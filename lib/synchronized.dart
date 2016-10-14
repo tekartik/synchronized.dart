@@ -7,15 +7,14 @@ library synchronized;
 
 import 'dart:async';
 import 'package:func/func.dart';
-import 'src/synchronized_impl.dart';
+import 'src/synchronized_impl.dart' as impl;
 
 // [SynchronizedLock] helper locker object. You don't need to use it directly as any object
 // can act as 'monitor'. It provides over the [locked] and [sychronized]
 // helper methods
 abstract class SynchronizedLock {
-
   factory SynchronizedLock([Object monitor]) {
-    return new SynchronizedLockImpl(monitor);
+    return new impl.SynchronizedLock(monitor);
   }
 
   // return true if the lock is currently locked
@@ -26,13 +25,8 @@ abstract class SynchronizedLock {
   Future/*<T>*/ synchronized/*<T>*/(Func0 fn, {timeout: null});
 }
 
-
 // Execute [fn] when lock is available. Only one fn can run while
 // the lock is retained. Any object can be a lock, locking is based on identity
-Future/*<T>*/ synchronized/*<T>*/(dynamic lock, Func0 fn,
-    {timeout: null}) {
-  // Make any object a lock object
-  SynchronizedLock lockImpl = makeSynchronizedLock(lock);
-
-  return lockImpl.synchronized(fn, timeout: timeout);
+Future/*<T>*/ synchronized/*<T>*/(dynamic lock, Func0 fn, {timeout: null}) {
+  return impl.synchronized(lock, fn, timeout: timeout);
 }

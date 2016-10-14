@@ -4,12 +4,12 @@
 
 import 'dart:async';
 
-import 'package:synchronized/synchronized.dart';
-import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLockImpl;
+import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLock;
 import 'package:dev_test/test.dart';
 
 // To make tests less verbose...
-class Lock extends SynchronizedLockImpl {}
+class Lock extends SynchronizedLock {}
 
 void main() {
   group('synchronized', () {
@@ -144,10 +144,9 @@ void main() {
         Lock lock = new Lock();
 
         // hold for 5ms
-        Future future = lock.synchronized(() async {
+        lock.synchronized(() async {
           await new Future.delayed(new Duration(milliseconds: 50));
         });
-
 
         try {
           await lock.synchronized(null, timeout: new Duration(milliseconds: 1));
@@ -160,47 +159,11 @@ void main() {
         } on TimeoutException catch (_) {}
 
         // waiting long enough
-        await lock.synchronized(() {
-        }, timeout: new Duration(milliseconds: 100));
-      });
-
-
-    });
-
-    group('lock', () {
-      test('locked', () async {
-        // Make sure the lock state is made immediately
-        // This ensure that calling locked then synchronized is atomic
-        Lock lock = new Lock();
-        Future future = lock.synchronized(null);
-        expect(lock.locked, isTrue);
-
-        await future;
-      });
-
-      test('immediacity', () async {
-        Lock lock = new Lock();
-        int value;
-        Future future = lock.synchronized(() {
-          value = 1;
-        });
-        // A sync method is executed right away!
-        expect(value, 1);
-        await future;
-      });
-
-      test('no immediacity', () async {
-        Lock lock = new Lock();
-        int value;
-        Future future = lock.synchronized(() async {
-          value = 1;
-        });
-        // A sync method is executed right away!
-        expect(value, isNull);
-        await future;
+        await lock.synchronized(() {},
+            timeout: new Duration(milliseconds: 100));
       });
     });
 
-
+    group('lock', () {});
   });
 }

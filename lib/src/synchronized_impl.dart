@@ -1,4 +1,4 @@
-import '../synchronized.dart';
+import '../synchronized.dart' as _;
 import 'dart:async';
 import 'package:func/func.dart';
 
@@ -20,9 +20,9 @@ class SynchronizedTask {
 
 // You can define synchonized lock object directly
 // for convenient access
-class SynchronizedLockImpl implements SynchronizedLock {
+class SynchronizedLock implements _.SynchronizedLock {
   Object monitor;
-  SynchronizedLockImpl([this.monitor]);
+  SynchronizedLock([this.monitor]);
   List<SynchronizedTask> tasks = new List();
 
   bool get inZone => (Zone.current[this] == true);
@@ -35,9 +35,6 @@ class SynchronizedLockImpl implements SynchronizedLock {
   }
 
   Future/*<T>*/ _run/*<T>*/(Func0 fn) {
-    if (inZone) {
-      return new Future.sync(fn);
-    }
     return new Future.sync(() {
       return runZoned(() {
         if (fn != null) {
@@ -56,41 +53,33 @@ class SynchronizedLockImpl implements SynchronizedLock {
 
   // implementation
   Future/*<T>*/ synchronized/*<T>*/(Func0 fn, {timeout: null}) {
-
     // Inner case scenario
-    if (false) {
-      return new Future/*<T>*/ .sync(fn).whenComplete(() {
-        cleanUp();
-      });
-    } else {
-      // get status before modifying our task list
-      bool locked = this.locked;
 
-      SynchronizedTask previous = locked ? tasks.last : null;
+    // get status before modifying our task list
+    bool locked = this.locked;
 
-      // Create the task and add it to our queue
-      SynchronizedTask task = new SynchronizedTask();
-      tasks.add(task);
+    SynchronizedTask previousTask = locked ? tasks.last : null;
 
+    // Create the task and add it to our queue
+    SynchronizedTask task = new SynchronizedTask();
+    tasks.add(task);
 
-      Future/*<T>*/ run() {
-        return _run/*<T>*/(fn).whenComplete(() {
-          cleanUpTask(task);
-        });
-      }
-
-      // When not locked, try to run in the most efficient way
-      if (!locked) {
-        // When not locked, try to run in the most efficient way
-        return run();
-      }
-
-      // Get the current running tasks (2 behind the one we just have added
-      SynchronizedTask previousTask = tasks[tasks.length - 2];
-      return previousTask.future.then((_) {
-        return run();
+    Future/*<T>*/ run() {
+      return _run/*<T>*/(fn).whenComplete(() {
+        cleanUpTask(task);
       });
     }
+
+    // When not locked, try to run in the most efficient way
+    if (!locked) {
+      // When not locked, try to run in the most efficient way
+      return run();
+    }
+
+    // Get the current running tasks (2 behind the one we just have added
+    return previousTask.future.then((_) {
+      return run();
+    });
   }
 
   @override
@@ -120,8 +109,7 @@ SynchronizedLock makeSynchronizedLock(dynamic monitor) {
   return monitor;
 }
 
-
-cleanUpLock(SynchronizedLockImpl lock) {
+cleanUpLock(SynchronizedLock lock) {
   if (lock.tasks.isEmpty) {
     if (lock.monitor != null) {
       synchronizedLocks.remove(lock.monitor);
@@ -129,3 +117,11 @@ cleanUpLock(SynchronizedLockImpl lock) {
   }
 }
 
+// Execute [fn] when lock is available. Only one fn can run while
+// the lock is retained. Any object can be a lock, locking is based on identity
+Future/*<T>*/ synchronized/*<T>*/(dynamic lock, Func0 fn, {timeout: null}) {
+  // Make any object a lock object
+  SynchronizedLock lockImpl = makeSynchronizedLock(lock);
+
+  return lockImpl.synchronized(fn, timeout: timeout);
+}
