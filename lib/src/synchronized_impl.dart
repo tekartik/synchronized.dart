@@ -22,12 +22,27 @@ class SynchronizedTask {
 // for convenient access
 class SynchronizedLock implements _.SynchronizedLock {
   Object monitor;
-  SynchronizedLock([this.monitor]);
+  SynchronizedLock.impl([this.monitor]);
+  factory SynchronizedLock([Object monitor]) {
+    if (monitor == null) {
+      return new SynchronizedLock.impl();
+    } else {
+      return makeSynchronizedLock(monitor);
+    }
+  }
   List<SynchronizedTask> tasks = new List();
 
   bool get inZone => (Zone.current[this] == true);
   // return true if the block is currently locked
   bool get locked => tasks.length > 0 && (!inZone);
+
+  // testing only
+  Future get ready {
+    if (!locked) {
+      return new Future.value();
+    }
+    return tasks.last.future;
+  }
 
   // cleanup global map if needed
   void cleanUp() {
@@ -114,7 +129,7 @@ SynchronizedLock makeSynchronizedLock(dynamic monitor) {
     // get or create Lock object
     SynchronizedLock synchronizedLock = synchronizedLocks[monitor];
     if (synchronizedLock == null) {
-      synchronizedLock = new SynchronizedLock(monitor);
+      synchronizedLock = new SynchronizedLock.impl(monitor);
       synchronizedLocks[monitor] = synchronizedLock;
     }
     return synchronizedLock;

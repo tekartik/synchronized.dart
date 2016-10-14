@@ -9,59 +9,111 @@ import 'package:synchronized/src/synchronized_impl.dart';
 import 'package:dev_test/test.dart';
 
 // To make tests less verbose...
-class Lock extends SynchronizedLock {}
+class Lock extends SynchronizedLock {
+  Lock() : super.impl();
+}
 
 void main() {
   group('synchronized_impl', () {
-    test('makeSynchronizedLock', () async {
-      expect(synchronizedLocks, isEmpty);
-      SynchronizedLock lockImpl = makeSynchronizedLock("test");
-      expect(lockImpl.monitor, "test");
-      expect(synchronizedLocks, hasLength(1));
-      // clear for next tests
-      synchronizedLocks.clear();
-    });
-    test('synchronizedLocks', () async {
-      expect(synchronizedLocks, isEmpty);
-
-      Future future = synchronized("test", () {
-        sleep(1);
+    group('makeSynchronizedLock', () {
+      test('equals', () async {
+        SynchronizedLock lock1 = makeSynchronizedLock("test");
+        SynchronizedLock lock2 = makeSynchronizedLock("test");
+        expect(lock1, same(lock2));
+        SynchronizedLock lock3 = new SynchronizedLock("test");
+        expect(lock1, same(lock3));
+        // clear for next tests
+        synchronizedLocks.clear();
       });
-      expect(synchronizedLocks, hasLength(1));
-      await future;
-      expect(synchronizedLocks, isEmpty);
-    });
-
-    test('synchronizedLocks_2', () async {
-      expect(synchronizedLocks, isEmpty);
-
-      synchronized("test", () {
-        sleep(1);
+      test('simple', () async {
+        expect(synchronizedLocks, isEmpty);
+        SynchronizedLock lockImpl = makeSynchronizedLock("test");
+        expect(lockImpl.monitor, "test");
+        expect(synchronizedLocks, hasLength(1));
+        // clear for next tests
+        synchronizedLocks.clear();
       });
-      Future future = synchronized("test", () {
-        sleep(1);
-      });
-      expect(synchronizedLocks, hasLength(1));
-      await future;
-      expect(synchronizedLocks, isEmpty);
     });
 
-    test('synchronizedLocks_inner', () async {
-      expect(synchronizedLocks, isEmpty);
+    group('SynchronizedLock', () {
+      test('equals', () async {
+        SynchronizedLock lock1 = new SynchronizedLock();
+        SynchronizedLock lock2 = new SynchronizedLock();
 
-      Completer beforeInnerCompleter = new Completer.sync();
-      Future future = synchronized("test", () async {
-        sleep(1);
-        beforeInnerCompleter.complete();
-        await synchronized("test", () {
-          sleep(1);
+        expect(lock1, isNot(lock2));
+        expect(synchronizedLocks, isEmpty);
+        lock1 = new SynchronizedLock("test");
+        lock2 = new SynchronizedLock("test");
+        expect(lock1, same(lock2));
+        expect(synchronizedLocks, hasLength(1));
+        // clear for next tests
+        synchronizedLocks.clear();
+      });
+
+      test('ready', () async {
+        SynchronizedLock lock = new SynchronizedLock();
+        await lock.ready;
+
+        bool done = false;
+        lock.synchronized(() async {
+          await sleep(100);
+          done = true;
         });
+
+        try {
+          await lock.ready.timeout(new Duration(milliseconds: 1));
+          fail('should fail');
+        } on TimeoutException catch (_) {}
+
+        expect(done, isFalse);
+        await lock.ready;
+        expect(done, isTrue);
+        ;
       });
-      expect(synchronizedLocks, hasLength(1));
-      await beforeInnerCompleter.future;
-      expect(synchronizedLocks, hasLength(1));
-      await future;
-      expect(synchronizedLocks, isEmpty);
+    });
+    group('synchronizedLocks', () {
+      test('content', () async {
+        expect(synchronizedLocks, isEmpty);
+
+        Future future = synchronized("test", () async {
+          await sleep(1);
+        });
+        expect(synchronizedLocks, hasLength(1));
+        await future;
+        expect(synchronizedLocks, isEmpty);
+      });
+
+      test('content_2', () async {
+        expect(synchronizedLocks, isEmpty);
+
+        synchronized("test", () async {
+          await sleep(1);
+        });
+        Future future = synchronized("test", () async {
+          await sleep(1);
+        });
+        expect(synchronizedLocks, hasLength(1));
+        await future;
+        expect(synchronizedLocks, isEmpty);
+      });
+
+      test('inner', () async {
+        expect(synchronizedLocks, isEmpty);
+
+        Completer beforeInnerCompleter = new Completer.sync();
+        Future future = synchronized("test", () async {
+          await sleep(1);
+          beforeInnerCompleter.complete();
+          await synchronized("test", () async {
+            await sleep(1);
+          });
+        });
+        expect(synchronizedLocks, hasLength(1));
+        await beforeInnerCompleter.future;
+        expect(synchronizedLocks, hasLength(1));
+        await future;
+        expect(synchronizedLocks, isEmpty);
+      });
     });
 
     group('locked', () {
@@ -157,6 +209,51 @@ void main() {
         completer.complete();
         await future;
         expect(lock.locked, isTrue);
+      });
+    });
+
+    group('perf', () {
+      test('10000 operations', () async {
+        int count = 10000;
+        int j;
+
+        Stopwatch sw = new Stopwatch();
+        j = 0;
+        sw.start();
+        for (int i = 0; i < count; i++) {
+          j += i;
+        }
+        print(sw.elapsed);
+        expect(j, count * (count - 1) / 2);
+
+        sw = new Stopwatch();
+        j = 0;
+        sw.start();
+        for (int i = 0; i < count; i++) {
+          await () async {
+            j += i;
+          }();
+        }
+        print(sw.elapsed);
+        expect(j, count * (count - 1) / 2);
+
+        SynchronizedLock lock = new SynchronizedLock();
+        sw = new Stopwatch();
+        j = 0;
+        sw.start();
+        for (int i = 0; i < count; i++) {
+          lock.synchronized(() {
+            j += i;
+          });
+        }
+        await lock.ready;
+        print(sw.elapsed);
+        expect(j, count * (count - 1) / 2);
+
+        // 2016-10-14
+        // 0:00:00.000201
+        // 0:00:00.221551
+        // 0:00:00.404036
       });
     });
   });

@@ -13,8 +13,8 @@ import 'src/synchronized_impl.dart' as impl;
 // can act as 'monitor'. It provides over the [locked] and [sychronized]
 // helper methods
 abstract class SynchronizedLock {
-  factory SynchronizedLock([Object monitor]) {
-    return new impl.SynchronizedLock(monitor);
+  factory SynchronizedLock() {
+    return new impl.SynchronizedLock();
   }
 
   // return true if the lock is currently locked

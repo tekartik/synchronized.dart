@@ -20,14 +20,22 @@ Future write1234() async {
 class Demo {
   Future test1() async {
     stdout.writeln("not synchronized");
-    await Future.wait([write1234(), write1234()]);
+    //await Future.wait([write1234(), write1234()]);
+    write1234();
+    write1234();
+
+    await new Future.delayed(new Duration(milliseconds: 50));
     stdout.writeln();
   }
 
   Future test2() async {
     stdout.writeln("synchronized");
-    await Future
-        .wait([synchronized(this, write1234), synchronized(this, write1234)]);
+
+    synchronized(this, write1234);
+    synchronized(this, write1234);
+
+    await new Future.delayed(new Duration(milliseconds: 50));
+
     stdout.writeln();
   }
 

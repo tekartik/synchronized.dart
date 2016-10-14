@@ -9,7 +9,9 @@ import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLock;
 import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
 
 // To make tests less verbose...
-class Lock extends SynchronizedLock {}
+class Lock extends SynchronizedLock {
+  Lock() : super.impl();
+}
 
 void main() {
   group('synchronized', () {
@@ -54,25 +56,27 @@ void main() {
       expect(list, [1, 2, 3, 4]);
     });
 
-    test('perf', () async {
-      Stopwatch sw = new Stopwatch();
-      sw.start();
-      int count = 10000;
-      Lock lock = new Lock();
-      List<Future> futures = [];
-      List<int> list = [];
-      for (int i = 0; i < count; i++) {
-        //await sleep(1);
-        Future future = lock.synchronized(() async {
-          list.add(i);
-        });
-        futures.add(future);
-      }
-      await Future.wait(futures);
-      expect(list, new List.generate(count, (i) => i));
-      print(sw.elapsed);
-      // 2016-10-13 10000 0:00:00.692360 v0.1.0
-      // 2016-10-05 10000 0:00:00.971284
+    group('perf', () {
+      test('10000 operations', () async {
+        Stopwatch sw = new Stopwatch();
+        sw.start();
+        int count = 10000;
+        Lock lock = new Lock();
+        List<Future> futures = [];
+        List<int> list = [];
+        for (int i = 0; i < count; i++) {
+          //await sleep(1);
+          Future future = lock.synchronized(() async {
+            list.add(i);
+          });
+          futures.add(future);
+        }
+        await Future.wait(futures);
+        expect(list, new List.generate(count, (i) => i));
+        print(sw.elapsed);
+        // 2016-10-13 10000 0:00:00.692360 v0.1.0
+        // 2016-10-05 10000 0:00:00.971284
+      });
     });
 
     test('throw', () async {
