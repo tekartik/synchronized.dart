@@ -20,6 +20,9 @@ abstract class SynchronizedLock {
   // return true if the lock is currently locked
   bool get locked;
 
+  // return true if we are in a synchronized zone already (i.e. inner)
+  bool get inZone;
+
   // Execute [fn] when lock is available. Only one fn can run while
   // the lock is retained
   Future/*<T>*/ synchronized/*<T>*/(Func0 fn, {timeout: null});
