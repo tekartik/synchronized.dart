@@ -9,8 +9,9 @@ import 'dart:async';
 import 'package:func/func.dart';
 import 'src/synchronized_impl.dart';
 
-// You can define synchonized lock object directly
-// for convenient access
+// [SynchronizedLock] helper locker object. You don't need to use it directly as any object
+// can act as 'monitor'. It provides over the [locked] and [sychronized]
+// helper methods
 abstract class SynchronizedLock {
 
   factory SynchronizedLock([Object monitor]) {

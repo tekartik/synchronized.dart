@@ -64,5 +64,20 @@ void main() {
       expect(synchronizedLocks, isEmpty);
     });
 
+    group('two_locks', () {
+      test('inZone',() {
+        Lock lock1 = new Lock();
+        Lock lock2 = new Lock();
+        Completer completer = new Completer();
+        Future future = lock1.synchronized(() async {
+          expect(lock1.inZone, isTrue);
+          expect(lock2.inZone, isFalse);
+          await completer.future;
+        });
+        expect(lock1.inZone, isFalse);
+        completer.complete();
+      });
+    });
+
   });
 }

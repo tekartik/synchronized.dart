@@ -10,14 +10,12 @@ devPrint(Object msg) {
 
 Future sleep(int ms) => new Future.delayed(new Duration(milliseconds: ms));
 
-// unique tag for the running synchronized zone
-var _zoneTag = #tekartik_synchronized;
-
-class _SynchronizedTask {
+// A [SynchronizedTask] only complete when all precedent task complete
+// i.e. in case of timeout
+class SynchronizedTask {
   Completer completer = new Completer.sync();
-  Func0 fn;
   Future get future => completer.future;
-  _SynchronizedTask(this.fn);
+  SynchronizedTask();
 }
 
 // You can define synchonized lock object directly
@@ -25,18 +23,79 @@ class _SynchronizedTask {
 class SynchronizedLockImpl implements SynchronizedLock {
   Object monitor;
   SynchronizedLockImpl([this.monitor]);
-  List<_SynchronizedTask> _tasks = new List();
+  List<SynchronizedTask> tasks = new List();
 
+  bool get inZone => (Zone.current[this] == true);
   // return true if the block is currently locked
-  bool get locked => _tasks.length > 0;
+  bool get locked => tasks.length > 0 && (!inZone);
 
-  Future/*<T>*/ synchronized/*<T>*/(Func0 fn, {timeout: null}) =>
-      _synchronized(this, fn, timeout: timeout);
+  // cleanup global map if needed
+  void cleanUp() {
+    cleanUpLock(this);
+  }
+
+  Future/*<T>*/ _run/*<T>*/(Func0 fn) {
+    if (inZone) {
+      return new Future.sync(fn);
+    }
+    return new Future.sync(() {
+      return runZoned(() {
+        if (fn != null) {
+          return fn();
+        }
+      }, zoneValues: {this: true});
+    });
+  }
+
+  void cleanUpTask(SynchronizedTask task) {
+    // remove, mark as complete
+    tasks.remove(task);
+    task.completer.complete();
+    cleanUp();
+  }
+
+  // implementation
+  Future/*<T>*/ synchronized/*<T>*/(Func0 fn, {timeout: null}) {
+
+    // Inner case scenario
+    if (false) {
+      return new Future/*<T>*/ .sync(fn).whenComplete(() {
+        cleanUp();
+      });
+    } else {
+      // get status before modifying our task list
+      bool locked = this.locked;
+
+      SynchronizedTask previous = locked ? tasks.last : null;
+
+      // Create the task and add it to our queue
+      SynchronizedTask task = new SynchronizedTask();
+      tasks.add(task);
+
+
+      Future/*<T>*/ run() {
+        return _run/*<T>*/(fn).whenComplete(() {
+          cleanUpTask(task);
+        });
+      }
+
+      // When not locked, try to run in the most efficient way
+      if (!locked) {
+        // When not locked, try to run in the most efficient way
+        return run();
+      }
+
+      // Get the current running tasks (2 behind the one we just have added
+      SynchronizedTask previousTask = tasks[tasks.length - 2];
+      return previousTask.future.then((_) {
+        return run();
+      });
+    }
+  }
 
   @override
   String toString() => 'SynchronizedLock[${identityHashCode(this)}]';
 }
-
 
 // list of waiting/running locks
 // empty when nothing running
@@ -61,64 +120,12 @@ SynchronizedLock makeSynchronizedLock(dynamic monitor) {
   return monitor;
 }
 
-Future/*<T>*/ _run/*<T>*/(Func0 fn) {
-  return new Future.sync(() {
-    return runZoned(() {
-      if (fn != null) {
-        return fn();
-      }
-    }, zoneValues: {_zoneTag: true});
-  });
-}
 
-cleanupLock(SynchronizedLockImpl lock) {
-  if (lock._tasks.isEmpty) {
+cleanUpLock(SynchronizedLockImpl lock) {
+  if (lock.tasks.isEmpty) {
     if (lock.monitor != null) {
       synchronizedLocks.remove(lock.monitor);
     }
   }
 }
-Future/*<T>*/ _synchronized/*<T>*/(SynchronizedLockImpl lock, Func0 fn, {timeout: null}) {
-  List<_SynchronizedTask> tasks = lock._tasks;
 
-  // Same zone means re-entrant, so run directly
-  if (Zone.current[_zoneTag] == true) {
-    return new Future/*<T>*/.sync(fn).whenComplete(() {
-      cleanupLock(lock);
-    });
-  } else {
-    // get status before modifying our task list
-    bool locked = lock.locked;
-
-    // Create the task and add it to our queue
-    _SynchronizedTask task = new _SynchronizedTask(fn);
-    tasks.add(task);
-
-    _cleanup() {
-      // Cleanup
-      // remove from queue and complete
-      tasks.remove(task);
-      cleanupLock(lock);
-      task.completer.complete();
-
-    }
-
-    Future/*<T>*/ run() {
-      return _run/*<T>*/(fn).whenComplete(() {
-        _cleanup();
-      });
-    }
-
-    // When not locked, try to run in the most efficient way
-    if (!locked) {
-      // When not locked, try to run in the most efficient way
-      return run();
-    }
-
-    // Get the current running tasks (2 behind the one we just have added
-    _SynchronizedTask previousTask = tasks[tasks.length - 2];
-    return previousTask.future.then((_) {
-      return run();
-    });
-  }
-}
