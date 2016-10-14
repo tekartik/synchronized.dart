@@ -4,9 +4,9 @@
 
 import 'dart:async';
 
-import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
-import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLock;
 import 'package:dev_test/test.dart';
+import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLock;
+import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
 
 // To make tests less verbose...
 class Lock extends SynchronizedLock {}
@@ -124,7 +124,7 @@ void main() {
       });
     });
 
-    skip_group('timeout', () {
+    group('timeout', () {
       test('0_ms', () async {
         Lock lock = new Lock();
         Completer completer = new Completer();
@@ -132,7 +132,7 @@ void main() {
           await completer.future;
         });
         try {
-          await lock.synchronized(null, timeout: new Duration());
+          await lock.synchronized(null, timeout: new Duration(milliseconds: 1));
           fail('should fail');
         } on TimeoutException catch (_) {}
         completer.complete();
@@ -143,24 +143,36 @@ void main() {
         // hoping timint is ok...
         Lock lock = new Lock();
 
+        bool ran1 = false;
+        bool ran2 = false;
+        bool ran3 = false;
         // hold for 5ms
         lock.synchronized(() async {
           await new Future.delayed(new Duration(milliseconds: 50));
         });
 
         try {
-          await lock.synchronized(null, timeout: new Duration(milliseconds: 1));
+          await lock.synchronized(() {
+            ran1 = true;
+          }, timeout: new Duration(milliseconds: 1));
           fail('should fail');
         } on TimeoutException catch (_) {}
 
         try {
-          await lock.synchronized(null, timeout: new Duration(milliseconds: 2));
+          await lock.synchronized(() {
+            ran2 = true;
+          }, timeout: new Duration(milliseconds: 2));
           fail('should fail');
         } on TimeoutException catch (_) {}
 
         // waiting long enough
-        await lock.synchronized(() {},
-            timeout: new Duration(milliseconds: 100));
+        await lock.synchronized(() {
+          ran3 = true;
+        }, timeout: new Duration(milliseconds: 100));
+
+        expect(ran1, isFalse);
+        expect(ran2, isFalse);
+        expect(ran3, isTrue);
       });
     });
 

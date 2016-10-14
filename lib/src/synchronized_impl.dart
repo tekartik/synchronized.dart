@@ -76,6 +76,19 @@ class SynchronizedLock implements _.SynchronizedLock {
       return run();
     }
 
+    // Handle timeout
+    if (timeout != null) {
+      //bool cancelled = false;
+      return previousTask.future.timeout(timeout).then((_) {
+        return run();
+      }, onError: (e) {
+        // timeout cleanup
+        cleanUpTask(task);
+        // keep the stack trace
+        throw e;
+      });
+    }
+
     // Get the current running tasks (2 behind the one we just have added
     return previousTask.future.then((_) {
       return run();
