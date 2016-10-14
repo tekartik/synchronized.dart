@@ -27,6 +27,7 @@ For single process (single isolate) accessing some resources (database..), it ca
  * Timeout support
  * Consistent behavior (i.e. if it is unlocked calling synchronized grab the lock)
  * Work on Browser and DartVM
+ * No dependencies (other than the sdk itself)
  
 It differs from the `pool` package used with a resource count of 1 by being reentrant
 

@@ -6,7 +6,6 @@
 library synchronized;
 
 import 'dart:async';
-import 'package:func/func.dart';
 import 'src/synchronized_impl.dart' as impl;
 
 // [SynchronizedLock] helper locker object. You don't need to use it directly as any object
@@ -23,13 +22,14 @@ abstract class SynchronizedLock {
   // return true if we are in a synchronized zone already (i.e. inner)
   bool get inZone;
 
-  // Execute [fn] when lock is available. Only one fn can run while
+  // Execute [computation] when lock is available. Only one asynchronous block can run while
   // the lock is retained
-  Future/*<T>*/ synchronized/*<T>*/(Func0 fn, {timeout: null});
+  Future/*<T>*/ synchronized/*<T>*/(computation(), {timeout: null});
 }
 
 // Execute [fn] when lock is available. Only one fn can run while
 // the lock is retained. Any object can be a lock, locking is based on identity
-Future/*<T>*/ synchronized/*<T>*/(dynamic lock, Func0 fn, {timeout: null}) {
-  return impl.synchronized(lock, fn, timeout: timeout);
+Future/*<T>*/ synchronized/*<T>*/(dynamic lock, computation(),
+    {timeout: null}) {
+  return impl.synchronized(lock, computation, timeout: timeout);
 }

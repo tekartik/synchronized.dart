@@ -1,6 +1,5 @@
 import '../synchronized.dart' as _;
 import 'dart:async';
-import 'package:func/func.dart';
 
 // utilities
 @deprecated
@@ -49,11 +48,11 @@ class SynchronizedLock implements _.SynchronizedLock {
     cleanUpLock(this);
   }
 
-  Future/*<T>*/ _run/*<T>*/(Func0 fn) {
+  Future/*<T>*/ _run/*<T>*/(computation()) {
     return new Future.sync(() {
       return runZoned(() {
-        if (fn != null) {
-          return fn();
+        if (computation != null) {
+          return computation();
         }
       }, zoneValues: {this: true});
     });
@@ -67,7 +66,7 @@ class SynchronizedLock implements _.SynchronizedLock {
   }
 
   // implementation
-  Future/*<T>*/ synchronized/*<T>*/(Func0 fn, {timeout: null}) {
+  Future/*<T>*/ synchronized/*<T>*/(computation(), {timeout: null}) {
     // Inner case scenario
 
     // get status before modifying our task list
@@ -80,7 +79,7 @@ class SynchronizedLock implements _.SynchronizedLock {
     tasks.add(task);
 
     Future/*<T>*/ run() {
-      return _run/*<T>*/(fn).whenComplete(() {
+      return _run/*<T>*/(computation).whenComplete(() {
         cleanUpTask(task);
       });
     }
@@ -145,11 +144,12 @@ cleanUpLock(SynchronizedLock lock) {
   }
 }
 
-// Execute [fn] when lock is available. Only one fn can run while
+// Execute [computation] when lock is available. Only one block can run while
 // the lock is retained. Any object can be a lock, locking is based on identity
-Future/*<T>*/ synchronized/*<T>*/(dynamic lock, Func0 fn, {timeout: null}) {
+Future/*<T>*/ synchronized/*<T>*/(dynamic lock, computation(),
+    {timeout: null}) {
   // Make any object a lock object
   SynchronizedLock lockImpl = makeSynchronizedLock(lock);
 
-  return lockImpl.synchronized(fn, timeout: timeout);
+  return lockImpl.synchronized(computation, timeout: timeout);
 }
