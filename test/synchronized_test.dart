@@ -5,10 +5,11 @@
 import 'dart:async';
 
 import 'package:synchronized/synchronized.dart';
+import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLockImpl;
 import 'package:dev_test/test.dart';
 
 // To make tests less verbose...
-class Lock extends SynchronizedLock {}
+class Lock extends SynchronizedLockImpl {}
 
 void main() {
   group('synchronized', () {
@@ -123,7 +124,48 @@ void main() {
       });
     });
 
-    group('timeout', () {});
+    skip_group('timeout', () {
+      test('0_ms', () async {
+        Lock lock = new Lock();
+        Completer completer = new Completer();
+        Future future = lock.synchronized(() async {
+          await completer.future;
+        });
+        try {
+          await lock.synchronized(null, timeout: new Duration());
+          fail('should fail');
+        } on TimeoutException catch (_) {}
+        completer.complete();
+        await future;
+      });
+
+      test('100_ms', () async {
+        // hoping timint is ok...
+        Lock lock = new Lock();
+
+        // hold for 5ms
+        Future future = lock.synchronized(() async {
+          await new Future.delayed(new Duration(milliseconds: 50));
+        });
+
+
+        try {
+          await lock.synchronized(null, timeout: new Duration(milliseconds: 1));
+          fail('should fail');
+        } on TimeoutException catch (_) {}
+
+        try {
+          await lock.synchronized(null, timeout: new Duration(milliseconds: 2));
+          fail('should fail');
+        } on TimeoutException catch (_) {}
+
+        // waiting long enough
+        await lock.synchronized(() {
+        }, timeout: new Duration(milliseconds: 100));
+      });
+
+
+    });
 
     group('lock', () {
       test('locked', () async {
