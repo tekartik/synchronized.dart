@@ -79,37 +79,6 @@ void main() {
       });
     });
 
-    test('throw', () async {
-      Lock lock = new Lock();
-      try {
-        await lock.synchronized(() {
-          throw "throwing";
-        });
-        fail("should throw");
-      } catch (e) {
-        expect(e is TestFailure, isFalse);
-      }
-    });
-
-    test('exception', () async {
-      Lock lock = new Lock();
-      List<int> list = [];
-      lock.synchronized(() async {
-        list.add(1);
-      });
-      // catch the error
-      lock.synchronized(() {
-        throw "throwing";
-      }).catchError((_) {
-        list.add(2);
-      });
-      // only wait the last one
-      await lock.synchronized(() async {
-        list.add(3);
-      });
-      expect(list, [1, 2, 3]);
-    });
-
     group('any_object', () {
       test('null_lock', () async {
         await synchronized(new Object(), null);
@@ -177,6 +146,32 @@ void main() {
         expect(ran1, isFalse);
         expect(ran2, isFalse);
         expect(ran3, isTrue);
+      });
+    });
+
+    group('error', () {
+      test('throw', () async {
+        Lock lock = new Lock();
+        try {
+          await lock.synchronized(() {
+            throw "throwing";
+          });
+          fail("should throw");
+        } catch (e) {
+          expect(e is TestFailure, isFalse);
+        }
+      });
+
+      test('throw_async', () async {
+        Lock lock = new Lock();
+        try {
+          await lock.synchronized(() {
+            throw "throwing";
+          });
+          fail("should throw");
+        } catch (e) {
+          expect(e is TestFailure, isFalse);
+        }
       });
     });
 
