@@ -26,6 +26,7 @@ For single process (single isolate) accessing some resources (database..), it ca
  * Synchronized block are reentrant
  * Timeout support
  * Consistent behavior (i.e. if it is unlocked calling synchronized grab the lock)
+ * Values and Errors are properly reported to the caller
  * Work on Browser and DartVM
  * No dependencies (other than the sdk itself)
  
