@@ -8,3 +8,6 @@ dartanalyzer --fatal-warnings \
   test/synchronized_test.dart \
 
 pub run test -p vm,firefox,chrome
+
+# test dartdevc support
+pub build example/browser --web-compiler=dartdevc
