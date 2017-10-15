@@ -90,6 +90,26 @@ void main() {
       expect(list, [1, 2, 3]);
     });
 
+    test('inner_no_wait', () async {
+      Lock lock = new Lock();
+      List<int> list = [];
+      await lock.synchronized(() async {
+        await sleep(1);
+        list.add(1);
+        // don't wait here on purpose
+        // to make sure this task is started first
+        lock.synchronized(() async {
+          await sleep(1);
+          list.add(3);
+        });
+      });
+      list.add(2);
+      await lock.synchronized(() async {
+        list.add(4);
+      });
+      expect(list, [1, 2, 3, 4]);
+    });
+
     group('perf', () {
       test('10000 operations', () async {
         Stopwatch sw = new Stopwatch();

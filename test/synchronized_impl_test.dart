@@ -114,6 +114,29 @@ void main() {
         await future;
         expect(synchronizedLocks, isEmpty);
       });
+
+      test('inner_no_wait', () async {
+        expect(synchronizedLocks, isEmpty);
+
+        Completer beforeInnerCompleter = new Completer.sync();
+        Future future = synchronized("test", () async {
+          await sleep(1);
+          beforeInnerCompleter.complete();
+
+          // no wait here on purpose
+          synchronized("test", () {
+            //await sleep(1);
+          });
+        });
+        expect(synchronizedLocks, hasLength(1));
+        await beforeInnerCompleter.future;
+        expect(synchronizedLocks, hasLength(1));
+        await future;
+        // There will be a delay when the locks are cleaned-up here
+        expect(synchronizedLocks, isNotEmpty);
+        await sleep(0);
+        expect(synchronizedLocks, isEmpty);
+      });
     });
 
     group('locked', () {
@@ -143,7 +166,7 @@ void main() {
         expect(lock.locked, isTrue);
         completer.complete();
         try {
-          await future.timeout(new Duration(milliseconds: 100));
+          await lock.synchronized(null, timeout: new Duration(milliseconds: 100));
           fail('should fail');
         } on TimeoutException catch (_) {}
         expect(lock.locked, isTrue);

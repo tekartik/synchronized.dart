@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.0.1
+## 1.0.2
 
-- Fix inner task issue
+- Fix inner task issue, next outer task will wait for all inner tasks to terminate
 
 ## 1.0.0
 

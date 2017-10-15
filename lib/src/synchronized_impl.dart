@@ -24,6 +24,12 @@ class SynchronizedTask {
       innerFutures = [];
     }
     innerFutures.add(future);
+    future.then((_) {
+      innerFutures.remove(future);
+      if (innerFutures.isEmpty) {
+        innerFutures = null;
+      }
+    });
   }
 
   // Wait for the tasks and its inner ones
@@ -91,13 +97,22 @@ class SynchronizedLock implements _.SynchronizedLock {
   }
 
   Future cleanUpTask(SynchronizedTask task) {
+    _cleanUp() {
+      tasks.remove(task);
+      cleanUp();
+    }
     // mark as complete, wait for inner if any
     // and remove
     task.completer.complete();
-    return task.future.whenComplete(() {
-      tasks.remove(task);
-      cleanUp();
-    });
+
+    // wait for inner before cleaning
+    if (task.innerFutures != null) {
+      Future.wait(task.innerFutures).whenComplete(() {
+        _cleanUp();
+      });
+    } else {
+      _cleanUp();
+    }
   }
 
   // implementation
@@ -126,7 +141,7 @@ class SynchronizedLock implements _.SynchronizedLock {
       return _run/*<T>*/(task, computation).whenComplete(() {
         // return value is ignore here but we do want
         // to wait for the all the inner tasks to finished
-        return cleanUpTask(task);
+        cleanUpTask(task);
       });
     }
 
