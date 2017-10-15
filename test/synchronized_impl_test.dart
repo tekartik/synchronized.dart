@@ -132,21 +132,23 @@ void main() {
         Lock lock = new Lock();
         Completer completer = new Completer();
         Completer innerCompleter = new Completer();
-        Future innerFuture;
         Future future = lock.synchronized(() async {
           // don't wait here
-          innerFuture = lock.synchronized(() async {
-            sleep(0);
+          lock.synchronized(() async {
+            await sleep(1);
             await innerCompleter.future;
           });
           await completer.future;
         });
         expect(lock.locked, isTrue);
         completer.complete();
-        await future;
+        try {
+          await future.timeout(new Duration(milliseconds: 100));
+          fail('should fail');
+        } on TimeoutException catch (_) {}
         expect(lock.locked, isTrue);
         innerCompleter.complete();
-        await innerFuture;
+        await future;
         expect(lock.locked, isFalse);
       });
     });
@@ -191,24 +193,50 @@ void main() {
 
       test('inner', () async {
         Lock lock = new Lock();
-        Completer completer = new Completer();
-        Completer innerCompleter = new Completer();
         Future future = lock.synchronized(() async {
           expect(lock.inZone, isTrue);
 
+          expect(lock.tasks.length, 1);
+          expect(lock.tasks.last.innerFutures, isNull);
           // don't wait here
           lock.synchronized(() async {
+            expect(lock.tasks.length, 1);
+            expect(lock.tasks.last.innerFutures.length, 1);
             expect(lock.inZone, isTrue);
-            sleep(1);
+            await sleep(10);
             expect(lock.inZone, isTrue);
-            await innerCompleter.future;
+            expect(lock.tasks.length, 1);
           });
-          await completer.future;
+          expect(lock.tasks.last.innerFutures.length, 1);
         });
         expect(lock.inZone, isFalse);
-        completer.complete();
         await future;
-        expect(lock.locked, isTrue);
+        expect(lock.inZone, isFalse);
+      });
+
+      test('inner_vs_outer', () async {
+        List<int> list = [];
+        Lock lock = new Lock();
+        Future future = lock.synchronized(() async {
+          await sleep(10);
+          // don't wait here
+          lock.synchronized(() async {
+            await sleep(20);
+            list.add(1);
+          });
+        });
+        expect(lock.inZone, isFalse);
+        Future future2 = lock.synchronized(() async {
+          await sleep(10);
+          list.add(2);
+        });
+        Future future3 = sleep(20).whenComplete(() async {
+          await lock.synchronized(() async {
+            list.add(3);
+          });
+        });
+        await Future.wait([future, future2, future3]);
+        expect(list, [1, 2, 3]);
       });
     });
 
@@ -254,6 +282,11 @@ void main() {
         // 0:00:00.000201
         // 0:00:00.221551
         // 0:00:00.404036
+
+        // 2017-10-15
+        // 0:00:00.000381
+        // 0:00:00.161558
+        // 0:00:00.603976
       });
     });
   });

@@ -13,7 +13,27 @@ Future sleep(int ms) => new Future.delayed(new Duration(milliseconds: ms));
 // i.e. in case of timeout
 class SynchronizedTask {
   Completer completer = new Completer.sync();
-  Future get future => completer.future;
+
+  // Inner task, a task won't be marked as complete until all
+  // its inner task are complete
+  List<Future> innerFutures;
+
+  // Add inner task if any
+  addInnerFuture(Future future) {
+    if (innerFutures == null) {
+      innerFutures = [];
+    }
+    innerFutures.add(future);
+  }
+
+  // Wait for the tasks and its inner ones
+  Future get future => completer.future.whenComplete(() {
+        // wait for inner
+        if (innerFutures != null) {
+          return Future.wait(innerFutures);
+        }
+      });
+
   SynchronizedTask();
 }
 
@@ -21,7 +41,9 @@ class SynchronizedTask {
 // for convenient access
 class SynchronizedLock implements _.SynchronizedLock {
   Object monitor;
+
   SynchronizedLock.impl([this.monitor]);
+
   factory SynchronizedLock([Object monitor]) {
     if (monitor == null) {
       return new SynchronizedLock.impl();
@@ -29,9 +51,11 @@ class SynchronizedLock implements _.SynchronizedLock {
       return makeSynchronizedLock(monitor);
     }
   }
+
   List<SynchronizedTask> tasks = new List();
 
-  bool get inZone => (Zone.current[this] == true);
+  bool get inZone => (Zone.current[this] != null);
+
   // return true if the block is currently locked
   bool get locked => tasks.length > 0 && (!inZone);
 
@@ -48,26 +72,46 @@ class SynchronizedLock implements _.SynchronizedLock {
     cleanUpLock(this);
   }
 
-  Future/*<T>*/ _run/*<T>*/(computation()) {
+  Future/*<T>*/ _run/*<T>*/(SynchronizedTask task, computation()) {
     return new Future.sync(() {
       return runZoned(() {
         if (computation != null) {
           return computation();
         }
-      }, zoneValues: {this: true});
+      }, zoneValues: {this: task});
     });
   }
 
-  void cleanUpTask(SynchronizedTask task) {
-    // remove, mark as complete
-    tasks.remove(task);
+  Future/*<T>*/ _runInner/*<T>*/(computation()) {
+    return new Future.sync(() {
+      if (computation != null) {
+        return computation();
+      }
+    });
+  }
+
+  Future cleanUpTask(SynchronizedTask task) {
+    // mark as complete, wait for inner if any
+    // and remove
     task.completer.complete();
-    cleanUp();
+    return task.future.whenComplete(() {
+      tasks.remove(task);
+      cleanUp();
+    });
   }
 
   // implementation
-  Future/*<T>*/ synchronized/*<T>*/(computation(), {timeout: null}) {
+  Future/*<T>*/ synchronized/*<T>*/(computation(), {Duration timeout}) {
     // Inner case scenario
+
+    // If currently in a zone,
+    // execute right away
+    SynchronizedTask inZoneTask = Zone.current[this];
+    if (inZoneTask != null) {
+      Future innerFuture = _runInner(computation);
+      inZoneTask.addInnerFuture(innerFuture);
+      return innerFuture;
+    }
 
     // get status before modifying our task list
     bool locked = this.locked;
@@ -79,8 +123,10 @@ class SynchronizedLock implements _.SynchronizedLock {
     tasks.add(task);
 
     Future/*<T>*/ run() {
-      return _run/*<T>*/(computation).whenComplete(() {
-        cleanUpTask(task);
+      return _run/*<T>*/(task, computation).whenComplete(() {
+        // return value is ignore here but we do want
+        // to wait for the all the inner tasks to finished
+        return cleanUpTask(task);
       });
     }
 
@@ -96,8 +142,12 @@ class SynchronizedLock implements _.SynchronizedLock {
       return previousTask.future.timeout(timeout).then((_) {
         return run();
       }, onError: (e) {
-        // timeout cleanup
-        cleanUpTask(task);
+        // timeout cleanup but don't wait for it
+        // however we only mark this task as complete when the previous
+        // did so that the next one is done at the proper time
+        previousTask.future.whenComplete(() {
+          cleanUpTask(task);
+        });
         // keep the stack trace
         throw e;
       });

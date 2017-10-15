@@ -5,7 +5,8 @@
 import 'dart:async';
 
 import 'package:dev_test/test.dart';
-import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLock;
+import 'package:synchronized/src/synchronized_impl.dart'
+    show SynchronizedLock, sleep;
 import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
 
 // To make tests less verbose...
@@ -56,6 +57,39 @@ void main() {
       expect(list, [1, 2, 3, 4]);
     });
 
+    test('inner_value', () async {
+      Lock lock = new Lock();
+      expect(
+          await lock.synchronized(() async {
+            expect(
+                await lock.synchronized(() {
+                  return "inner";
+                }),
+                "inner");
+            return "outer";
+          }),
+          "outer");
+    });
+
+    test('inner_vs_outer', () async {
+      Lock lock = new Lock();
+      List<int> list = [];
+      lock.synchronized(() async {
+        await sleep(1);
+        list.add(1);
+        // don't wait here on purpose
+        // to make sure this task is started first
+        lock.synchronized(() async {
+          await sleep(1);
+          list.add(2);
+        });
+      });
+      await lock.synchronized(() async {
+        list.add(3);
+      });
+      expect(list, [1, 2, 3]);
+    });
+
     group('perf', () {
       test('10000 operations', () async {
         Stopwatch sw = new Stopwatch();
@@ -76,6 +110,7 @@ void main() {
         print(sw.elapsed);
         // 2016-10-13 10000 0:00:00.692360 v0.1.0
         // 2016-10-05 10000 0:00:00.971284
+        // 2017-10-15 10000 0:00:00.944471
       });
     });
 
@@ -128,7 +163,6 @@ void main() {
           await lock.synchronized(() {
             ran1 = true;
           }, timeout: new Duration(milliseconds: 1));
-          fail('should fail');
         } on TimeoutException catch (_) {}
 
         try {
