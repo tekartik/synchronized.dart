@@ -57,6 +57,16 @@ void main() {
       expect(list, [1, 2, 3, 4]);
     });
 
+    test('queued_value', () async {
+      Lock lock = new Lock();
+      Future<String> value1 = lock.synchronized(() async {
+        await sleep(1);
+        return "value1";
+      });
+      expect(await lock.synchronized(() => "value2"), "value2");
+      expect(await value1, "value1");
+    });
+
     test('inner_value', () async {
       Lock lock = new Lock();
       expect(
@@ -214,18 +224,71 @@ void main() {
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
+
+        await lock.synchronized(() {});
       });
 
-      test('throw_async', () async {
+      test('queued_throw', () async {
         Lock lock = new Lock();
+
+        // delay so that it is queued
+        lock.synchronized(() {
+          return sleep(1);
+        });
         try {
-          await lock.synchronized(() {
+          await lock.synchronized(() async {
             throw "throwing";
           });
           fail("should throw");
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
+
+        await lock.synchronized(() {});
+      });
+
+      test('throw_async', () async {
+        Lock lock = new Lock();
+        try {
+          await lock.synchronized(() async {
+            throw "throwing";
+          });
+          fail("should throw");
+        } catch (e) {
+          expect(e is TestFailure, isFalse);
+        }
+      });
+
+      test('inner_throw', () async {
+        Lock lock = new Lock();
+        try {
+          await lock.synchronized(() async {
+            await lock.synchronized(() {
+              throw "throwing";
+            });
+          });
+          fail("should throw");
+        } catch (e) {
+          expect(e is TestFailure, isFalse);
+        }
+
+        await lock.synchronized(() {});
+      });
+
+      test('inner_throw_async', () async {
+        Lock lock = new Lock();
+
+        try {
+          await lock.synchronized(() async {
+            await lock.synchronized(() async {
+              throw "throwing";
+            });
+          });
+          fail("should throw");
+        } catch (e) {
+          expect(e is TestFailure, isFalse);
+        }
+        await sleep(1);
       });
     });
 

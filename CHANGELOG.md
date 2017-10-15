@@ -1,8 +1,9 @@
 # Changelog
 
-## 1.0.2
+## 1.1.0
 
 - Fix inner task issue, next outer task will wait for all inner tasks to terminate
+- Properly handle nested thrown error
 
 ## 1.0.0
 

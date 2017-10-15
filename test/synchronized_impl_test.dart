@@ -124,9 +124,25 @@ void main() {
           beforeInnerCompleter.complete();
 
           // no wait here on purpose
-          synchronized("test", () {
-            //await sleep(1);
-          });
+          synchronized("test", () {});
+        });
+        expect(synchronizedLocks, hasLength(1));
+        await beforeInnerCompleter.future;
+        expect(synchronizedLocks, hasLength(1));
+        await future;
+        expect(synchronizedLocks, isEmpty);
+      });
+
+      test('inner_no_wait_async', () async {
+        expect(synchronizedLocks, isEmpty);
+
+        Completer beforeInnerCompleter = new Completer.sync();
+        Future future = synchronized("test", () async {
+          await sleep(1);
+          beforeInnerCompleter.complete();
+
+          // no wait here on purpose
+          synchronized("test", () async {});
         });
         expect(synchronizedLocks, hasLength(1));
         await beforeInnerCompleter.future;

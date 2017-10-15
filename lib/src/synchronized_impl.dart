@@ -24,7 +24,8 @@ class SynchronizedTask {
       innerFutures = [];
     }
     innerFutures.add(future);
-    future.then((_) {
+    // Make sure we catch the error to prevent test error
+    future.catchError((e) {}).whenComplete(() {
       innerFutures.remove(future);
       if (innerFutures.isEmpty) {
         innerFutures = null;
@@ -88,14 +89,6 @@ class SynchronizedLock implements _.SynchronizedLock {
     });
   }
 
-  Future/*<T>*/ _runInner/*<T>*/(computation()) {
-    return new Future.sync(() {
-      if (computation != null) {
-        return computation();
-      }
-    });
-  }
-
   cleanUpTask(SynchronizedTask task) {
     _cleanUp() {
       tasks.remove(task);
@@ -124,9 +117,21 @@ class SynchronizedLock implements _.SynchronizedLock {
     // execute right away
     SynchronizedTask inZoneTask = Zone.current[this];
     if (inZoneTask != null) {
-      Future innerFuture = _runInner(computation);
-      inZoneTask.addInnerFuture(innerFuture);
-      return innerFuture;
+      var result;
+      if (computation != null) {
+        try {
+          result = computation();
+        } catch (e) {
+          // Catch direct error right away
+          return new Future.error(e);
+        }
+        // If it is a future add it to the fask
+        if (result is Future) {
+          inZoneTask.addInnerFuture(result);
+          return result;
+        }
+      }
+      return new Future.value(result);
     }
 
     // get status before modifying our task list
