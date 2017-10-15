@@ -96,11 +96,12 @@ class SynchronizedLock implements _.SynchronizedLock {
     });
   }
 
-  Future cleanUpTask(SynchronizedTask task) {
+  cleanUpTask(SynchronizedTask task) {
     _cleanUp() {
       tasks.remove(task);
       cleanUp();
     }
+
     // mark as complete, wait for inner if any
     // and remove
     task.completer.complete();
