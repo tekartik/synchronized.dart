@@ -125,12 +125,13 @@ class SynchronizedLock implements _.SynchronizedLock {
           // Catch direct error right away
           return new Future.error(e);
         }
-        // If it is a future add it to the fask
+        // If it is a future add it to the task
         if (result is Future) {
           inZoneTask.addInnerFuture(result);
           return result;
         }
       }
+      // Non future block handling
       return new Future.value(result);
     }
 
