@@ -63,7 +63,7 @@ class Demo {
 }
 
 main() async {
-  Demo demo = new Demo();
+  var demo = new Demo();
 
   await demo.test1();
   await demo.test2();

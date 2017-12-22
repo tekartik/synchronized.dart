@@ -1,9 +1,10 @@
-import '../synchronized.dart' as _;
 import 'dart:async';
+
+import '../synchronized.dart' as _;
 
 // utilities
 @deprecated
-devPrint(Object msg) {
+void devPrint(Object msg) {
   print(msg);
 }
 
