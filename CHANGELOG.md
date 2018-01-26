@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+- Use generic instead of 2.0 deprecated comments
+
 ## 1.1.0
 
 - Fix inner task issue, next outer task will wait for all inner tasks to terminate

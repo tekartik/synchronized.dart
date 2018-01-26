@@ -80,7 +80,7 @@ class SynchronizedLock implements _.SynchronizedLock {
     cleanUpLock(this);
   }
 
-  Future/*<T>*/ _run/*<T>*/(SynchronizedTask task, computation()) {
+  Future<T> _run<T>(SynchronizedTask task, computation()) {
     return new Future.sync(() {
       return runZoned(() {
         if (computation != null) {
@@ -111,7 +111,7 @@ class SynchronizedLock implements _.SynchronizedLock {
   }
 
   // implementation
-  Future/*<T>*/ synchronized/*<T>*/(computation(), {Duration timeout}) {
+  Future<T> synchronized<T>(computation(), {Duration timeout}) {
     // Inner case scenario
 
     // If currently in a zone,
@@ -145,8 +145,8 @@ class SynchronizedLock implements _.SynchronizedLock {
     SynchronizedTask task = new SynchronizedTask();
     tasks.add(task);
 
-    Future/*<T>*/ run() {
-      return _run/*<T>*/(task, computation).whenComplete(() {
+    Future<T> run() {
+      return _run<T>(task, computation).whenComplete(() {
         // return value is ignore here but we do want
         // to wait for the all the inner tasks to finished
         cleanUpTask(task);
@@ -219,8 +219,7 @@ cleanUpLock(SynchronizedLock lock) {
 
 // Execute [computation] when lock is available. Only one block can run while
 // the lock is retained. Any object can be a lock, locking is based on identity
-Future/*<T>*/ synchronized/*<T>*/(dynamic lock, computation(),
-    {timeout: null}) {
+Future<T> synchronized<T>(dynamic lock, computation(), {timeout: null}) {
   // Make any object a lock object
   SynchronizedLock lockImpl = makeSynchronizedLock(lock);
 
