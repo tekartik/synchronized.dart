@@ -23,11 +23,12 @@ abstract class SynchronizedLock {
 
   // Execute [computation] when lock is available. Only one asynchronous block can run while
   // the lock is retained
-  Future<T> synchronized<T>(computation(), {Duration timeout});
+  Future<T> synchronized<T>(FutureOr<T> computation(), {Duration timeout});
 }
 
 // Execute [fn] when lock is available. Only one fn can run while
 // the lock is retained. Any object can be a lock, locking is based on identity
-Future<T> synchronized<T>(dynamic lock, computation(), {Duration timeout}) {
+Future<T> synchronized<T>(dynamic lock, FutureOr<T> computation(),
+    {Duration timeout}) {
   return impl.synchronized(lock, computation, timeout: timeout);
 }

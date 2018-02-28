@@ -6,7 +6,7 @@ PreElement outElement;
 
 print(msg) {
   if (outElement == null) {
-    outElement = querySelector("#output");
+    outElement = querySelector("#output") as PreElement;
   }
   outElement.text += "${msg}\n";
 }

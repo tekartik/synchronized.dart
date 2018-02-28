@@ -80,7 +80,7 @@ class SynchronizedLock implements _.SynchronizedLock {
     cleanUpLock(this);
   }
 
-  Future<T> _run<T>(SynchronizedTask task, computation()) {
+  Future<T> _run<T>(SynchronizedTask task, FutureOr<T> computation()) {
     return new Future.sync(() {
       return runZoned(() {
         if (computation != null) {
@@ -111,12 +111,13 @@ class SynchronizedLock implements _.SynchronizedLock {
   }
 
   // implementation
-  Future<T> synchronized<T>(computation(), {Duration timeout}) {
+  @override
+  Future<T> synchronized<T>(FutureOr<T> computation(), {Duration timeout}) {
     // Inner case scenario
 
     // If currently in a zone,
     // execute right away
-    SynchronizedTask inZoneTask = Zone.current[this];
+    SynchronizedTask inZoneTask = Zone.current[this] as SynchronizedTask;
     if (inZoneTask != null) {
       var result;
       if (computation != null) {
@@ -129,11 +130,11 @@ class SynchronizedLock implements _.SynchronizedLock {
         // If it is a future add it to the task
         if (result is Future) {
           inZoneTask.addInnerFuture(result);
-          return result;
+          return result as Future<T>;
         }
       }
       // Non future block handling
-      return new Future.value(result);
+      return new Future.value(result as FutureOr<T>);
     }
 
     // get status before modifying our task list
@@ -196,17 +197,18 @@ SynchronizedLock makeSynchronizedLock(dynamic monitor) {
     throw new ArgumentError('synchronized lock cannot be null');
   }
 
-  // make lock a synchronizedLock object
-  if (!(monitor is SynchronizedLock)) {
-    // get or create Lock object
-    SynchronizedLock synchronizedLock = synchronizedLocks[monitor];
-    if (synchronizedLock == null) {
-      synchronizedLock = new SynchronizedLock.impl(monitor);
-      synchronizedLocks[monitor] = synchronizedLock;
-    }
-    return synchronizedLock;
+  if (monitor is SynchronizedLock) {
+    return monitor;
   }
-  return monitor;
+
+  // make lock a synchronizedLock object
+  // get or create Lock object
+  SynchronizedLock synchronizedLock = synchronizedLocks[monitor];
+  if (synchronizedLock == null) {
+    synchronizedLock = new SynchronizedLock.impl(monitor);
+    synchronizedLocks[monitor] = synchronizedLock;
+  }
+  return synchronizedLock;
 }
 
 cleanUpLock(SynchronizedLock lock) {
@@ -219,7 +221,8 @@ cleanUpLock(SynchronizedLock lock) {
 
 // Execute [computation] when lock is available. Only one block can run while
 // the lock is retained. Any object can be a lock, locking is based on identity
-Future<T> synchronized<T>(dynamic lock, computation(), {timeout: null}) {
+Future<T> synchronized<T>(dynamic lock, FutureOr<T> computation(),
+    {Duration timeout: null}) {
   // Make any object a lock object
   SynchronizedLock lockImpl = makeSynchronizedLock(lock);
 
