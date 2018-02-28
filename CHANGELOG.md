@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- implicit-casts: false (testing dart2 support)
+
 ## 1.2.0
 
 - Use generic instead of 2.0 deprecated comments
