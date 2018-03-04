@@ -16,6 +16,8 @@ class Lock extends SynchronizedLock {
 
 void main() {
   group('synchronized', () {
+    test('demo', () {});
+
     test('order', () async {
       Lock lock = new Lock();
       List<int> list = [];
@@ -118,30 +120,6 @@ void main() {
         list.add(4);
       });
       expect(list, [1, 2, 3, 4]);
-    });
-
-    group('perf', () {
-      test('10000 operations', () async {
-        Stopwatch sw = new Stopwatch();
-        sw.start();
-        int count = 10000;
-        Lock lock = new Lock();
-        List<Future> futures = [];
-        List<int> list = [];
-        for (int i = 0; i < count; i++) {
-          //await sleep(1);
-          Future future = lock.synchronized(() async {
-            list.add(i);
-          });
-          futures.add(future);
-        }
-        await Future.wait(futures);
-        expect(list, new List.generate(count, (i) => i));
-        print(sw.elapsed);
-        // 2016-10-13 10000 0:00:00.692360 v0.1.0
-        // 2016-10-05 10000 0:00:00.971284
-        // 2017-10-15 10000 0:00:00.944471
-      });
     });
 
     group('any_object', () {

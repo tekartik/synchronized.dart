@@ -45,97 +45,13 @@ class SynchronizedTask {
   SynchronizedTask();
 }
 
-// You can define synchonized lock object directly
-// for convenient access
-class SynchronizedLock implements _.SynchronizedLock {
-  Object monitor;
-
-  SynchronizedLock.impl([this.monitor]);
-
-  factory SynchronizedLock([Object monitor]) {
-    if (monitor == null) {
-      return new SynchronizedLock.impl();
-    } else {
-      return makeSynchronizedLock(monitor);
-    }
-  }
-
+abstract class LockBase implements _.Lock {
   List<SynchronizedTask> tasks = new List();
 
-  bool get inZone => (Zone.current[this] != null);
-
-  // return true if the block is currently locked
-  bool get locked => tasks.length > 0 && (!inZone);
-
-  // testing only
-  Future get ready {
-    if (!locked) {
-      return new Future.value();
-    }
-    return tasks.last.future;
-  }
-
-  // cleanup global map if needed
-  void cleanUp() {
-    cleanUpLock(this);
-  }
-
-  Future<T> _run<T>(SynchronizedTask task, FutureOr<T> computation()) {
-    return new Future.sync(() {
-      return runZoned(() {
-        if (computation != null) {
-          return computation();
-        }
-      }, zoneValues: {this: task});
-    });
-  }
-
-  cleanUpTask(SynchronizedTask task) {
-    _cleanUp() {
-      tasks.remove(task);
-      cleanUp();
-    }
-
-    // mark as complete, wait for inner if any
-    // and remove
-    task.completer.complete();
-
-    // wait for inner before cleaning
-    if (task.innerFutures != null) {
-      Future.wait(task.innerFutures).whenComplete(() {
-        _cleanUp();
-      });
-    } else {
-      _cleanUp();
-    }
-  }
-
-  // implementation
-  @override
-  Future<T> synchronized<T>(FutureOr<T> computation(), {Duration timeout}) {
+  // implementation when running
+  Future<T> _createAndRunTask<T>(FutureOr<T> computation(),
+      {Duration timeout}) {
     // Inner case scenario
-
-    // If currently in a zone,
-    // execute right away
-    SynchronizedTask inZoneTask = Zone.current[this] as SynchronizedTask;
-    if (inZoneTask != null) {
-      var result;
-      if (computation != null) {
-        try {
-          result = computation();
-        } catch (e) {
-          // Catch direct error right away
-          return new Future.error(e);
-        }
-        // If it is a future add it to the task
-        if (result is Future) {
-          inZoneTask.addInnerFuture(result);
-          return result as Future<T>;
-        }
-      }
-      // Non future block handling
-      return new Future.value(result as FutureOr<T>);
-    }
 
     // get status before modifying our task list
     bool locked = this.locked;
@@ -147,7 +63,7 @@ class SynchronizedLock implements _.SynchronizedLock {
     tasks.add(task);
 
     Future<T> run() {
-      return _run<T>(task, computation).whenComplete(() {
+      return _runTask<T>(task, computation).whenComplete(() {
         // return value is ignore here but we do want
         // to wait for the all the inner tasks to finished
         cleanUpTask(task);
@@ -183,8 +99,143 @@ class SynchronizedLock implements _.SynchronizedLock {
     });
   }
 
+  // testing only
+  Future get ready {
+    if (!locked) {
+      return new Future.value();
+    }
+    return tasks.last.future;
+  }
+
+  Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation());
+
+  removeTask(SynchronizedTask task) {
+    tasks.remove(task);
+  }
+
+  cleanUpTask(SynchronizedTask task) {
+    _cleanUp() {
+      removeTask(task);
+    }
+
+    // mark as complete, wait for inner if any
+    // and remove
+    task.completer.complete();
+
+    // wait for inner before cleaning
+    if (task.innerFutures != null) {
+      Future.wait(task.innerFutures).whenComplete(() {
+        _cleanUp();
+      });
+    } else {
+      _cleanUp();
+    }
+  }
+}
+
+class Lock extends LockBase {
+  bool taskRunning = false;
+
   @override
-  String toString() => 'SynchronizedLock[${identityHashCode(this)}]';
+  bool get locked => tasks.length > 0 && taskRunning;
+
+  @override
+  Future<T> synchronized<T>(FutureOr<T> computation(), {Duration timeout}) {
+    return _createAndRunTask(computation, timeout: timeout);
+  }
+
+  Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation()) {
+    FutureOr<T> result;
+    taskRunning = true;
+    try {
+      result = computation();
+    } catch (_) {
+      taskRunning = false;
+      rethrow;
+    }
+    if (result is Future<T>) {
+      return result.whenComplete(() {
+        taskRunning = false;
+      });
+    } else {
+      return new Future.value(result);
+    }
+  }
+
+  @override
+  String toString() => 'Lock[${identityHashCode(this)}]';
+}
+
+// You can define synchonized lock object directly
+// for convenient access
+class SynchronizedLock extends LockBase implements _.SynchronizedLock {
+  Object monitor;
+
+  SynchronizedLock.impl([this.monitor]);
+
+  factory SynchronizedLock([Object monitor]) {
+    if (monitor == null) {
+      return new SynchronizedLock.impl();
+    } else {
+      return makeSynchronizedLock(monitor);
+    }
+  }
+
+  bool get inZone => (Zone.current[this] != null);
+
+  // return true if the block is currently locked
+  bool get locked => tasks.length > 0 && (!inZone);
+
+  @override
+  Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation()) {
+    return new Future.sync(() {
+      return runZoned(() {
+        if (computation != null) {
+          return computation();
+        }
+      }, zoneValues: {this: task});
+    });
+  }
+
+  // implementation
+  @override
+  Future<T> synchronized<T>(FutureOr<T> computation(), {Duration timeout}) {
+    // Inner case scenario
+
+    // If currently in a zone,
+    // execute right away
+    SynchronizedTask inZoneTask = Zone.current[this] as SynchronizedTask;
+    if (inZoneTask != null) {
+      var result;
+      if (computation != null) {
+        try {
+          result = computation();
+        } catch (e) {
+          // Catch direct error right away
+          return new Future.error(e);
+        }
+        // If it is a future add it to the task
+        if (result is Future) {
+          inZoneTask.addInnerFuture(result);
+          return result as Future<T>;
+        }
+      }
+      // Non future block handling
+      return new Future.value(result as FutureOr<T>);
+    }
+
+    return _createAndRunTask(computation, timeout: timeout);
+  }
+
+  @override
+  void removeTask(SynchronizedTask task) {
+    super.removeTask(task);
+    // clean up global lock is needed
+    cleanUpLock(this);
+  }
+
+  @override
+  String toString() => 'SynchronizedLock[${monitor ?? identityHashCode(this)}]';
 }
 
 // list of waiting/running locks

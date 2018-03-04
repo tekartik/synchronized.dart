@@ -52,14 +52,26 @@ Any object can become a locker, so in a class method you can use
       // do some stuff
     });
 
-A SynchronizedLock object has a locked helper method
+A SynchronizedLock object has a locked helper method, it is reentrant and uses Zone
 
-    var lock = new SynchronizedLock();
-    if (!lock.locked) {
-      lock.synchronized(() async {
-        // do some stuff
-      });
-    }
+````
+var lock = new SynchronizedLock();
+lock.synchronized(() async {
+  // do some stuff
+  // ... 
+});
+````
+        
+A basic lock is not reentrant by default and does not use Zone. It behaves like an async executor with a pool capacity
+of 1
+
+````
+var lock = Lock();
+lock.synchronized(() async {
+  // do some stuff
+  // ...
+});
+````
     
 The return value is preserved
 
@@ -69,8 +81,8 @@ The return value is preserved
     
 ## How it works
 
-It uses `Zone` to know in which context a block is running in order to be reentrant.
-It maintains a list of active locks and tasks to run them consecutively
+`SynchronizedLock` uses `Zone` to know in which context a block is running in order to be reentrant.
+Locks maintain a list of active locks and tasks to run them consecutively
 
 ## Example
 

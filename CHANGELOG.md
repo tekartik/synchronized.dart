@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- Add non-reentrant lock that do not use Zone
+
 ## 1.2.1
 
 - implicit-casts: false (testing dart2 support)
