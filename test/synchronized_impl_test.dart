@@ -5,7 +5,7 @@
 import 'dart:async';
 
 import 'package:synchronized/src/synchronized_impl.dart';
-//import 'package:synchronized/synchronized.dart';
+import 'package:synchronized/synchronized.dart' as common;
 import 'package:dev_test/test.dart';
 
 // To make tests less verbose...
@@ -17,6 +17,16 @@ void main() {
   group('synchronized_impl', () {
     group('Lock', () {
       group('Lock', () {
+        test('normal', () {
+          var lock = new common.Lock();
+          expect(lock, new isInstanceOf<Lock>());
+        });
+
+        test('reentrant', () {
+          var lock = new common.Lock(reentrant: true);
+          expect(lock, new isInstanceOf<SynchronizedLock>());
+        });
+
         test('taskRunning', () {});
         test('toString', () {
           var lock = new Lock();

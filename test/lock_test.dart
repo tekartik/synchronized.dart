@@ -6,12 +6,33 @@ import 'dart:async';
 
 import 'package:dev_test/test.dart';
 import 'package:synchronized/src/synchronized_impl.dart' show sleep;
-import 'package:synchronized/synchronized.dart';
+import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+
 import 'test_common.dart';
 
 main() {
   group('Lock', () {
     lockMain();
+
+    test('reentrant', () async {
+      Lock lock = new Lock(reentrant: true);
+      await lock.synchronized(() async {
+        await lock.synchronized(() {});
+      });
+    });
+
+    test('non-reentrant', () async {
+      Lock lock = new Lock();
+      var exception;
+      await lock.synchronized(() async {
+        try {
+          await lock.synchronized(() {}, timeout: new Duration(seconds: 1));
+        } catch (_exception) {
+          exception = _exception;
+        }
+      });
+      expect(exception, new isInstanceOf<TimeoutException>());
+    });
   });
 }
 
@@ -44,27 +65,6 @@ void lockMain([LockFactory lockFactory]) {
       expect(list, [1, 2, 3]);
     });
 
-    // only for reentrant-lock
-    test('nested', () async {
-      Lock lock = newLock();
-      if (lock is SynchronizedLock) {
-        List<int> list = [];
-        Future future1 = lock.synchronized(() async {
-          list.add(1);
-          await lock.synchronized(() async {
-            await new Duration(milliseconds: 10);
-            list.add(2);
-          });
-          list.add(3);
-        });
-        Future future2 = lock.synchronized(() {
-          list.add(4);
-        });
-        await Future.wait([future1, future2]);
-        expect(list, [1, 2, 3, 4]);
-      }
-    });
-
     test('queued_value', () async {
       Lock lock = newLock();
       Future<String> value1 = lock.synchronized(() async {
@@ -73,65 +73,6 @@ void lockMain([LockFactory lockFactory]) {
       });
       expect(await lock.synchronized(() => "value2"), "value2");
       expect(await value1, "value1");
-    });
-
-    test('inner_value', () async {
-      Lock lock = newLock();
-      if (lock is SynchronizedLock) {
-        expect(
-            await lock.synchronized(() async {
-              expect(
-                  await lock.synchronized(() {
-                    return "inner";
-                  }),
-                  "inner");
-              return "outer";
-            }),
-            "outer");
-      }
-    });
-
-    test('inner_vs_outer', () async {
-      Lock lock = newLock();
-      if (lock is SynchronizedLock) {
-        List<int> list = [];
-        lock.synchronized(() async {
-          await sleep(1);
-          list.add(1);
-          // don't wait here on purpose
-          // to make sure this task is started first
-          lock.synchronized(() async {
-            await sleep(1);
-            list.add(2);
-          });
-        });
-        await lock.synchronized(() async {
-          list.add(3);
-        });
-        expect(list, [1, 2, 3]);
-      }
-    });
-
-    test('inner_no_wait', () async {
-      Lock lock = newLock();
-      if (lock is SynchronizedLock) {
-        List<int> list = [];
-        await lock.synchronized(() async {
-          await sleep(1);
-          list.add(1);
-          // don't wait here on purpose
-          // to make sure this task is started first
-          lock.synchronized(() async {
-            await sleep(1);
-            list.add(3);
-          });
-        });
-        list.add(2);
-        await lock.synchronized(() async {
-          list.add(4);
-        });
-        expect(list, [1, 2, 3, 4]);
-      }
     });
 
     group('perf', () {
@@ -170,6 +111,7 @@ void lockMain([LockFactory lockFactory]) {
             j += i;
           });
         }
+        // final wait
         await lock.synchronized(() => {});
         print("syncd ${sw.elapsed}");
         expect(j, count * (count - 1) / 2);
@@ -184,6 +126,15 @@ void lockMain([LockFactory lockFactory]) {
          none 0:00:00.002337
         await 0:00:00.838564
         syncd 0:00:20.403227
+
+        00:00 +0: test/lock_test.dart: Lock synchronized perf 10000 operations
+         none 0:00:00.000466
+        await 0:00:00.384491
+        syncd 0:00:00.486831
+        00:01 +1: test/synchronized_lock_test.dart: SynchronizedLock synchronized perf 10000 operations
+         none 0:00:00.000405
+        await 0:00:00.298768
+        syncd 0:00:00.516049
 
         */
 
@@ -323,41 +274,6 @@ void lockMain([LockFactory lockFactory]) {
           fail("should throw");
         } catch (e) {
           expect(e is TestFailure, isFalse);
-        }
-      });
-
-      test('inner_throw', () async {
-        Lock lock = newLock();
-        if (lock is SynchronizedLock) {
-          try {
-            await lock.synchronized(() async {
-              await lock.synchronized(() {
-                throw "throwing";
-              });
-            });
-            fail("should throw");
-          } catch (e) {
-            expect(e is TestFailure, isFalse);
-          }
-
-          await lock.synchronized(() {});
-        }
-      });
-
-      test('inner_throw_async', () async {
-        Lock lock = newLock();
-        if (lock is SynchronizedLock) {
-          try {
-            await lock.synchronized(() async {
-              await lock.synchronized(() async {
-                throw "throwing";
-              });
-            });
-            fail("should throw");
-          } catch (e) {
-            expect(e is TestFailure, isFalse);
-          }
-          await sleep(1);
         }
       });
     });

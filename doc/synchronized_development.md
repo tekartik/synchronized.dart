@@ -7,6 +7,8 @@
 * string mode / implicit-casts: false
 
 ````
+# quick run before commiting
+
 dartfmt -w .
 dartanalyzer .
 pub run test
