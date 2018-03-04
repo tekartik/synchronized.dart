@@ -2,7 +2,7 @@
 
 ## Guidelines
 
-* run test
+* run tests
 * no warning
 * string mode / implicit-casts: false
 

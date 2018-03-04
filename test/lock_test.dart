@@ -231,6 +231,21 @@ void lockMain([LockFactory lockFactory]) {
       });
     });
 
+    test('two_locks', () async {
+
+      var lock1 = newLock();
+      var lock2 = newLock();
+
+      bool ok;
+      await lock1.synchronized(() async {
+        await lock2.synchronized(() async {
+          expect(lock1.locked, isTrue);
+          expect(lock2.locked, isTrue);
+          ok = true;
+        });
+      });
+      expect(ok, isTrue);
+    });
     group('error', () {
       test('throw', () async {
         Lock lock = newLock();
