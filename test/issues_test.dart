@@ -5,7 +5,7 @@
 import 'dart:async';
 
 import 'package:dev_test/test.dart';
-import 'package:synchronized/src/synchronized_impl.dart' show sleep;
+import 'package:synchronized/src/utils.dart';
 import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
 
 void main() {

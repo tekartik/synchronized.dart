@@ -1,14 +1,6 @@
-import 'dart:async';
+import 'utils.dart';
 
 import '../synchronized.dart' as _;
-
-// utilities
-@deprecated
-void devPrint(Object msg) {
-  print(msg);
-}
-
-Future sleep(int ms) => new Future.delayed(new Duration(milliseconds: ms));
 
 // A [SynchronizedTask] only complete when all precedent task complete
 // i.e. in case of timeout
@@ -43,6 +35,9 @@ class SynchronizedTask {
       });
 
   SynchronizedTask();
+
+  @override
+  String toString() => "SynchronizedTask[${identityHashCode(this)}]";
 }
 
 abstract class LockBase implements _.Lock {

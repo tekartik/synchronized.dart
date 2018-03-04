@@ -1,4 +1,5 @@
 import 'package:synchronized/synchronized.dart';
+export 'package:synchronized/src/utils.dart';
 
 // Create by default a non-reentrant lock
 class LockFactory {

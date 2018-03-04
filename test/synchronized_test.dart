@@ -5,9 +5,9 @@
 import 'dart:async';
 
 import 'package:dev_test/test.dart';
-import 'package:synchronized/src/synchronized_impl.dart'
-    show SynchronizedLock, sleep;
+import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLock;
 import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+import 'test_common.dart';
 
 // To make tests less verbose...
 class Lock extends SynchronizedLock {

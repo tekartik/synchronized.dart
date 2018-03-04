@@ -2,10 +2,11 @@
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-import 'package:synchronized/src/synchronized_impl.dart' show sleep;
-import 'lock_test.dart';
+
 import 'package:dev_test/test.dart';
 import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+
+import 'lock_test.dart';
 import 'test_common.dart';
 
 main() {
@@ -88,6 +89,27 @@ main() {
         list.add(4);
       });
       expect(list, [1, 2, 3, 4]);
+    });
+
+    test('two_locks', () async {
+      var lock1 = newLock();
+      var lock2 = newLock();
+
+      expect(Zone.current[lock1], isNull);
+
+      bool ok;
+      await lock1.synchronized(() async {
+        expect(Zone.current[lock1], isNotNull);
+        expect(Zone.current[lock2], isNull);
+        await lock2.synchronized(() async {
+          expect(Zone.current[lock2], isNotNull);
+          expect(Zone.current[lock1], isNotNull);
+          expect(lock1.locked, isFalse);
+          expect(lock2.locked, isFalse);
+          ok = true;
+        });
+      });
+      expect(ok, isTrue);
     });
 
     group('error', () {

@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:synchronized/src/synchronized_impl.dart';
+import 'package:synchronized/src/utils.dart';
 import 'package:synchronized/synchronized.dart' as common;
 import 'package:dev_test/test.dart';
 

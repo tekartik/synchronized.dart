@@ -5,7 +5,7 @@
 import 'dart:async';
 
 import 'package:dev_test/test.dart';
-import 'package:synchronized/src/synchronized_impl.dart' show sleep;
+import 'package:synchronized/src/utils.dart';
 import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
 
 import 'test_common.dart';
@@ -32,6 +32,20 @@ main() {
         }
       });
       expect(exception, new isInstanceOf<TimeoutException>());
+    });
+
+    test('two_locks', () async {
+      var lock1 = new Lock();
+      var lock2 = new Lock();
+
+      bool ok;
+      await lock1.synchronized(() async {
+        await lock2.synchronized(() async {
+          expect(lock2.locked, isTrue);
+          ok = true;
+        });
+      });
+      expect(ok, isTrue);
     });
   });
 }
@@ -231,21 +245,6 @@ void lockMain([LockFactory lockFactory]) {
       });
     });
 
-    test('two_locks', () async {
-
-      var lock1 = newLock();
-      var lock2 = newLock();
-
-      bool ok;
-      await lock1.synchronized(() async {
-        await lock2.synchronized(() async {
-          expect(lock1.locked, isTrue);
-          expect(lock2.locked, isTrue);
-          ok = true;
-        });
-      });
-      expect(ok, isTrue);
-    });
     group('error', () {
       test('throw', () async {
         Lock lock = newLock();
