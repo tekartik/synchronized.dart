@@ -124,9 +124,13 @@ would print
 
 ## Features and bugs
 
-Please file feature requests and bugs at the [issue tracker][tracker] or [contact me][contact_me]
+Please feel free to: 
+* file feature requests and bugs at the [issue tracker][tracker]
+* or [contact me][contact_me]
+* [How to][how_to] guide
 
-* [tracker]: https://github.com/tekartik/synchronized.dart/issues
-* [contact_me]: http://contact.tekartik.com/
-* [How to](https://github.com/tekartik/synchronized.dart/blob/master/doc/how_to.md) guide
+
+[tracker]: https://github.com/tekartik/synchronized.dart/issues
+[contact_me]: http://contact.tekartik.com/
+[how_to]: https://github.com/tekartik/synchronized.dart/blob/master/doc/how_to.md
 

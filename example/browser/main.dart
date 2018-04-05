@@ -55,6 +55,15 @@ class Demo {
     await new Future.delayed(new Duration(milliseconds: 50));
   }
 
+  Future test4() async {
+    print("basic");
+    var lock = new Lock();
+    await lock.synchronized(() async {
+      // do you stuff
+      // await ...
+    });
+  }
+
   Future readme1() async {
     synchronized(this, () async {
       // do some stuff
@@ -84,6 +93,7 @@ main() async {
   await demo.test1();
   await demo.test2();
   await demo.test3();
+  await demo.test4();
   await demo.readme1();
   await demo.readme1();
   await demo.readme3();
