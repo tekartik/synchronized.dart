@@ -25,6 +25,7 @@ For single process (single isolate) accessing some resources (database..), it ca
 
  * Synchronized block are reentrant
  * Timeout support
+ * Support for non-reentrant lock (not using Zone)
  * Consistent behavior (i.e. if it is unlocked calling synchronized grab the lock)
  * Values and Errors are properly reported to the caller
  * Work on Browser and DartVM
@@ -75,7 +76,7 @@ lock.synchronized(() async {
     
 The return value is preserved
 
-    int value = await synchronized(this, () {
+    int value = await lock.synchronized(() {
       return 1;
     });
     
@@ -114,8 +115,8 @@ would print
     
 while doing
 
-    synchronized(this, write1234);
-    synchronized(this, write1234);
+    lock.synchronized(write1234);
+    lock.synchronized(write1234);
 
 would print
 
@@ -125,5 +126,7 @@ would print
 
 Please file feature requests and bugs at the [issue tracker][tracker] or [contact me][contact_me]
 
-[tracker]: https://github.com/tekartik/synchronized.dart/issues
-[contact_me]: http://contact.tekartik.com/
+* [tracker]: https://github.com/tekartik/synchronized.dart/issues
+* [contact_me]: http://contact.tekartik.com/
+* [How to](https://github.com/tekartik/synchronized.dart/blob/master/doc/how_to.md) guide
+
