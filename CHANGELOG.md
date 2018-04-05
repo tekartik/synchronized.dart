@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+- Re-use non-reentrant lock in synchronized method
+
 ## 1.3.0
 
 - Add non-reentrant lock that do not use Zone
