@@ -219,7 +219,7 @@ void lockMain([LockFactory lockFactory]) {
         bool ran4 = false;
         // hold for 5ms
         lock.synchronized(() async {
-          await new Future.delayed(new Duration(milliseconds: 50));
+          await new Future.delayed(new Duration(milliseconds: 100));
         });
 
         try {
@@ -232,20 +232,20 @@ void lockMain([LockFactory lockFactory]) {
           await lock.synchronized(() async {
             await sleep(5000);
             ran2 = true;
-          }, timeout: new Duration(milliseconds: 2));
+          }, timeout: new Duration(milliseconds: 1));
           // fail('should fail');
+        } on TimeoutException catch (_) {}
+
+        try {
+          lock.synchronized(() {
+            ran4 = true;
+          }, timeout: new Duration(milliseconds: 500));
         } on TimeoutException catch (_) {}
 
         // waiting long enough
         await lock.synchronized(() {
           ran3 = true;
-        }, timeout: new Duration(milliseconds: 100));
-
-        try {
-          lock.synchronized(() {
-            ran4 = true;
-          }, timeout: new Duration(milliseconds: 100));
-        } on TimeoutException catch (_) {}
+        }, timeout: new Duration(milliseconds: 500));
 
         expect(ran1, isFalse);
         expect(ran2, isFalse);
