@@ -34,6 +34,41 @@ void main() {
           expect("$lock", startsWith("Lock["));
           expect("$lock", endsWith("]"));
         });
+        group('makeLock', () {
+          test('equals', () async {
+            var lock = new Lock();
+            var lockOther = new Lock();
+            expect(lock, isNot(same(lockOther)));
+            var lock1 = makeLock(lock);
+            var lock2 = makeLock(lock);
+            expect(lock1, same(lock2));
+            expect(lock1, same(lock));
+
+            lock1 = makeLock("test");
+            lock2 = makeLock("test");
+            expect(lock1, same(lock2));
+            expect(lock1, new isInstanceOf<SynchronizedLock>());
+          });
+          test('simple', () async {
+            synchronizedLocks.clear();
+            expect(synchronizedLocks, isEmpty);
+            var lock = new Lock();
+            Lock lockImpl = makeLock(lock) as Lock;
+            bool hasRan = false;
+            expect(lockImpl.taskRunning, isFalse);
+            await lockImpl.synchronized(() async {
+              hasRan = true;
+              expect(lockImpl.taskRunning, isTrue);
+            });
+            expect(lockImpl.taskRunning, isFalse);
+            expect(hasRan, isTrue);
+            expect(synchronizedLocks, isEmpty);
+
+            var lock2Impl = makeLock("test") as SynchronizedLock;
+            expect(lock2Impl.monitor, "test");
+            expect(synchronizedLocks, hasLength(1));
+          });
+        });
       });
     });
 
@@ -47,19 +82,27 @@ void main() {
           expect(lock1, same(lock3));
           // clear for next tests
           synchronizedLocks.clear();
+
+          // Make a synchronized lock from a lock
+          var lock = new Lock();
+          lock1 = makeSynchronizedLock(lock);
+          lock2 = makeSynchronizedLock(lock);
+          expect(lock1, same(lock2));
+          expect(lock1, isNot(same(lock)));
         });
         test('simple', () async {
+          synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
           SynchronizedLock lockImpl = makeSynchronizedLock("test");
           expect(lockImpl.monitor, "test");
           expect(synchronizedLocks, hasLength(1));
-          // clear for next tests
-          synchronizedLocks.clear();
         });
       });
 
       group('SynchronizedLock', () {
         test('equals', () async {
+          synchronizedLocks.clear();
+
           SynchronizedLock lock1 = new SynchronizedLock();
           SynchronizedLock lock2 = new SynchronizedLock();
 
@@ -74,13 +117,13 @@ void main() {
         });
 
         test('toString', () {
+          synchronizedLocks.clear();
           var lock = new SynchronizedLock('test');
           expect("$lock", "SynchronizedLock[test]");
-          // clear for next tests
-          synchronizedLocks.clear();
         });
 
         test('ready', () async {
+          synchronizedLocks.clear();
           SynchronizedLock lock = new SynchronizedLock();
           await lock.ready;
 
@@ -104,6 +147,7 @@ void main() {
       });
       group('synchronizedLocks', () {
         test('content', () async {
+          synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
           Future future = synchronized("test", () async {
@@ -115,6 +159,7 @@ void main() {
         });
 
         test('content_2', () async {
+          synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
           synchronized("test", () async {
@@ -129,6 +174,7 @@ void main() {
         });
 
         test('inner', () async {
+          synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
           Completer beforeInnerCompleter = new Completer.sync();
@@ -147,6 +193,7 @@ void main() {
         });
 
         test('inner_no_wait', () async {
+          synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
           Completer beforeInnerCompleter = new Completer.sync();
@@ -165,6 +212,7 @@ void main() {
         });
 
         test('inner_no_wait_async', () async {
+          synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
           Completer beforeInnerCompleter = new Completer.sync();

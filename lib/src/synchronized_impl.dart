@@ -237,6 +237,15 @@ class SynchronizedLock extends LockBase implements _.SynchronizedLock {
 // empty when nothing running
 Map<Object, SynchronizedLock> synchronizedLocks = {};
 
+// Return the lock itself if the monitor is a lock
+// otherwiser create a re-entrant lock
+_.Lock makeLock(dynamic monitor) {
+  if (monitor is Lock) {
+    return monitor;
+  }
+  return makeSynchronizedLock(monitor);
+}
+
 // Make any object a synchronized lock
 SynchronizedLock makeSynchronizedLock(dynamic monitor) {
   if (monitor == null) {
@@ -270,7 +279,7 @@ cleanUpLock(SynchronizedLock lock) {
 Future<T> synchronized<T>(dynamic lock, FutureOr<T> computation(),
     {Duration timeout: null}) {
   // Make any object a lock object
-  SynchronizedLock lockImpl = makeSynchronizedLock(lock);
+  var lockImpl = makeLock(lock);
 
   return lockImpl.synchronized(computation, timeout: timeout);
 }

@@ -14,6 +14,13 @@ dartanalyzer .
 pub run test
 ````
     
+## Use the git version
+
+```
+dependency_overrides:
+  synchronized:
+    git: git://github.com/tekartik/synchronized.dart
+```
 ## Run perf test
 
     pub run test -n "10000 operations" -j 1
