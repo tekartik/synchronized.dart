@@ -18,7 +18,7 @@ The goal is to ensure for a single process (single isolate) that some asynchrono
 without conflict. It won't solve cross-process (or cross-isolate) synchronization.
 
 For single process (single isolate) accessing some resources (database..), it can help to
- * Provide transaction on database system that don't have transaction mechanism (mongodbn, file system)
+ * Provide transaction on database system that don't have transaction mechanism (mongodb, file system)
  * In html application make sure some asynchronous UI operation are not conflicting (login, transition)
 
 ## Feature
@@ -28,10 +28,10 @@ For single process (single isolate) accessing some resources (database..), it ca
  * Support for non-reentrant lock (not using Zone)
  * Consistent behavior (i.e. if it is unlocked calling synchronized grab the lock)
  * Values and Errors are properly reported to the caller
- * Work on Browser and DartVM
+ * Work on Browser, DartVM and Flutter
  * No dependencies (other than the sdk itself)
  
-It differs from the `pool` package used with a resource count of 1 by being reentrant
+It differs from the `pool` package used with a resource count of 1 by supporting a reentrant option
 
 ## Usage
 
@@ -39,9 +39,9 @@ A simple usage example:
 
     import 'package:synchronized/synchronized.dart';
 
-    main() {
-      var lock = new Object();
-      synchronized(lock, () async {
+    main() async {
+      var lock = new Lock();
+      await lock.synchronized(() async {
         // Only this block can run (once) until done 
         ...
       });
@@ -53,13 +53,17 @@ Any object can become a locker, so in a class method you can use
       // do some stuff
     });
 
-A SynchronizedLock object has a locked helper method, it is reentrant and uses Zone
+If you need a re-entrant lock you can use
 
 ````
-var lock = new SynchronizedLock();
-lock.synchronized(() async {
+var lock = new Lock(reentrant: true);
+await lock.synchronized(() async {
   // do some stuff
   // ... 
+  
+  await lock.synchronized(() async {
+    // other stuff
+  }
 });
 ````
         
@@ -82,8 +86,9 @@ The return value is preserved
     
 ## How it works
 
-`SynchronizedLock` uses `Zone` to know in which context a block is running in order to be reentrant.
-Locks maintain a list of active locks and tasks to run them consecutively
+Each `Lock` object keep a list of pending tasks. The next tasks is executed once the previous one is done
+
+Re-entrant locks uses `Zone` to know in which context a block is running in order to be reentrant.
 
 ## Example
 
