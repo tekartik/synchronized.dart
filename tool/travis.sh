@@ -8,4 +8,4 @@ dartanalyzer --fatal-warnings example lib test
 pub run test -p vm,firefox,chrome
 
 # test dartdevc support
-pub build example/browser --web-compiler=dartdevc
+# pub build example/browser --web-compiler=dartdevc
