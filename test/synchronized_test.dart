@@ -19,6 +19,7 @@ void main() {
     test('demo', () {});
 
     test('order', () async {
+      var isNewTiming = await isDart2AsyncTiming();
       Lock lock = new Lock();
       List<int> list = [];
       Future future1 = lock.synchronized(() async {
@@ -33,7 +34,11 @@ void main() {
         list.add(3);
         return 1234;
       });
-      expect(list, isEmpty);
+      if (isNewTiming) {
+        expect(list, [1]);
+      } else {
+        expect(list, isEmpty);
+      }
       await Future.wait([future1, future2, future3]);
       expect(await future1, isNull);
       expect(await future2, "text");

@@ -9,6 +9,8 @@ import 'package:synchronized/src/utils.dart';
 import 'package:synchronized/synchronized.dart' as common;
 import 'package:dev_test/test.dart';
 
+import 'test_common.dart';
+
 // To make tests less verbose...
 class _Lock extends SynchronizedLock {
   _Lock() : super.impl();
@@ -285,13 +287,18 @@ void main() {
         });
 
         test('async', () async {
+          var isNewTiming = await isDart2AsyncTiming();
           _Lock lock = new _Lock();
           int value;
           Future future = lock.synchronized(() async {
             value = 1;
           });
           // A sync method is executed right away!
-          expect(value, isNull);
+          if (isNewTiming) {
+            expect(value, 1);
+          } else {
+            expect(value, isNull);
+          }
           await future;
         });
       });

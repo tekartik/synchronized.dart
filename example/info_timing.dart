@@ -1,19 +1,5 @@
 import 'dart:async';
 
-import 'package:synchronized/synchronized.dart';
-export 'package:synchronized/src/utils.dart';
-
-// Create by default a non-reentrant lock
-class LockFactory {
-  Lock newLock() => new Lock();
-}
-
-// Create a reentrant lock (use Zone)
-class SynchronizedLockFactory extends LockFactory {
-  @override
-  Lock newLock() => new SynchronizedLock();
-}
-
 bool _isDart2AsyncTiming;
 Future<bool> isDart2AsyncTiming() async {
   if (_isDart2AsyncTiming == null) {
@@ -33,4 +19,8 @@ Future<bool> isDart2AsyncTiming() async {
     }
   }
   return _isDart2AsyncTiming;
+}
+
+main() async {
+  print('isDart2AsyncTiming ${await isDart2AsyncTiming()}');
 }
