@@ -11,7 +11,7 @@ import 'test_common.dart';
 import 'test_compat.dart';
 
 main() {
-  var lockFactory = new SynchronizedLockFactory();
+  var lockFactory = new ReentrantLockFactory();
   Lock newLock() => lockFactory.newLock();
 
   group('SynchronizedLock', () {

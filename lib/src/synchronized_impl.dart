@@ -160,6 +160,12 @@ class Lock extends LockBase {
 
   @override
   String toString() => 'Lock[${identityHashCode(this)}]';
+
+  // For standard lock it returns whether currently we have
+  // a synchronized section running
+  // always true from within a section
+  @override
+  bool get inLock => locked;
 }
 
 // You can define synchonized lock object directly
@@ -177,10 +183,11 @@ class ReentrantLock extends LockBase implements _.SynchronizedLockCompat {
     }
   }
 
-  bool get inZone => (Zone.current[this] != null);
+  @deprecated
+  bool get inZone => inLock;
 
   // return true if the block is currently locked
-  bool get locked => tasks.length > 0 && (!inZone);
+  bool get locked => tasks.length > 0 && (!inLock);
 
   @override
   Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation()) {
@@ -232,6 +239,9 @@ class ReentrantLock extends LockBase implements _.SynchronizedLockCompat {
 
   @override
   String toString() => 'SynchronizedLock[${monitor ?? identityHashCode(this)}]';
+
+  @override
+  bool get inLock => (Zone.current[this] != null);
 }
 
 // list of waiting/running locks

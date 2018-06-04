@@ -19,6 +19,10 @@ abstract class Lock {
   // return true if the lock is currently locked
   bool get locked;
 
+  // for reentrant, test whether we are currently in the synchronized section
+  // for non reentrant, it returns the [locked] status
+  bool get inLock;
+
   factory Lock({bool reentrant = false}) {
     if (reentrant == true) {
       return new impl.ReentrantLock();

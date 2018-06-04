@@ -16,7 +16,9 @@ main() {
 
     test('reentrant', () async {
       Lock lock = new Lock(reentrant: true);
+      expect(lock.inLock, isFalse);
       await lock.synchronized(() async {
+        expect(lock.inLock, isTrue);
         await lock.synchronized(() {});
       });
     });

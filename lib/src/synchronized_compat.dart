@@ -20,7 +20,11 @@ abstract class SynchronizedLock extends Lock {
 }
 
 // ignore: non_generative_constructor, deprecated_member_use
-abstract class SynchronizedLockCompat extends SynchronizedLock {}
+abstract class SynchronizedLockCompat extends SynchronizedLock {
+  factory SynchronizedLockCompat() {
+    return new impl.ReentrantLock();
+  }
+}
 
 // Execute [fn] when lock is available. Only one fn can run while
 // the lock is retained. Any object can be a lock, locking is based on identity

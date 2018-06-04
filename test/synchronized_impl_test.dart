@@ -302,17 +302,17 @@ void main() {
           await future;
         });
       });
-      group('inZone', () {
+      group('inLock', () {
         test('two_locks', () async {
           _Lock lock1 = new _Lock();
           _Lock lock2 = new _Lock();
           Completer completer = new Completer();
           Future future = lock1.synchronized(() async {
-            expect(lock1.inZone, isTrue);
-            expect(lock2.inZone, isFalse);
+            expect(lock1.inLock, isTrue);
+            expect(lock2.inLock, isFalse);
             await completer.future;
           });
-          expect(lock1.inZone, isFalse);
+          expect(lock1.inLock, isFalse);
           completer.complete();
           await future;
         });
@@ -320,7 +320,7 @@ void main() {
         test('inner', () async {
           _Lock lock = new _Lock();
           Future future = lock.synchronized(() async {
-            expect(lock.inZone, isTrue);
+            expect(lock.inLock, isTrue);
 
             expect(lock.tasks.length, 1);
             expect(lock.tasks.last.innerFutures, isNull);
@@ -328,16 +328,16 @@ void main() {
             lock.synchronized(() async {
               expect(lock.tasks.length, 1);
               expect(lock.tasks.last.innerFutures.length, 1);
-              expect(lock.inZone, isTrue);
+              expect(lock.inLock, isTrue);
               await sleep(10);
-              expect(lock.inZone, isTrue);
+              expect(lock.inLock, isTrue);
               expect(lock.tasks.length, 1);
             });
             expect(lock.tasks.last.innerFutures.length, 1);
           });
-          expect(lock.inZone, isFalse);
+          expect(lock.inLock, isFalse);
           await future;
-          expect(lock.inZone, isFalse);
+          expect(lock.inLock, isFalse);
         });
 
         test('inner_vs_outer', () async {
@@ -351,7 +351,7 @@ void main() {
               list.add(1);
             });
           });
-          expect(lock.inZone, isFalse);
+          expect(lock.inLock, isFalse);
           Future future2 = lock.synchronized(() async {
             await sleep(10);
             list.add(2);

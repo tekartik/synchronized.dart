@@ -4,13 +4,14 @@
 import 'dart:async';
 
 import 'package:dev_test/test.dart';
-import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+import 'package:synchronized/synchronized.dart';
 
 import 'lock_test.dart';
 import 'test_common.dart';
 import 'test_compat.dart';
 
 main() {
+  // ignore: deprecated_member_use
   var lockFactory = new SynchronizedLockFactory();
   Lock newLock() => lockFactory.newLock();
 
@@ -229,6 +230,66 @@ main() {
           expect(e is TestFailure, isFalse);
         }
         await sleep(1);
+      });
+    });
+    group('inZone', () {
+      test('two_locks', () async {
+        // ignore: deprecated_member_use
+        var lock1 = new SynchronizedLock();
+        // ignore: deprecated_member_use
+        var lock2 = new SynchronizedLock();
+        Completer completer = new Completer();
+        Future future = lock1.synchronized(() async {
+          expect(lock1.inZone, isTrue);
+          expect(lock2.inZone, isFalse);
+          await completer.future;
+        });
+        expect(lock1.inZone, isFalse);
+        completer.complete();
+        await future;
+      });
+
+      test('inner', () async {
+        // ignore: deprecated_member_use
+        var lock = new SynchronizedLock();
+        Future future = lock.synchronized(() async {
+          expect(lock.inZone, isTrue);
+          // don't wait here
+          lock.synchronized(() async {
+            expect(lock.inZone, isTrue);
+            await sleep(10);
+            expect(lock.inZone, isTrue);
+          });
+        });
+        expect(lock.inZone, isFalse);
+        await future;
+        expect(lock.inZone, isFalse);
+      });
+
+      test('inner_vs_outer', () async {
+        List<int> list = [];
+        // ignore: deprecated_member_use
+        var lock = new SynchronizedLock();
+        Future future = lock.synchronized(() async {
+          await sleep(10);
+          // don't wait here
+          lock.synchronized(() async {
+            await sleep(20);
+            list.add(1);
+          });
+        });
+        expect(lock.inZone, isFalse);
+        Future future2 = lock.synchronized(() async {
+          await sleep(10);
+          list.add(2);
+        });
+        Future future3 = sleep(20).whenComplete(() async {
+          await lock.synchronized(() async {
+            list.add(3);
+          });
+        });
+        await Future.wait([future, future2, future3]);
+        expect(list, [1, 2, 3]);
       });
     });
   });

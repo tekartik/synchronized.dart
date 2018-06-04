@@ -4,7 +4,13 @@ import 'package:synchronized/src/synchronized_impl.dart' as impl;
 
 import 'test_common.dart';
 
+@deprecated
 class SynchronizedLockFactory implements LockFactory {
+  @override
+  Lock newLock() => new impl.ReentrantLock();
+}
+
+class ReentrantLockFactory implements LockFactory {
   @override
   Lock newLock() => new impl.ReentrantLock();
 }
