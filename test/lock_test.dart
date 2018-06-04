@@ -181,24 +181,6 @@ void lockMain([LockFactory lockFactory]) {
       });
     });
 
-    group('any_object', () {
-      test('null_lock', () async {
-        await synchronized(new Object(), null);
-        try {
-          await synchronized(null, null);
-          fail("should fail");
-        } on ArgumentError catch (_) {}
-      });
-
-      test('string_lock', () async {
-        await synchronized(new Object(), null);
-        try {
-          await synchronized(null, null);
-          fail("should fail");
-        } on ArgumentError catch (_) {}
-      });
-    });
-
     group('timeout', () {
       test('0_ms', () async {
         Lock lock = newLock();

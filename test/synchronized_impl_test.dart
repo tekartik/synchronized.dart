@@ -12,7 +12,7 @@ import 'package:dev_test/test.dart';
 import 'test_common.dart';
 
 // To make tests less verbose...
-class _Lock extends SynchronizedLock {
+class _Lock extends ReentrantLock {
   _Lock() : super.impl();
 }
 
@@ -27,7 +27,7 @@ void main() {
 
         test('reentrant', () {
           var lock = new common.Lock(reentrant: true);
-          expect(lock, new isInstanceOf<SynchronizedLock>());
+          expect(lock, new isInstanceOf<ReentrantLock>());
         });
 
         test('taskRunning', () {});
@@ -49,7 +49,7 @@ void main() {
             lock1 = makeLock("test");
             lock2 = makeLock("test");
             expect(lock1, same(lock2));
-            expect(lock1, new isInstanceOf<SynchronizedLock>());
+            expect(lock1, new isInstanceOf<ReentrantLock>());
           });
           test('simple', () async {
             synchronizedLocks.clear();
@@ -66,7 +66,7 @@ void main() {
             expect(hasRan, isTrue);
             expect(synchronizedLocks, isEmpty);
 
-            var lock2Impl = makeLock("test") as SynchronizedLock;
+            var lock2Impl = makeLock("test") as ReentrantLock;
             expect(lock2Impl.monitor, "test");
             expect(synchronizedLocks, hasLength(1));
           });
@@ -77,10 +77,10 @@ void main() {
     group('SynchronizedLock', () {
       group('makeSynchronizedLock', () {
         test('equals', () async {
-          SynchronizedLock lock1 = makeSynchronizedLock("test");
-          SynchronizedLock lock2 = makeSynchronizedLock("test");
+          ReentrantLock lock1 = makeSynchronizedLock("test");
+          ReentrantLock lock2 = makeSynchronizedLock("test");
           expect(lock1, same(lock2));
-          SynchronizedLock lock3 = new SynchronizedLock("test");
+          ReentrantLock lock3 = new ReentrantLock("test");
           expect(lock1, same(lock3));
           // clear for next tests
           synchronizedLocks.clear();
@@ -95,7 +95,7 @@ void main() {
         test('simple', () async {
           synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
-          SynchronizedLock lockImpl = makeSynchronizedLock("test");
+          ReentrantLock lockImpl = makeSynchronizedLock("test");
           expect(lockImpl.monitor, "test");
           expect(synchronizedLocks, hasLength(1));
         });
@@ -105,13 +105,13 @@ void main() {
         test('equals', () async {
           synchronizedLocks.clear();
 
-          SynchronizedLock lock1 = new SynchronizedLock();
-          SynchronizedLock lock2 = new SynchronizedLock();
+          ReentrantLock lock1 = new ReentrantLock();
+          ReentrantLock lock2 = new ReentrantLock();
 
           expect(lock1, isNot(lock2));
           expect(synchronizedLocks, isEmpty);
-          lock1 = new SynchronizedLock("test");
-          lock2 = new SynchronizedLock("test");
+          lock1 = new ReentrantLock("test");
+          lock2 = new ReentrantLock("test");
           expect(lock1, same(lock2));
           expect(synchronizedLocks, hasLength(1));
           // clear for next tests
@@ -120,13 +120,13 @@ void main() {
 
         test('toString', () {
           synchronizedLocks.clear();
-          var lock = new SynchronizedLock('test');
+          var lock = new ReentrantLock('test');
           expect("$lock", "SynchronizedLock[test]");
         });
 
         test('ready', () async {
           synchronizedLocks.clear();
-          SynchronizedLock lock = new SynchronizedLock();
+          ReentrantLock lock = new ReentrantLock();
           await lock.ready;
 
           bool done = false;

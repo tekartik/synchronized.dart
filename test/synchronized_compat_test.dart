@@ -14,7 +14,93 @@ main() {
   var lockFactory = new SynchronizedLockFactory();
   Lock newLock() => lockFactory.newLock();
 
-  group('SynchronizedLock', () {
+  group('compat', () {
+    group('synchronized', () {
+      test('order', () async {
+        var object = new Object();
+        List<int> list = [];
+        // ignore: deprecated_member_use
+        Future future1 = synchronized(object, () async {
+          list.add(1);
+        });
+        // ignore: deprecated_member_use
+        Future<String> future2 = synchronized(object, () async {
+          await new Duration(milliseconds: 10);
+          list.add(2);
+          return "text";
+        });
+        // ignore: deprecated_member_use
+        Future<int> future3 = synchronized(object, () {
+          list.add(3);
+          return 1234;
+        });
+        await Future.wait([future1, future2, future3]);
+        expect(await future1, isNull);
+        expect(await future2, "text");
+        expect(await future3, 1234);
+        expect(list, [1, 2, 3]);
+      });
+
+      group('any_object', () {
+        test('any_lock', () async {
+          // ignore: deprecated_member_use
+          await synchronized(new Object(), null);
+        });
+        test('null_lock', () async {
+          try {
+            // ignore: deprecated_member_use
+            await synchronized(null, null);
+            fail("should fail");
+          } on ArgumentError catch (_) {}
+        });
+
+        test('string_lock', () async {
+          // ignore: deprecated_member_use
+          await synchronized("text", null);
+        });
+      });
+
+      // https://github.com/tekartik/synchronized.dart/issues/1
+      test('issue_1', () async {
+        var value = '';
+
+        // ignore: deprecated_member_use
+        Future outer1 = synchronized('test', () async {
+          expect(value, equals(''));
+          value = 'outer1';
+
+          await sleep(20);
+
+          // ignore: deprecated_member_use
+          await synchronized('test', () async {
+            await sleep(30);
+            expect(value, equals('outer1'));
+            value = 'inner1';
+          });
+        });
+
+        // ignore: deprecated_member_use
+        Future outer2 = synchronized('test', () async {
+          await sleep(30);
+          expect(value, equals('inner1'));
+          value = 'outer2';
+        });
+
+        Future outer3 = sleep(30).whenComplete(() {
+          // ignore: deprecated_member_use
+          return synchronized('test', () async {
+            expect(value, equals('outer2'));
+            value = 'outer3';
+          });
+        });
+
+        await Future.wait([outer1, outer2, outer3]);
+
+        expect(value, equals('outer3'));
+      });
+    });
+  });
+  group('SynchronizedLockCompat', () {
     lockMain(lockFactory);
 
     // only for reentrant-lock

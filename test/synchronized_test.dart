@@ -5,12 +5,11 @@
 import 'dart:async';
 
 import 'package:dev_test/test.dart';
-import 'package:synchronized/src/synchronized_impl.dart' show SynchronizedLock;
-import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+import 'package:synchronized/src/synchronized_impl.dart' show ReentrantLock;
 import 'test_common.dart';
 
 // To make tests less verbose...
-class Lock extends SynchronizedLock {
+class Lock extends ReentrantLock {
   Lock() : super.impl();
 }
 
@@ -125,24 +124,6 @@ void main() {
         list.add(4);
       });
       expect(list, [1, 2, 3, 4]);
-    });
-
-    group('any_object', () {
-      test('null_lock', () async {
-        await synchronized(new Object(), null);
-        try {
-          await synchronized(null, null);
-          fail("should fail");
-        } on ArgumentError catch (_) {}
-      });
-
-      test('string_lock', () async {
-        await synchronized(new Object(), null);
-        try {
-          await synchronized(null, null);
-          fail("should fail");
-        } on ArgumentError catch (_) {}
-      });
     });
 
     group('timeout', () {

@@ -8,12 +8,6 @@ class LockFactory {
   Lock newLock() => new Lock();
 }
 
-// Create a reentrant lock (use Zone)
-class SynchronizedLockFactory extends LockFactory {
-  @override
-  Lock newLock() => new SynchronizedLock();
-}
-
 bool _isDart2AsyncTiming;
 Future<bool> isDart2AsyncTiming() async {
   if (_isDart2AsyncTiming == null) {

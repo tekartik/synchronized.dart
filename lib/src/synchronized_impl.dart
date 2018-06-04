@@ -1,6 +1,7 @@
 import 'utils.dart';
 
 import '../synchronized.dart' as _;
+import 'synchronized_compat.dart' as _;
 
 // A [SynchronizedTask] only complete when all precedent task complete
 // i.e. in case of timeout
@@ -163,14 +164,14 @@ class Lock extends LockBase {
 
 // You can define synchonized lock object directly
 // for convenient access
-class SynchronizedLock extends LockBase implements _.SynchronizedLock {
+class ReentrantLock extends LockBase implements _.SynchronizedLockCompat {
   Object monitor;
 
-  SynchronizedLock.impl([this.monitor]);
+  ReentrantLock.impl([this.monitor]);
 
-  factory SynchronizedLock([Object monitor]) {
+  factory ReentrantLock([Object monitor]) {
     if (monitor == null) {
-      return new SynchronizedLock.impl();
+      return new ReentrantLock.impl();
     } else {
       return makeSynchronizedLock(monitor);
     }
@@ -235,7 +236,7 @@ class SynchronizedLock extends LockBase implements _.SynchronizedLock {
 
 // list of waiting/running locks
 // empty when nothing running
-Map<Object, SynchronizedLock> synchronizedLocks = {};
+Map<Object, ReentrantLock> synchronizedLocks = {};
 
 // Return the lock itself if the monitor is a lock
 // otherwiser create a re-entrant lock
@@ -247,26 +248,26 @@ _.Lock makeLock(dynamic monitor) {
 }
 
 // Make any object a synchronized lock
-SynchronizedLock makeSynchronizedLock(dynamic monitor) {
+ReentrantLock makeSynchronizedLock(dynamic monitor) {
   if (monitor == null) {
     throw new ArgumentError('synchronized lock cannot be null');
   }
 
-  if (monitor is SynchronizedLock) {
+  if (monitor is ReentrantLock) {
     return monitor;
   }
 
   // make lock a synchronizedLock object
   // get or create Lock object
-  SynchronizedLock synchronizedLock = synchronizedLocks[monitor];
+  ReentrantLock synchronizedLock = synchronizedLocks[monitor];
   if (synchronizedLock == null) {
-    synchronizedLock = new SynchronizedLock.impl(monitor);
+    synchronizedLock = new ReentrantLock.impl(monitor);
     synchronizedLocks[monitor] = synchronizedLock;
   }
   return synchronizedLock;
 }
 
-cleanUpLock(SynchronizedLock lock) {
+cleanUpLock(ReentrantLock lock) {
   if (lock.tasks.isEmpty) {
     if (lock.monitor != null) {
       synchronizedLocks.remove(lock.monitor);

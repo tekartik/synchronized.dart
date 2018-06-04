@@ -31,8 +31,9 @@ class Demo {
   Future test2() async {
     stdout.writeln("synchronized");
 
-    synchronized(this, write1234);
-    synchronized(this, write1234);
+    var lock = new Lock();
+    lock.synchronized(write1234);
+    lock.synchronized(write1234);
 
     await new Future.delayed(new Duration(milliseconds: 50));
 
@@ -40,13 +41,16 @@ class Demo {
   }
 
   Future readme1() async {
-    synchronized(this, () async {
+    var lock = new Lock();
+
+    // ...
+    await lock.synchronized(() async {
       // do some stuff
     });
   }
 
   Future readme2() async {
-    var lock = new SynchronizedLock();
+    var lock = new Lock();
     if (!lock.locked) {
       lock.synchronized(() async {
         // do some stuff
@@ -55,7 +59,8 @@ class Demo {
   }
 
   Future readme3() async {
-    int value = await synchronized(this, () {
+    var lock = new Lock();
+    int value = await lock.synchronized(() {
       return 1;
     });
     stdout.writeln("got value: ${value}");

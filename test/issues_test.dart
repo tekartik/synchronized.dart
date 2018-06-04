@@ -15,28 +15,29 @@ void main() {
     // https://github.com/tekartik/synchronized.dart/issues/1
     test('issue_1', () async {
       var value = '';
+      var lock = new Lock();
 
-      Future outer1 = synchronized('test', () async {
+      Future outer1 = lock.synchronized(() async {
         expect(value, equals(''));
         value = 'outer1';
 
         await sleep(20);
 
-        await synchronized('test', () async {
+        await lock.synchronized(() async {
           await sleep(30);
           expect(value, equals('outer1'));
           value = 'inner1';
         });
       });
 
-      Future outer2 = synchronized('test', () async {
+      Future outer2 = lock.synchronized(() async {
         await sleep(30);
         expect(value, equals('inner1'));
         value = 'outer2';
       });
 
       Future outer3 = sleep(30).whenComplete(() {
-        return synchronized('test', () async {
+        return lock.synchronized(() async {
           expect(value, equals('outer2'));
           value = 'outer3';
         });
