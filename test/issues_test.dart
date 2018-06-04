@@ -15,7 +15,7 @@ void main() {
     // https://github.com/tekartik/synchronized.dart/issues/1
     test('issue_1', () async {
       var value = '';
-      var lock = new Lock();
+      var lock = new Lock(reentrant: true);
 
       Future outer1 = lock.synchronized(() async {
         expect(value, equals(''));
