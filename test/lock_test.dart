@@ -199,6 +199,7 @@ void lockMain([LockFactory lockFactory]) {
       });
 
       test('100_ms', () async {
+        var isNewTiming = await isDart2AsyncTiming();
         // hoping timint is ok...
         Lock lock = newLock();
 
@@ -237,7 +238,8 @@ void lockMain([LockFactory lockFactory]) {
         }, timeout: new Duration(milliseconds: 500));
 
         expect(ran1, isFalse, reason: "ran1 should be false");
-        expect(ran2, isFalse, reason: "ran2 should be false");
+        expect(ran2, isNewTiming ? isTrue : isFalse,
+            reason: "ran2 should be false");
         expect(ran3, isTrue, reason: "ran3 should be true");
         expect(ran4, isTrue, reason: "ran4 should be true");
       });
