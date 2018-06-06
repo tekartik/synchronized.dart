@@ -199,7 +199,7 @@ void lockMain([LockFactory lockFactory]) {
       });
 
       test('100_ms', () async {
-        var isNewTiming = await isDart2AsyncTiming();
+        // var isNewTiming = await isDart2AsyncTiming();
         // hoping timint is ok...
         Lock lock = newLock();
 
@@ -209,7 +209,7 @@ void lockMain([LockFactory lockFactory]) {
         bool ran4 = false;
         // hold for 5ms
         lock.synchronized(() async {
-          await new Future.delayed(new Duration(milliseconds: 100));
+          await sleep(500);
         });
 
         try {
@@ -229,16 +229,16 @@ void lockMain([LockFactory lockFactory]) {
         try {
           lock.synchronized(() {
             ran4 = true;
-          }, timeout: new Duration(milliseconds: 500));
+          }, timeout: new Duration(milliseconds: 1000));
         } on TimeoutException catch (_) {}
 
         // waiting long enough
         await lock.synchronized(() {
           ran3 = true;
-        }, timeout: new Duration(milliseconds: 500));
+        }, timeout: new Duration(milliseconds: 1000));
 
         expect(ran1, isFalse, reason: "ran1 should be false");
-        expect(ran2, isNewTiming ? isTrue : isFalse,
+        expect(ran2, isFalse,
             reason: "ran2 should be false");
         expect(ran3, isTrue, reason: "ran3 should be true");
         expect(ran4, isTrue, reason: "ran4 should be true");
