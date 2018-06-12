@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+
+- Deprecate SynchronizedLock and synchronized
+
 ## 1.4.0
 
 - Re-use non-reentrant lock in synchronized method
