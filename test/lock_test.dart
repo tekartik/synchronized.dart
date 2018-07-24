@@ -33,7 +33,7 @@ main() {
           exception = _exception;
         }
       });
-      expect(exception, new isInstanceOf<TimeoutException>());
+      expect(exception, TypeMatcher<TimeoutException>());
     });
 
     test('two_locks', () async {

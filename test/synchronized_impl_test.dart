@@ -22,12 +22,12 @@ void main() {
       group('Lock', () {
         test('normal', () {
           var lock = new common.Lock();
-          expect(lock, new isInstanceOf<Lock>());
+          expect(lock, TypeMatcher<Lock>());
         });
 
         test('reentrant', () {
           var lock = new common.Lock(reentrant: true);
-          expect(lock, new isInstanceOf<ReentrantLock>());
+          expect(lock, TypeMatcher<ReentrantLock>());
         });
 
         test('taskRunning', () {});
@@ -49,7 +49,7 @@ void main() {
             lock1 = makeLock("test");
             lock2 = makeLock("test");
             expect(lock1, same(lock2));
-            expect(lock1, new isInstanceOf<ReentrantLock>());
+            expect(lock1, TypeMatcher<ReentrantLock>());
           });
           test('simple', () async {
             synchronizedLocks.clear();
