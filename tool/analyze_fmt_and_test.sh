@@ -3,7 +3,7 @@
 # Fast fail the script on failures.
 set -xe
 
-dartfmt -w .
+dartfmt -w example lib test
 dartanalyzer --fatal-warnings example lib test
 
 pub run test -p vm
