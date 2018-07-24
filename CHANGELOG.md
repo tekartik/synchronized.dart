@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+
+- Dart2 stable support
+
 ## 1.5.0
 
 - Deprecate SynchronizedLock and synchronized

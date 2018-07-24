@@ -238,8 +238,7 @@ void lockMain([LockFactory lockFactory]) {
         }, timeout: new Duration(milliseconds: 1000));
 
         expect(ran1, isFalse, reason: "ran1 should be false");
-        expect(ran2, isFalse,
-            reason: "ran2 should be false");
+        expect(ran2, isFalse, reason: "ran2 should be false");
         expect(ran3, isTrue, reason: "ran3 should be true");
         expect(ran4, isTrue, reason: "ran4 should be true");
       });
