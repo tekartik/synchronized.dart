@@ -32,6 +32,8 @@ class SynchronizedTask {
         // wait for inner
         if (innerFutures != null) {
           return Future.wait(innerFutures);
+        } else {
+          return null;
         }
       });
 
@@ -195,6 +197,8 @@ class ReentrantLock extends LockBase implements _.SynchronizedLockCompat {
       return runZoned(() {
         if (computation != null) {
           return computation();
+        } else {
+          return null;
         }
       }, zoneValues: {this: task});
     });

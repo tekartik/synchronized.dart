@@ -1,6 +1,6 @@
 name: synchronized
 description: Lock mechanism to prevent concurrent access to asynchronous code
-version: 1.5.1
+version: 1.5.2
 author:  Tekartik <dev@tekartik.com>
 homepage: https://github.com/tekartik/synchronized.dart
 
@@ -10,7 +10,6 @@ environment:
 dev_dependencies:
   test: '>=0.12.0'
   dev_test: '>=0.12.0'
-  browser: any
   chrome_travis:
     git:
       url: git://github.com/tekartik/chrome_travis.dart
