@@ -9,7 +9,7 @@ environment:
 
 dev_dependencies:
   test: '>=0.12.0'
-  dev_test: '>=0.9.3'
+  dev_test: '>=0.12.0'
   browser: any
   chrome_travis:
     git:
