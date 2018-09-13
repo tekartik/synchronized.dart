@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+
+- Remove dev_test dependency
+
 ## 1.5.1
 
 - Dart2 stable support
