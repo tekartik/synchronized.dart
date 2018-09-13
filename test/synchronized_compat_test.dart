@@ -3,8 +3,8 @@
 
 import 'dart:async';
 
-import 'package:dev_test/test.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:test/test.dart';
 
 import 'lock_test.dart';
 import 'test_common.dart';
