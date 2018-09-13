@@ -4,8 +4,8 @@
 
 import 'dart:async';
 
-import 'package:dev_test/test.dart';
 import 'package:synchronized/src/synchronized_impl.dart' show ReentrantLock;
+import 'package:test/test.dart';
 import 'test_common.dart';
 
 // To make tests less verbose...
