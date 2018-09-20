@@ -8,6 +8,7 @@
 
 ```dart
 var lock = new Lock();
+// ...
 await lock.synchronized(() async {
   // do you stuff
   // await ...
