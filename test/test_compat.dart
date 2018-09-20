@@ -7,10 +7,10 @@ import 'test_common.dart';
 @deprecated
 class SynchronizedLockFactory implements LockFactory {
   @override
-  Lock newLock() => new impl.ReentrantLock();
+  Lock newLock() => impl.ReentrantLock();
 }
 
 class ReentrantLockFactory implements LockFactory {
   @override
-  Lock newLock() => new impl.ReentrantLock();
+  Lock newLock() => impl.ReentrantLock();
 }

@@ -12,13 +12,13 @@ import 'test_compat.dart';
 
 main() {
   // ignore: deprecated_member_use
-  var lockFactory = new SynchronizedLockFactory();
+  var lockFactory = SynchronizedLockFactory();
   Lock newLock() => lockFactory.newLock();
 
   group('compat', () {
     group('synchronized', () {
       test('order', () async {
-        var object = new Object();
+        var object = Object();
         List<int> list = [];
         // ignore: deprecated_member_use
         Future future1 = synchronized(object, () async {
@@ -26,7 +26,7 @@ main() {
         });
         // ignore: deprecated_member_use
         Future<String> future2 = synchronized(object, () async {
-          await new Duration(milliseconds: 10);
+          await Duration(milliseconds: 10);
           list.add(2);
           return "text";
         });
@@ -45,7 +45,7 @@ main() {
       group('any_object', () {
         test('any_lock', () async {
           // ignore: deprecated_member_use
-          await synchronized(new Object(), null);
+          await synchronized(Object(), null);
         });
         test('null_lock', () async {
           try {
@@ -112,7 +112,7 @@ main() {
       var future1 = lock.synchronized(() async {
         list.add(1);
         await lock.synchronized(() async {
-          await new Duration(milliseconds: 10);
+          await Duration(milliseconds: 10);
           list.add(2);
         });
         list.add(3);
@@ -235,10 +235,10 @@ main() {
     group('inZone', () {
       test('two_locks', () async {
         // ignore: deprecated_member_use
-        var lock1 = new SynchronizedLock();
+        var lock1 = SynchronizedLock();
         // ignore: deprecated_member_use
-        var lock2 = new SynchronizedLock();
-        Completer completer = new Completer();
+        var lock2 = SynchronizedLock();
+        Completer completer = Completer();
         Future future = lock1.synchronized(() async {
           expect(lock1.inZone, isTrue);
           expect(lock2.inZone, isFalse);
@@ -251,7 +251,7 @@ main() {
 
       test('inner', () async {
         // ignore: deprecated_member_use
-        var lock = new SynchronizedLock();
+        var lock = SynchronizedLock();
         Future future = lock.synchronized(() async {
           expect(lock.inZone, isTrue);
           // don't wait here
@@ -269,7 +269,7 @@ main() {
       test('inner_vs_outer', () async {
         List<int> list = [];
         // ignore: deprecated_member_use
-        var lock = new SynchronizedLock();
+        var lock = SynchronizedLock();
         Future future = lock.synchronized(() async {
           await sleep(10);
           // don't wait here

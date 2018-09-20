@@ -98,7 +98,7 @@ Consider the following dummy code
 
 ```dart
 Future writeSlow(int value) async {
-  new Future.delayed(new Duration(milliseconds: 1));
+  await new Future.delayed(new Duration(milliseconds: 1));
   stdout.write(value);
 }
 

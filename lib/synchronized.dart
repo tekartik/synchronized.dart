@@ -25,9 +25,9 @@ abstract class Lock {
 
   factory Lock({bool reentrant = false}) {
     if (reentrant == true) {
-      return new impl.ReentrantLock();
+      return impl.ReentrantLock();
     } else {
-      return new impl.Lock();
+      return impl.Lock();
     }
   }
 }

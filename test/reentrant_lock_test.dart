@@ -11,7 +11,7 @@ import 'test_common.dart';
 import 'test_compat.dart';
 
 main() {
-  var lockFactory = new ReentrantLockFactory();
+  var lockFactory = ReentrantLockFactory();
   Lock newLock() => lockFactory.newLock();
 
   group('SynchronizedLock', () {
@@ -25,7 +25,7 @@ main() {
       var future1 = lock.synchronized(() async {
         list.add(1);
         await lock.synchronized(() async {
-          await new Duration(milliseconds: 10);
+          await Duration(milliseconds: 10);
           list.add(2);
         });
         list.add(3);

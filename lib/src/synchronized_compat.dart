@@ -12,7 +12,7 @@ import 'synchronized_impl.dart' as impl;
 @deprecated
 abstract class SynchronizedLock extends Lock {
   factory SynchronizedLock() {
-    return new impl.ReentrantLock();
+    return impl.ReentrantLock();
   }
 
   // return true if we are in a synchronized zone already (i.e. inner)
@@ -22,7 +22,7 @@ abstract class SynchronizedLock extends Lock {
 // ignore: non_generative_constructor, deprecated_member_use
 abstract class SynchronizedLockCompat extends SynchronizedLock {
   factory SynchronizedLockCompat() {
-    return new impl.ReentrantLock();
+    return impl.ReentrantLock();
   }
 }
 

@@ -6,7 +6,7 @@ import 'synchronized_compat.dart' as _;
 // A [SynchronizedTask] only complete when all precedent task complete
 // i.e. in case of timeout
 class SynchronizedTask {
-  Completer completer = new Completer.sync();
+  Completer completer = Completer.sync();
 
   // Inner task, a task won't be marked as complete until all
   // its inner task are complete
@@ -44,7 +44,7 @@ class SynchronizedTask {
 }
 
 abstract class LockBase implements _.Lock {
-  List<SynchronizedTask> tasks = new List();
+  List<SynchronizedTask> tasks = List();
 
   // implementation when running
   Future<T> _createAndRunTask<T>(FutureOr<T> computation(),
@@ -57,7 +57,7 @@ abstract class LockBase implements _.Lock {
     SynchronizedTask previousTask = locked ? tasks.last : null;
 
     // Create the task and add it to our queue
-    SynchronizedTask task = new SynchronizedTask();
+    SynchronizedTask task = SynchronizedTask();
     tasks.add(task);
 
     Future<T> run() {
@@ -100,7 +100,7 @@ abstract class LockBase implements _.Lock {
   // testing only
   Future get ready {
     if (!locked) {
-      return new Future.value();
+      return Future.value();
     }
     return tasks.last.future;
   }
@@ -156,7 +156,7 @@ class Lock extends LockBase {
         taskRunning = false;
       });
     } else {
-      return new Future.value(result);
+      return Future.value(result);
     }
   }
 
@@ -179,7 +179,7 @@ class ReentrantLock extends LockBase implements _.SynchronizedLockCompat {
 
   factory ReentrantLock([Object monitor]) {
     if (monitor == null) {
-      return new ReentrantLock.impl();
+      return ReentrantLock.impl();
     } else {
       return makeSynchronizedLock(monitor);
     }
@@ -193,7 +193,7 @@ class ReentrantLock extends LockBase implements _.SynchronizedLockCompat {
 
   @override
   Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation()) {
-    return new Future.sync(() {
+    return Future.sync(() {
       return runZoned(() {
         if (computation != null) {
           return computation();
@@ -219,7 +219,7 @@ class ReentrantLock extends LockBase implements _.SynchronizedLockCompat {
           result = computation();
         } catch (e) {
           // Catch direct error right away
-          return new Future.error(e);
+          return Future.error(e);
         }
         // If it is a future add it to the task
         if (result is Future) {
@@ -228,7 +228,7 @@ class ReentrantLock extends LockBase implements _.SynchronizedLockCompat {
         }
       }
       // Non future block handling
-      return new Future.value(result as FutureOr<T>);
+      return Future.value(result as FutureOr<T>);
     }
 
     return _createAndRunTask(computation, timeout: timeout);
@@ -264,7 +264,7 @@ _.Lock makeLock(dynamic monitor) {
 // Make any object a synchronized lock
 ReentrantLock makeSynchronizedLock(dynamic monitor) {
   if (monitor == null) {
-    throw new ArgumentError('synchronized lock cannot be null');
+    throw ArgumentError('synchronized lock cannot be null');
   }
 
   if (monitor is ReentrantLock) {
@@ -275,7 +275,7 @@ ReentrantLock makeSynchronizedLock(dynamic monitor) {
   // get or create Lock object
   ReentrantLock synchronizedLock = synchronizedLocks[monitor];
   if (synchronizedLock == null) {
-    synchronizedLock = new ReentrantLock.impl(monitor);
+    synchronizedLock = ReentrantLock.impl(monitor);
     synchronizedLocks[monitor] = synchronizedLock;
   }
   return synchronizedLock;
@@ -292,7 +292,7 @@ cleanUpLock(ReentrantLock lock) {
 // Execute [computation] when lock is available. Only one block can run while
 // the lock is retained. Any object can be a lock, locking is based on identity
 Future<T> synchronized<T>(dynamic lock, FutureOr<T> computation(),
-    {Duration timeout: null}) {
+    {Duration timeout = null}) {
   // Make any object a lock object
   var lockImpl = makeLock(lock);
 

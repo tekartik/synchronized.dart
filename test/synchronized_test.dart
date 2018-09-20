@@ -19,13 +19,13 @@ void main() {
 
     test('order', () async {
       var isNewTiming = await isDart2AsyncTiming();
-      Lock lock = new Lock();
+      Lock lock = Lock();
       List<int> list = [];
       Future future1 = lock.synchronized(() async {
         list.add(1);
       });
       Future<String> future2 = lock.synchronized(() async {
-        await new Duration(milliseconds: 10);
+        await Duration(milliseconds: 10);
         list.add(2);
         return "text";
       });
@@ -46,12 +46,12 @@ void main() {
     });
 
     test('nested', () async {
-      Lock lock = new Lock();
+      Lock lock = Lock();
       List<int> list = [];
       Future future1 = lock.synchronized(() async {
         list.add(1);
         await lock.synchronized(() async {
-          await new Duration(milliseconds: 10);
+          await Duration(milliseconds: 10);
           list.add(2);
         });
         list.add(3);
@@ -64,7 +64,7 @@ void main() {
     });
 
     test('queued_value', () async {
-      Lock lock = new Lock();
+      Lock lock = Lock();
       Future<String> value1 = lock.synchronized(() async {
         await sleep(1);
         return "value1";
@@ -74,7 +74,7 @@ void main() {
     });
 
     test('inner_value', () async {
-      Lock lock = new Lock();
+      Lock lock = Lock();
       expect(
           await lock.synchronized(() async {
             expect(
@@ -88,7 +88,7 @@ void main() {
     });
 
     test('inner_vs_outer', () async {
-      Lock lock = new Lock();
+      Lock lock = Lock();
       List<int> list = [];
       lock.synchronized(() async {
         await sleep(1);
@@ -107,7 +107,7 @@ void main() {
     });
 
     test('inner_no_wait', () async {
-      Lock lock = new Lock();
+      Lock lock = Lock();
       List<int> list = [];
       await lock.synchronized(() async {
         await sleep(1);
@@ -128,13 +128,13 @@ void main() {
 
     group('timeout', () {
       test('0_ms', () async {
-        Lock lock = new Lock();
-        Completer completer = new Completer();
+        Lock lock = Lock();
+        Completer completer = Completer();
         Future future = lock.synchronized(() async {
           await completer.future;
         });
         try {
-          await lock.synchronized(null, timeout: new Duration(milliseconds: 1));
+          await lock.synchronized(null, timeout: Duration(milliseconds: 1));
           fail('should fail');
         } on TimeoutException catch (_) {}
         completer.complete();
@@ -143,33 +143,33 @@ void main() {
 
       test('100_ms', () async {
         // hoping timint is ok...
-        Lock lock = new Lock();
+        Lock lock = Lock();
 
         bool ran1 = false;
         bool ran2 = false;
         bool ran3 = false;
         // hold for 5ms
         lock.synchronized(() async {
-          await new Future.delayed(new Duration(milliseconds: 50));
+          await Future.delayed(Duration(milliseconds: 50));
         });
 
         try {
           await lock.synchronized(() {
             ran1 = true;
-          }, timeout: new Duration(milliseconds: 1));
+          }, timeout: Duration(milliseconds: 1));
         } on TimeoutException catch (_) {}
 
         try {
           await lock.synchronized(() {
             ran2 = true;
-          }, timeout: new Duration(milliseconds: 2));
+          }, timeout: Duration(milliseconds: 2));
           fail('should fail');
         } on TimeoutException catch (_) {}
 
         // waiting long enough
         await lock.synchronized(() {
           ran3 = true;
-        }, timeout: new Duration(milliseconds: 100));
+        }, timeout: Duration(milliseconds: 100));
 
         expect(ran1, isFalse);
         expect(ran2, isFalse);
@@ -179,7 +179,7 @@ void main() {
 
     group('error', () {
       test('throw', () async {
-        Lock lock = new Lock();
+        Lock lock = Lock();
         try {
           await lock.synchronized(() {
             throw "throwing";
@@ -193,7 +193,7 @@ void main() {
       });
 
       test('queued_throw', () async {
-        Lock lock = new Lock();
+        Lock lock = Lock();
 
         // delay so that it is queued
         lock.synchronized(() {
@@ -212,7 +212,7 @@ void main() {
       });
 
       test('throw_async', () async {
-        Lock lock = new Lock();
+        Lock lock = Lock();
         try {
           await lock.synchronized(() async {
             throw "throwing";
@@ -224,7 +224,7 @@ void main() {
       });
 
       test('inner_throw', () async {
-        Lock lock = new Lock();
+        Lock lock = Lock();
         try {
           await lock.synchronized(() async {
             await lock.synchronized(() {
@@ -240,7 +240,7 @@ void main() {
       });
 
       test('inner_throw_async', () async {
-        Lock lock = new Lock();
+        Lock lock = Lock();
 
         try {
           await lock.synchronized(() async {

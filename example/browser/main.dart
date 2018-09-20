@@ -12,7 +12,7 @@ print(msg) {
 }
 
 Future writeSlow(int value) async {
-  new Future.delayed(new Duration(milliseconds: 1));
+  Future.delayed(Duration(milliseconds: 1));
   print(value);
 }
 
@@ -33,32 +33,32 @@ class Demo {
     write1234();
     write1234();
 
-    await new Future.delayed(new Duration(milliseconds: 50));
+    await Future.delayed(Duration(milliseconds: 50));
   }
 
   Future test2() async {
     print("synchronized");
-    var lock = new Lock();
+    var lock = Lock();
 
     lock.synchronized(write1234);
     lock.synchronized(write1234);
 
-    await new Future.delayed(new Duration(milliseconds: 50));
+    await Future.delayed(Duration(milliseconds: 50));
   }
 
   Future test3() async {
     print("lock.synchronized");
 
-    var lock = new Lock();
+    var lock = Lock();
     lock.synchronized(write1234);
     lock.synchronized(write1234);
 
-    await new Future.delayed(new Duration(milliseconds: 50));
+    await Future.delayed(Duration(milliseconds: 50));
   }
 
   Future test4() async {
     print("basic");
-    var lock = new Lock();
+    var lock = Lock();
     await lock.synchronized(() async {
       // do you stuff
       // await ...
@@ -66,7 +66,7 @@ class Demo {
   }
 
   Future readme1() async {
-    var lock = new Lock();
+    var lock = Lock();
 
     // ...
     await lock.synchronized(() async {
@@ -75,7 +75,7 @@ class Demo {
   }
 
   Future readme2() async {
-    var lock = new Lock();
+    var lock = Lock();
     if (!lock.locked) {
       lock.synchronized(() async {
         // do some stuff
@@ -84,7 +84,7 @@ class Demo {
   }
 
   Future readme3() async {
-    var lock = new Lock();
+    var lock = Lock();
 
     int value = await lock.synchronized(() {
       return 1;
@@ -94,7 +94,7 @@ class Demo {
 }
 
 main() async {
-  Demo demo = new Demo();
+  Demo demo = Demo();
 
   await demo.test1();
   await demo.test2();

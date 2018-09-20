@@ -5,7 +5,7 @@ export 'package:synchronized/src/utils.dart';
 
 // Create by default a non-reentrant lock
 class LockFactory {
-  Lock newLock() => new Lock();
+  Lock newLock() => Lock();
 }
 
 bool _isDart2AsyncTiming;

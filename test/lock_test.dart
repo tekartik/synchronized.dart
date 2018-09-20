@@ -15,7 +15,7 @@ main() {
     lockMain();
 
     test('reentrant', () async {
-      Lock lock = new Lock(reentrant: true);
+      Lock lock = Lock(reentrant: true);
       expect(lock.inLock, isFalse);
       await lock.synchronized(() async {
         expect(lock.inLock, isTrue);
@@ -24,11 +24,11 @@ main() {
     });
 
     test('non-reentrant', () async {
-      Lock lock = new Lock();
+      Lock lock = Lock();
       var exception;
       await lock.synchronized(() async {
         try {
-          await lock.synchronized(() {}, timeout: new Duration(seconds: 1));
+          await lock.synchronized(() {}, timeout: Duration(seconds: 1));
         } catch (_exception) {
           exception = _exception;
         }
@@ -37,8 +37,8 @@ main() {
     });
 
     test('two_locks', () async {
-      var lock1 = new Lock();
-      var lock2 = new Lock();
+      var lock1 = Lock();
+      var lock2 = Lock();
 
       bool ok;
       await lock1.synchronized(() async {
@@ -53,7 +53,7 @@ main() {
 }
 
 void lockMain([LockFactory lockFactory]) {
-  lockFactory ??= new LockFactory();
+  lockFactory ??= LockFactory();
 
   Lock newLock() => lockFactory.newLock();
 
@@ -66,7 +66,7 @@ void lockMain([LockFactory lockFactory]) {
         list.add(1);
       });
       Future<String> future2 = lock.synchronized(() async {
-        await new Duration(milliseconds: 10);
+        await Duration(milliseconds: 10);
         list.add(2);
         return "text";
       });
@@ -103,7 +103,7 @@ void lockMain([LockFactory lockFactory]) {
         int count = operationCount;
         int j;
 
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch();
         j = 0;
         sw.start();
         for (int i = 0; i < count; i++) {
@@ -112,7 +112,7 @@ void lockMain([LockFactory lockFactory]) {
         print(" none ${sw.elapsed}");
         expect(j, count * (count - 1) / 2);
 
-        sw = new Stopwatch();
+        sw = Stopwatch();
         j = 0;
         sw.start();
         for (int i = 0; i < count; i++) {
@@ -124,7 +124,7 @@ void lockMain([LockFactory lockFactory]) {
         expect(j, count * (count - 1) / 2);
 
         var lock = newLock();
-        sw = new Stopwatch();
+        sw = Stopwatch();
         j = 0;
         sw.start();
         for (int i = 0; i < count; i++) {
@@ -186,12 +186,12 @@ void lockMain([LockFactory lockFactory]) {
     group('timeout', () {
       test('0_ms', () async {
         Lock lock = newLock();
-        Completer completer = new Completer();
+        Completer completer = Completer();
         Future future = lock.synchronized(() async {
           await completer.future;
         });
         try {
-          await lock.synchronized(null, timeout: new Duration(milliseconds: 1));
+          await lock.synchronized(null, timeout: Duration(milliseconds: 1));
           fail('should fail');
         } on TimeoutException catch (_) {}
         completer.complete();
@@ -215,27 +215,27 @@ void lockMain([LockFactory lockFactory]) {
         try {
           await lock.synchronized(() {
             ran1 = true;
-          }, timeout: new Duration(milliseconds: 1));
+          }, timeout: Duration(milliseconds: 1));
         } on TimeoutException catch (_) {}
 
         try {
           await lock.synchronized(() async {
             await sleep(5000);
             ran2 = true;
-          }, timeout: new Duration(milliseconds: 1));
+          }, timeout: Duration(milliseconds: 1));
           // fail('should fail');
         } on TimeoutException catch (_) {}
 
         try {
           lock.synchronized(() {
             ran4 = true;
-          }, timeout: new Duration(milliseconds: 1000));
+          }, timeout: Duration(milliseconds: 1000));
         } on TimeoutException catch (_) {}
 
         // waiting long enough
         await lock.synchronized(() {
           ran3 = true;
-        }, timeout: new Duration(milliseconds: 1000));
+        }, timeout: Duration(milliseconds: 1000));
 
         expect(ran1, isFalse, reason: "ran1 should be false");
         expect(ran2, isFalse, reason: "ran2 should be false");

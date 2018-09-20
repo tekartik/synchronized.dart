@@ -21,25 +21,25 @@ void main() {
     group('Lock', () {
       group('Lock', () {
         test('normal', () {
-          var lock = new common.Lock();
+          var lock = common.Lock();
           expect(lock, TypeMatcher<Lock>());
         });
 
         test('reentrant', () {
-          var lock = new common.Lock(reentrant: true);
+          var lock = common.Lock(reentrant: true);
           expect(lock, TypeMatcher<ReentrantLock>());
         });
 
         test('taskRunning', () {});
         test('toString', () {
-          var lock = new Lock();
+          var lock = Lock();
           expect("$lock", startsWith("Lock["));
           expect("$lock", endsWith("]"));
         });
         group('makeLock', () {
           test('equals', () async {
-            var lock = new Lock();
-            var lockOther = new Lock();
+            var lock = Lock();
+            var lockOther = Lock();
             expect(lock, isNot(same(lockOther)));
             var lock1 = makeLock(lock);
             var lock2 = makeLock(lock);
@@ -54,7 +54,7 @@ void main() {
           test('simple', () async {
             synchronizedLocks.clear();
             expect(synchronizedLocks, isEmpty);
-            var lock = new Lock();
+            var lock = Lock();
             Lock lockImpl = makeLock(lock) as Lock;
             bool hasRan = false;
             expect(lockImpl.taskRunning, isFalse);
@@ -80,13 +80,13 @@ void main() {
           ReentrantLock lock1 = makeSynchronizedLock("test");
           ReentrantLock lock2 = makeSynchronizedLock("test");
           expect(lock1, same(lock2));
-          ReentrantLock lock3 = new ReentrantLock("test");
+          ReentrantLock lock3 = ReentrantLock("test");
           expect(lock1, same(lock3));
           // clear for next tests
           synchronizedLocks.clear();
 
           // Make a synchronized lock from a lock
-          var lock = new Lock();
+          var lock = Lock();
           lock1 = makeSynchronizedLock(lock);
           lock2 = makeSynchronizedLock(lock);
           expect(lock1, same(lock2));
@@ -105,13 +105,13 @@ void main() {
         test('equals', () async {
           synchronizedLocks.clear();
 
-          ReentrantLock lock1 = new ReentrantLock();
-          ReentrantLock lock2 = new ReentrantLock();
+          ReentrantLock lock1 = ReentrantLock();
+          ReentrantLock lock2 = ReentrantLock();
 
           expect(lock1, isNot(lock2));
           expect(synchronizedLocks, isEmpty);
-          lock1 = new ReentrantLock("test");
-          lock2 = new ReentrantLock("test");
+          lock1 = ReentrantLock("test");
+          lock2 = ReentrantLock("test");
           expect(lock1, same(lock2));
           expect(synchronizedLocks, hasLength(1));
           // clear for next tests
@@ -120,13 +120,13 @@ void main() {
 
         test('toString', () {
           synchronizedLocks.clear();
-          var lock = new ReentrantLock('test');
+          var lock = ReentrantLock('test');
           expect("$lock", "SynchronizedLock[test]");
         });
 
         test('ready', () async {
           synchronizedLocks.clear();
-          ReentrantLock lock = new ReentrantLock();
+          ReentrantLock lock = ReentrantLock();
           await lock.ready;
 
           bool done = false;
@@ -136,7 +136,7 @@ void main() {
           });
 
           try {
-            await lock.ready.timeout(new Duration(milliseconds: 1));
+            await lock.ready.timeout(Duration(milliseconds: 1));
             fail('should fail');
           } on TimeoutException catch (_) {}
 
@@ -179,7 +179,7 @@ void main() {
           synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
-          Completer beforeInnerCompleter = new Completer.sync();
+          Completer beforeInnerCompleter = Completer.sync();
           Future future = synchronized("test", () async {
             await sleep(1);
             beforeInnerCompleter.complete();
@@ -198,7 +198,7 @@ void main() {
           synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
-          Completer beforeInnerCompleter = new Completer.sync();
+          Completer beforeInnerCompleter = Completer.sync();
           Future future = synchronized("test", () async {
             await sleep(1);
             beforeInnerCompleter.complete();
@@ -217,7 +217,7 @@ void main() {
           synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
-          Completer beforeInnerCompleter = new Completer.sync();
+          Completer beforeInnerCompleter = Completer.sync();
           Future future = synchronized("test", () async {
             await sleep(1);
             beforeInnerCompleter.complete();
@@ -240,7 +240,7 @@ void main() {
         test('simple', () async {
           // Make sure the lock state is made immediately
           // This ensure that calling locked then synchronized is atomic
-          _Lock lock = new _Lock();
+          _Lock lock = _Lock();
           expect(lock.locked, isFalse);
           Future future = lock.synchronized(null);
           expect(lock.locked, isTrue);
@@ -249,9 +249,9 @@ void main() {
         });
 
         test('inner', () async {
-          _Lock lock = new _Lock();
-          Completer completer = new Completer();
-          Completer innerCompleter = new Completer();
+          _Lock lock = _Lock();
+          Completer completer = Completer();
+          Completer innerCompleter = Completer();
           Future future = lock.synchronized(() async {
             // don't wait here
             lock.synchronized(() async {
@@ -263,8 +263,7 @@ void main() {
           expect(lock.locked, isTrue);
           completer.complete();
           try {
-            await lock.synchronized(null,
-                timeout: new Duration(milliseconds: 100));
+            await lock.synchronized(null, timeout: Duration(milliseconds: 100));
             fail('should fail');
           } on TimeoutException catch (_) {}
           expect(lock.locked, isTrue);
@@ -276,7 +275,7 @@ void main() {
 
       group('immediacity', () {
         test('sync', () async {
-          _Lock lock = new _Lock();
+          _Lock lock = _Lock();
           int value;
           Future future = lock.synchronized(() {
             value = 1;
@@ -288,7 +287,7 @@ void main() {
 
         test('async', () async {
           var isNewTiming = await isDart2AsyncTiming();
-          _Lock lock = new _Lock();
+          _Lock lock = _Lock();
           int value;
           Future future = lock.synchronized(() async {
             value = 1;
@@ -304,9 +303,9 @@ void main() {
       });
       group('inLock', () {
         test('two_locks', () async {
-          _Lock lock1 = new _Lock();
-          _Lock lock2 = new _Lock();
-          Completer completer = new Completer();
+          _Lock lock1 = _Lock();
+          _Lock lock2 = _Lock();
+          Completer completer = Completer();
           Future future = lock1.synchronized(() async {
             expect(lock1.inLock, isTrue);
             expect(lock2.inLock, isFalse);
@@ -318,7 +317,7 @@ void main() {
         });
 
         test('inner', () async {
-          _Lock lock = new _Lock();
+          _Lock lock = _Lock();
           Future future = lock.synchronized(() async {
             expect(lock.inLock, isTrue);
 
@@ -342,7 +341,7 @@ void main() {
 
         test('inner_vs_outer', () async {
           List<int> list = [];
-          _Lock lock = new _Lock();
+          _Lock lock = _Lock();
           Future future = lock.synchronized(() async {
             await sleep(10);
             // don't wait here
