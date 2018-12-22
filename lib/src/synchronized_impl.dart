@@ -184,7 +184,6 @@ class ReentrantLock extends LockBase implements compat.SynchronizedLockCompat {
 
   Object monitor;
 
-
   @deprecated
   @override
   bool get inZone => inLock;

@@ -144,7 +144,6 @@ void main() {
           await lock.ready;
           expect(done, isTrue);
           expect(synchronizedLocks, isEmpty);
-          
         });
       });
       group('synchronizedLocks', () {
