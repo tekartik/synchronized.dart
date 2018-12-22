@@ -22,12 +22,12 @@ void main() {
       group('Lock', () {
         test('normal', () {
           var lock = common.Lock();
-          expect(lock, TypeMatcher<Lock>());
+          expect(lock, const TypeMatcher<Lock>());
         });
 
         test('reentrant', () {
           var lock = common.Lock(reentrant: true);
-          expect(lock, TypeMatcher<ReentrantLock>());
+          expect(lock, const TypeMatcher<ReentrantLock>());
         });
 
         test('taskRunning', () {});
@@ -49,7 +49,7 @@ void main() {
             lock1 = makeLock("test");
             lock2 = makeLock("test");
             expect(lock1, same(lock2));
-            expect(lock1, TypeMatcher<ReentrantLock>());
+            expect(lock1, const TypeMatcher<ReentrantLock>());
           });
           test('simple', () async {
             synchronizedLocks.clear();
@@ -144,7 +144,7 @@ void main() {
           await lock.ready;
           expect(done, isTrue);
           expect(synchronizedLocks, isEmpty);
-          ;
+          
         });
       });
       group('synchronizedLocks', () {

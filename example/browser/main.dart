@@ -4,15 +4,15 @@ import 'package:synchronized/synchronized.dart';
 
 PreElement outElement;
 
-print(msg) {
+void print(dynamic msg) {
   if (outElement == null) {
     outElement = querySelector("#output") as PreElement;
   }
-  outElement.text += "${msg}\n";
+  outElement.text += "$msg\n";
 }
 
 Future writeSlow(int value) async {
-  Future.delayed(Duration(milliseconds: 1));
+  await Future.delayed(Duration(milliseconds: 1));
   print(value);
 }
 
@@ -89,7 +89,7 @@ class Demo {
     int value = await lock.synchronized(() {
       return 1;
     });
-    print("got value: ${value}");
+    print("got value: $value");
   }
 }
 

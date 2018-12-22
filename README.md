@@ -23,9 +23,9 @@ For single process (single isolate) accessing some resources (database..), it ca
 
 ## Feature
 
- * Synchronized block are reentrant
+ * Default lock are not-rentrant
  * Timeout support
- * Support for non-reentrant lock (not using Zone)
+ * Support for reentrant lock (using Zone)
  * Consistent behavior (i.e. if it is unlocked calling synchronized grab the lock)
  * Values and Errors are properly reported to the caller
  * Work on Browser, DartVM and Flutter
@@ -98,7 +98,7 @@ Consider the following dummy code
 
 ```dart
 Future writeSlow(int value) async {
-  await new Future.delayed(new Duration(milliseconds: 1));
+  await Future.delayed(new Duration(milliseconds: 1));
   stdout.write(value);
 }
 
@@ -140,7 +140,7 @@ Have in mind that the `Lock` instance must be shared between calls in order to e
 
 ```dart
 class MyClass {
-  Lock _lock = new Lock();
+  final _lock = new Lock();
 
   Future<void> myMethod() async {
     await _lock.synchronized(() async {

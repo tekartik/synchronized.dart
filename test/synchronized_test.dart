@@ -25,7 +25,7 @@ void main() {
         list.add(1);
       });
       Future<String> future2 = lock.synchronized(() async {
-        await Duration(milliseconds: 10);
+        await sleep(10);
         list.add(2);
         return "text";
       });
@@ -51,7 +51,7 @@ void main() {
       Future future1 = lock.synchronized(() async {
         list.add(1);
         await lock.synchronized(() async {
-          await Duration(milliseconds: 10);
+          await sleep(10);
           list.add(2);
         });
         list.add(3);

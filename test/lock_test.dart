@@ -33,7 +33,7 @@ main() {
           exception = _exception;
         }
       });
-      expect(exception, TypeMatcher<TimeoutException>());
+      expect(exception, const TypeMatcher<TimeoutException>());
     });
 
     test('two_locks', () async {
@@ -66,7 +66,7 @@ void lockMain([LockFactory lockFactory]) {
         list.add(1);
       });
       Future<String> future2 = lock.synchronized(() async {
-        await Duration(milliseconds: 10);
+        await sleep(10);
         list.add(2);
         return "text";
       });

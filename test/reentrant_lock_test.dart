@@ -25,7 +25,7 @@ main() {
       var future1 = lock.synchronized(() async {
         list.add(1);
         await lock.synchronized(() async {
-          await Duration(milliseconds: 10);
+          await sleep(10);
           list.add(2);
         });
         list.add(3);
