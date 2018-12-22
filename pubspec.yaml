@@ -1,6 +1,6 @@
 name: synchronized
 description: Lock mechanism to prevent concurrent access to asynchronous code
-version: 1.5.3+1
+version: 1.5.3+2
 author:  Tekartik <dev@tekartik.com>
 homepage: https://github.com/tekartik/synchronized.dart
 
