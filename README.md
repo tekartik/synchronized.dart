@@ -23,7 +23,7 @@ For single process (single isolate) accessing some resources (database..), it ca
 
 ## Feature
 
- * Default lock are not-rentrant
+ * By default a lock is not reentrant
  * Timeout support
  * Support for reentrant lock (using Zone)
  * Consistent behavior (i.e. if it is unlocked calling synchronized grab the lock)
