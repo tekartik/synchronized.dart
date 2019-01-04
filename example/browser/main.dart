@@ -93,7 +93,7 @@ class Demo {
   }
 }
 
-main() async {
+Future main() async {
   Demo demo = Demo();
 
   await demo.test1();

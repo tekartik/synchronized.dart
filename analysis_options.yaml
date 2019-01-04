@@ -1,6 +1,7 @@
 analyzer:
   strong-mode:
     implicit-casts: false
+    # implicit-dynamic: false
 
 linter:
   rules:
@@ -29,7 +30,7 @@ linter:
     - valid_regexps
 
     # === style rules ===
-    # - always_declare_return_types (2018-12-22 removed)
+    - always_declare_return_types
     # - always_put_control_body_on_new_line
     - always_require_non_null_named_parameters
     # - always_specify_types

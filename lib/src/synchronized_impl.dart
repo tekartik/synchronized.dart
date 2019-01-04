@@ -13,7 +13,7 @@ class SynchronizedTask {
   List<Future> innerFutures;
 
   // Add inner task if any
-  addInnerFuture(Future future) {
+  void addInnerFuture(Future future) {
     if (innerFutures == null) {
       innerFutures = [];
     }
@@ -105,12 +105,12 @@ abstract class LockBase implements synchronized_lib.Lock {
 
   Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation());
 
-  removeTask(SynchronizedTask task) {
+  void removeTask(SynchronizedTask task) {
     tasks.remove(task);
   }
 
-  cleanUpTask(SynchronizedTask task) {
-    _cleanUp() {
+  void cleanUpTask(SynchronizedTask task) {
+    void _cleanUp() {
       removeTask(task);
     }
 
@@ -282,7 +282,7 @@ ReentrantLock makeSynchronizedLock(dynamic monitor) {
   return synchronizedLock;
 }
 
-cleanUpLock(ReentrantLock lock) {
+void cleanUpLock(ReentrantLock lock) {
   if (lock.tasks.isEmpty) {
     if (lock.monitor != null) {
       synchronizedLocks.remove(lock.monitor);

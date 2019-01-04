@@ -27,7 +27,7 @@ class Demo {
   }
 }
 
-main() async {
+Future main() async {
   var demo = Demo();
 
   await demo.runNotSynchronized();

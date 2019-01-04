@@ -10,7 +10,7 @@ import 'lock_test.dart';
 import 'test_common.dart';
 import 'test_compat.dart';
 
-main() {
+void main() {
   var lockFactory = ReentrantLockFactory();
   Lock newLock() => lockFactory.newLock();
 

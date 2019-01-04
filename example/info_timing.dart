@@ -6,7 +6,7 @@ Future<bool> isDart2AsyncTiming() async {
     // Create an async function
     // in dart1 the first line won't be executed directly
     // in dart2 it should
-    method() async {
+    Future method() async {
       if (_isDart2AsyncTiming == null) {
         _isDart2AsyncTiming = true;
       }
@@ -21,6 +21,6 @@ Future<bool> isDart2AsyncTiming() async {
   return _isDart2AsyncTiming;
 }
 
-main() async {
+Future main() async {
   print('isDart2AsyncTiming ${await isDart2AsyncTiming()}');
 }

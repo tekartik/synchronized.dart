@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 
 import 'test_common.dart';
 
-main() {
+void main() {
   group('Lock', () {
     lockMain();
 
