@@ -13,6 +13,17 @@ dartfmt -w .
 dartanalyzer .
 pub run test
 ````
+
+## Browser and node test
+
+````
+pub run test -p chrome
+
+# full test in one
+pub run test -p chrome -p firefox -p vm
+# Using build_runner
+pub run build_runner test -- -p chrome -p firefox -p vm
+````
     
 ## Use the git version
 
@@ -21,6 +32,7 @@ dependency_overrides:
   synchronized:
     git: git://github.com/tekartik/synchronized.dart
 ```
+
 ## Run perf test
 
     pub run test -n "10000 operations" -j 1

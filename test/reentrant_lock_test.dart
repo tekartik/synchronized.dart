@@ -56,11 +56,13 @@ void main() {
       Lock lock = newLock();
 
       List<int> list = [];
+      // ignore: unawaited_futures
       lock.synchronized(() async {
         await sleep(1);
         list.add(1);
         // don't wait here on purpose
         // to make sure this task is started first
+        // ignore: unawaited_futures
         lock.synchronized(() async {
           await sleep(1);
           list.add(2);
@@ -80,6 +82,7 @@ void main() {
         list.add(1);
         // don't wait here on purpose
         // to make sure this task is started first
+        // ignore: unawaited_futures
         lock.synchronized(() async {
           await sleep(1);
           list.add(3);

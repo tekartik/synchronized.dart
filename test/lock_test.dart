@@ -128,6 +128,7 @@ void lockMain([LockFactory lockFactory]) {
         j = 0;
         sw.start();
         for (int i = 0; i < count; i++) {
+          // ignore: unawaited_futures
           lock.synchronized(() {
             j += i;
           });
@@ -208,6 +209,7 @@ void lockMain([LockFactory lockFactory]) {
         bool ran3 = false;
         bool ran4 = false;
         // hold for 5ms
+        // ignore: unawaited_futures
         lock.synchronized(() async {
           await sleep(500);
         });
@@ -227,6 +229,7 @@ void lockMain([LockFactory lockFactory]) {
         } on TimeoutException catch (_) {}
 
         try {
+          // ignore: unawaited_futures
           lock.synchronized(() {
             ran4 = true;
           }, timeout: Duration(milliseconds: 1000));
@@ -263,6 +266,7 @@ void lockMain([LockFactory lockFactory]) {
         Lock lock = newLock();
 
         // delay so that it is queued
+        // ignore: unawaited_futures
         lock.synchronized(() {
           return sleep(1);
         });

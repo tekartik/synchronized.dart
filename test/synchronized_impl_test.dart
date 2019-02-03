@@ -130,6 +130,7 @@ void main() {
           await lock.ready;
 
           bool done = false;
+          // ignore: unawaited_futures
           lock.synchronized(() async {
             await sleep(100);
             done = true;
@@ -163,6 +164,7 @@ void main() {
           synchronizedLocks.clear();
           expect(synchronizedLocks, isEmpty);
 
+          // ignore: unawaited_futures
           synchronized("test", () async {
             await sleep(1);
           });
@@ -203,6 +205,7 @@ void main() {
             beforeInnerCompleter.complete();
 
             // no wait here on purpose
+            // ignore: unawaited_futures
             synchronized("test", () {});
           });
           expect(synchronizedLocks, hasLength(1));
@@ -222,6 +225,7 @@ void main() {
             beforeInnerCompleter.complete();
 
             // no wait here on purpose
+            // ignore: unawaited_futures
             synchronized("test", () async {});
           });
           expect(synchronizedLocks, hasLength(1));
@@ -253,6 +257,7 @@ void main() {
           Completer innerCompleter = Completer();
           Future future = lock.synchronized(() async {
             // don't wait here
+            // ignore: unawaited_futures
             lock.synchronized(() async {
               await sleep(1);
               await innerCompleter.future;
@@ -323,6 +328,7 @@ void main() {
             expect(lock.tasks.length, 1);
             expect(lock.tasks.last.innerFutures, isNull);
             // don't wait here
+            // ignore: unawaited_futures
             lock.synchronized(() async {
               expect(lock.tasks.length, 1);
               expect(lock.tasks.last.innerFutures.length, 1);
@@ -344,6 +350,7 @@ void main() {
           Future future = lock.synchronized(() async {
             await sleep(10);
             // don't wait here
+            // ignore: unawaited_futures
             lock.synchronized(() async {
               await sleep(20);
               list.add(1);

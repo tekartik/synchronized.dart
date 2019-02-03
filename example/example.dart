@@ -6,7 +6,9 @@ class Demo {
   Future runNotSynchronized() async {
     stdout.writeln("not synchronized");
     // this should print 11223344
+    // ignore: unawaited_futures
     write1234();
+    // ignore: unawaited_futures
     write1234();
 
     await Future.delayed(Duration(milliseconds: 50));
@@ -18,7 +20,9 @@ class Demo {
 
     final lock = Lock();
     // this should print 12341234
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
 
     await Future.delayed(Duration(milliseconds: 50));

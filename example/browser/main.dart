@@ -30,7 +30,9 @@ class Demo {
   Future test1() async {
     print("not synchronized");
     //await Future.wait([write1234(), write1234()]);
+    // ignore: unawaited_futures
     write1234();
+    // ignore: unawaited_futures
     write1234();
 
     await Future.delayed(Duration(milliseconds: 50));
@@ -40,7 +42,9 @@ class Demo {
     print("synchronized");
     var lock = Lock();
 
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
 
     await Future.delayed(Duration(milliseconds: 50));
@@ -50,7 +54,9 @@ class Demo {
     print("lock.synchronized");
 
     var lock = Lock();
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
 
     await Future.delayed(Duration(milliseconds: 50));
@@ -77,7 +83,7 @@ class Demo {
   Future readme2() async {
     var lock = Lock();
     if (!lock.locked) {
-      lock.synchronized(() async {
+      await lock.synchronized(() async {
         // do some stuff
       });
     }

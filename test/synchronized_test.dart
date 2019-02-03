@@ -90,11 +90,13 @@ void main() {
     test('inner_vs_outer', () async {
       Lock lock = Lock();
       List<int> list = [];
+      // ignore: unawaited_futures
       lock.synchronized(() async {
         await sleep(1);
         list.add(1);
         // don't wait here on purpose
         // to make sure this task is started first
+        // ignore: unawaited_futures
         lock.synchronized(() async {
           await sleep(1);
           list.add(2);
@@ -114,6 +116,7 @@ void main() {
         list.add(1);
         // don't wait here on purpose
         // to make sure this task is started first
+        // ignore: unawaited_futures
         lock.synchronized(() async {
           await sleep(1);
           list.add(3);
@@ -149,6 +152,7 @@ void main() {
         bool ran2 = false;
         bool ran3 = false;
         // hold for 5ms
+        // ignore: unawaited_futures
         lock.synchronized(() async {
           await Future.delayed(Duration(milliseconds: 50));
         });
@@ -196,6 +200,7 @@ void main() {
         Lock lock = Lock();
 
         // delay so that it is queued
+        // ignore: unawaited_futures
         lock.synchronized(() {
           return sleep(1);
         });

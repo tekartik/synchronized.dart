@@ -143,11 +143,13 @@ void main() {
       Lock lock = newLock();
 
       List<int> list = [];
+      // ignore: unawaited_futures
       lock.synchronized(() async {
         await sleep(1);
         list.add(1);
         // don't wait here on purpose
         // to make sure this task is started first
+        // ignore: unawaited_futures
         lock.synchronized(() async {
           await sleep(1);
           list.add(2);
@@ -167,6 +169,7 @@ void main() {
         list.add(1);
         // don't wait here on purpose
         // to make sure this task is started first
+        // ignore: unawaited_futures
         lock.synchronized(() async {
           await sleep(1);
           list.add(3);
@@ -255,6 +258,7 @@ void main() {
         Future future = lock.synchronized(() async {
           expect(lock.inZone, isTrue);
           // don't wait here
+          // ignore: unawaited_futures
           lock.synchronized(() async {
             expect(lock.inZone, isTrue);
             await sleep(10);
@@ -273,6 +277,7 @@ void main() {
         Future future = lock.synchronized(() async {
           await sleep(10);
           // don't wait here
+          // ignore: unawaited_futures
           lock.synchronized(() async {
             await sleep(20);
             list.add(1);

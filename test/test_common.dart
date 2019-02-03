@@ -21,6 +21,7 @@ Future<bool> isDart2AsyncTiming() async {
     }
 
     // Calling the async function not waiting for it
+    // ignore: unawaited_futures
     method();
     if (_isDart2AsyncTiming == null) {
       _isDart2AsyncTiming = false;
