@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0
+
+- Remove previously depracated `SynchronizedLock` and `synchronized` function
+
 ## 1.5.2
 
 - Remove dev_test dependency

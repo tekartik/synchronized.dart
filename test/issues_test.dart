@@ -5,10 +5,8 @@
 import 'dart:async';
 
 import 'package:synchronized/src/utils.dart';
-import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
-
-import 'test_common.dart';
 
 void main() {
   group('issues', () {
@@ -46,10 +44,6 @@ void main() {
       await Future.wait([outer1, outer2, outer3]);
 
       expect(value, equals('outer3'));
-    });
-
-    test('timing', () async {
-      print("isDart2AsyncTiming ${await isDart2AsyncTiming()}");
     });
   });
 }

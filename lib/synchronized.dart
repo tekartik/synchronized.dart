@@ -23,27 +23,25 @@ library synchronized;
 
 import 'dart:async';
 
-import 'package:synchronized/src/synchronized_impl.dart' as impl;
-
-export 'compat/synchronized_compat.dart';
-// ignore: deprecated_member_use
+import 'package:synchronized/src/basic_lock.dart';
+import 'package:synchronized/src/reentrant_lock.dart';
 
 /// Object providing the implicit lock.
 ///
-/// A [Lock] can be reentrant (in this case it will use a [Zone])
+/// A [Lock] can be reentrant (in this case it will use a [Zone]).
 ///
-/// non-reentrant lock is used like an aync executor with a capacity of 1
+/// non-reentrant lock is used like an aync executor with a capacity of 1.
 ///
-/// if [timeout] is not null, it will timeout after the specified duration
+/// if [timeout] is not null, it will timeout after the specified duration.
 abstract class Lock {
   /// Creates a [Lock] object.
   ///
   /// if [reentrant], it uses [Zone] to allow inner [synchronized] calls.
   factory Lock({bool reentrant = false}) {
     if (reentrant == true) {
-      return impl.ReentrantLock();
+      return ReentrantLock();
     } else {
-      return impl.Lock();
+      return BasicLock();
     }
   }
 
@@ -55,7 +53,7 @@ abstract class Lock {
   /// returns true if the lock is currently locked.
   bool get locked;
 
-  /// for reentrant, test whether we are currently in the synchronized section
-  /// for non reentrant, it returns the [locked] status
+  /// for reentrant, test whether we are currently in the synchronized section.
+  /// for non reentrant, it returns the [locked] status.
   bool get inLock;
 }

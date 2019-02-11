@@ -4,16 +4,15 @@
 
 import 'dart:async';
 
-import 'package:synchronized/src/synchronized_impl.dart';
+import 'package:synchronized/src/basic_lock.dart';
+import 'package:synchronized/src/reentrant_lock.dart';
 import 'package:synchronized/src/utils.dart';
 import 'package:synchronized/synchronized.dart' as common;
 import 'package:test/test.dart';
 
-import 'test_common.dart';
-
 // To make tests less verbose...
 class _Lock extends ReentrantLock {
-  _Lock() : super.impl();
+  _Lock() : super();
 }
 
 void main() {
@@ -22,7 +21,7 @@ void main() {
       group('Lock', () {
         test('normal', () {
           var lock = common.Lock();
-          expect(lock, const TypeMatcher<Lock>());
+          expect(lock, const TypeMatcher<BasicLock>());
         });
 
         test('reentrant', () {
@@ -32,213 +31,14 @@ void main() {
 
         test('taskRunning', () {});
         test('toString', () {
-          var lock = Lock();
+          var lock = common.Lock();
           expect("$lock", startsWith("Lock["));
           expect("$lock", endsWith("]"));
-        });
-        group('makeLock', () {
-          test('equals', () async {
-            var lock = Lock();
-            var lockOther = Lock();
-            expect(lock, isNot(same(lockOther)));
-            var lock1 = makeLock(lock);
-            var lock2 = makeLock(lock);
-            expect(lock1, same(lock2));
-            expect(lock1, same(lock));
-
-            lock1 = makeLock("test");
-            lock2 = makeLock("test");
-            expect(lock1, same(lock2));
-            expect(lock1, const TypeMatcher<ReentrantLock>());
-          });
-          test('simple', () async {
-            synchronizedLocks.clear();
-            expect(synchronizedLocks, isEmpty);
-            var lock = Lock();
-            Lock lockImpl = makeLock(lock) as Lock;
-            bool hasRan = false;
-            expect(lockImpl.taskRunning, isFalse);
-            await lockImpl.synchronized(() async {
-              hasRan = true;
-              expect(lockImpl.taskRunning, isTrue);
-            });
-            expect(lockImpl.taskRunning, isFalse);
-            expect(hasRan, isTrue);
-            expect(synchronizedLocks, isEmpty);
-
-            var lock2Impl = makeLock("test") as ReentrantLock;
-            expect(lock2Impl.monitor, "test");
-            expect(synchronizedLocks, hasLength(1));
-          });
         });
       });
     });
 
     group('SynchronizedLock', () {
-      group('makeSynchronizedLock', () {
-        test('equals', () async {
-          ReentrantLock lock1 = makeSynchronizedLock("test");
-          ReentrantLock lock2 = makeSynchronizedLock("test");
-          expect(lock1, same(lock2));
-          ReentrantLock lock3 = ReentrantLock("test");
-          expect(lock1, same(lock3));
-          // clear for next tests
-          synchronizedLocks.clear();
-
-          // Make a synchronized lock from a lock
-          var lock = Lock();
-          lock1 = makeSynchronizedLock(lock);
-          lock2 = makeSynchronizedLock(lock);
-          expect(lock1, same(lock2));
-          expect(lock1, isNot(same(lock)));
-        });
-        test('simple', () async {
-          synchronizedLocks.clear();
-          expect(synchronizedLocks, isEmpty);
-          ReentrantLock lockImpl = makeSynchronizedLock("test");
-          expect(lockImpl.monitor, "test");
-          expect(synchronizedLocks, hasLength(1));
-        });
-      });
-
-      group('SynchronizedLock', () {
-        test('equals', () async {
-          synchronizedLocks.clear();
-
-          ReentrantLock lock1 = ReentrantLock();
-          ReentrantLock lock2 = ReentrantLock();
-
-          expect(lock1, isNot(lock2));
-          expect(synchronizedLocks, isEmpty);
-          lock1 = ReentrantLock("test");
-          lock2 = ReentrantLock("test");
-          expect(lock1, same(lock2));
-          expect(synchronizedLocks, hasLength(1));
-          // clear for next tests
-          synchronizedLocks.clear();
-        });
-
-        test('toString', () {
-          synchronizedLocks.clear();
-          var lock = ReentrantLock('test');
-          expect("$lock", "SynchronizedLock[test]");
-        });
-
-        test('ready', () async {
-          synchronizedLocks.clear();
-          ReentrantLock lock = ReentrantLock();
-          await lock.ready;
-
-          bool done = false;
-          // ignore: unawaited_futures
-          lock.synchronized(() async {
-            await sleep(100);
-            done = true;
-          });
-
-          try {
-            await lock.ready.timeout(Duration(milliseconds: 1));
-            fail('should fail');
-          } on TimeoutException catch (_) {}
-
-          expect(done, isFalse);
-          await lock.ready;
-          expect(done, isTrue);
-          expect(synchronizedLocks, isEmpty);
-        });
-      });
-      group('synchronizedLocks', () {
-        test('content', () async {
-          synchronizedLocks.clear();
-          expect(synchronizedLocks, isEmpty);
-
-          Future future = synchronized("test", () async {
-            await sleep(1);
-          });
-          expect(synchronizedLocks, hasLength(1));
-          await future;
-          expect(synchronizedLocks, isEmpty);
-        });
-
-        test('content_2', () async {
-          synchronizedLocks.clear();
-          expect(synchronizedLocks, isEmpty);
-
-          // ignore: unawaited_futures
-          synchronized("test", () async {
-            await sleep(1);
-          });
-          Future future = synchronized("test", () async {
-            await sleep(1);
-          });
-          expect(synchronizedLocks, hasLength(1));
-          await future;
-          expect(synchronizedLocks, isEmpty);
-        });
-
-        test('inner', () async {
-          synchronizedLocks.clear();
-          expect(synchronizedLocks, isEmpty);
-
-          Completer beforeInnerCompleter = Completer.sync();
-          Future future = synchronized("test", () async {
-            await sleep(1);
-            beforeInnerCompleter.complete();
-            await synchronized("test", () async {
-              await sleep(1);
-            });
-          });
-          expect(synchronizedLocks, hasLength(1));
-          await beforeInnerCompleter.future;
-          expect(synchronizedLocks, hasLength(1));
-          await future;
-          expect(synchronizedLocks, isEmpty);
-        });
-
-        test('inner_no_wait', () async {
-          synchronizedLocks.clear();
-          expect(synchronizedLocks, isEmpty);
-
-          Completer beforeInnerCompleter = Completer.sync();
-          Future future = synchronized("test", () async {
-            await sleep(1);
-            beforeInnerCompleter.complete();
-
-            // no wait here on purpose
-            // ignore: unawaited_futures
-            synchronized("test", () {});
-          });
-          expect(synchronizedLocks, hasLength(1));
-          await beforeInnerCompleter.future;
-          expect(synchronizedLocks, hasLength(1));
-          await future;
-          expect(synchronizedLocks, isEmpty);
-        });
-
-        test('inner_no_wait_async', () async {
-          synchronizedLocks.clear();
-          expect(synchronizedLocks, isEmpty);
-
-          Completer beforeInnerCompleter = Completer.sync();
-          Future future = synchronized("test", () async {
-            await sleep(1);
-            beforeInnerCompleter.complete();
-
-            // no wait here on purpose
-            // ignore: unawaited_futures
-            synchronized("test", () async {});
-          });
-          expect(synchronizedLocks, hasLength(1));
-          await beforeInnerCompleter.future;
-          expect(synchronizedLocks, hasLength(1));
-          await future;
-          // There will be a delay when the locks are cleaned-up here
-          expect(synchronizedLocks, isNotEmpty);
-          await sleep(0);
-          expect(synchronizedLocks, isEmpty);
-        });
-      });
-
       group('locked', () {
         test('simple', () async {
           // Make sure the lock state is made immediately
@@ -290,18 +90,14 @@ void main() {
         });
 
         test('async', () async {
-          var isNewTiming = await isDart2AsyncTiming();
           _Lock lock = _Lock();
           int value;
           Future future = lock.synchronized(() async {
             value = 1;
           });
           // A sync method is executed right away!
-          if (isNewTiming) {
-            expect(value, 1);
-          } else {
-            expect(value, isNull);
-          }
+          expect(value, 1);
+
           await future;
         });
       });

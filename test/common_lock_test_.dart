@@ -4,41 +4,25 @@
 
 import 'dart:async';
 
+import 'package:pedantic/pedantic.dart';
+import 'package:synchronized/src/basic_lock.dart';
 import 'package:synchronized/src/utils.dart';
-import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
 
-import 'test_common.dart';
+import 'lock_factory.dart';
 
 void main() {
-  group('Lock', () {
-    lockMain();
+  lockMain(BasicLockFactory());
+}
 
-    test('reentrant', () async {
-      Lock lock = Lock(reentrant: true);
-      expect(lock.inLock, isFalse);
-      await lock.synchronized(() async {
-        expect(lock.inLock, isTrue);
-        await lock.synchronized(() {});
-      });
-    });
+void lockMain(LockFactory lockFactory) {
+  Lock newLock() => lockFactory.newLock();
 
-    test('non-reentrant', () async {
-      Lock lock = Lock();
-      var exception;
-      await lock.synchronized(() async {
-        try {
-          await lock.synchronized(() {}, timeout: Duration(seconds: 1));
-        } catch (_exception) {
-          exception = _exception;
-        }
-      });
-      expect(exception, const TypeMatcher<TimeoutException>());
-    });
-
+  group('synchronized', () {
     test('two_locks', () async {
-      var lock1 = Lock();
-      var lock2 = Lock();
+      var lock1 = newLock();
+      var lock2 = newLock();
 
       bool ok;
       await lock1.synchronized(() async {
@@ -49,17 +33,8 @@ void main() {
       });
       expect(ok, isTrue);
     });
-  });
-}
 
-void lockMain([LockFactory lockFactory]) {
-  lockFactory ??= LockFactory();
-
-  Lock newLock() => lockFactory.newLock();
-
-  group('synchronized', () {
     test('order', () async {
-      var isNewTiming = await isDart2AsyncTiming();
       Lock lock = newLock();
       List<int> list = [];
       Future future1 = lock.synchronized(() async {
@@ -74,11 +49,7 @@ void lockMain([LockFactory lockFactory]) {
         list.add(3);
         return 1234;
       });
-      if (isNewTiming) {
-        expect(list, [1]);
-      } else {
-        expect(list, isEmpty);
-      }
+      expect(list, [1]);
       await Future.wait([future1, future2, future3]);
       expect(await future1, isNull);
       expect(await future2, "text");
@@ -138,6 +109,23 @@ void lockMain([LockFactory lockFactory]) {
         print("syncd ${sw.elapsed}");
         expect(j, count * (count - 1) / 2);
 
+        // 2019-02-11
+        // PC3 2.0.0-dev.1
+        // 00:01 +3: test/basic_lock_test.dart: BasicLock synchronized perf 10000 operations
+        // none 0:00:00.000210
+        // await 0:00:00.090603
+        // syncd 0:00:00.133308
+        // 00:02 +16: test/reentrant_lock_test.dart: ReentrantLock synchronized perf 10000 operations
+        // none 0:00:00.000209
+        // await 0:00:00.096543
+        // syncd 0:00:00.399162
+
+        // 2019-02-09
+        // PC3 1.5.4
+        // none 0:00:00.000237
+        // await 0:00:00.096719
+        // syncd 0:00:00.366971
+
         // 2018-03-04
         /*
         00:00 +0: test/lock_test.dart: Lock synchronized perf 100000 operations
@@ -185,7 +173,7 @@ void lockMain([LockFactory lockFactory]) {
     });
 
     group('timeout', () {
-      test('0_ms', () async {
+      test('1_ms', () async {
         Lock lock = newLock();
         Completer completer = Completer();
         Future future = lock.synchronized(() async {
@@ -245,6 +233,35 @@ void lockMain([LockFactory lockFactory]) {
         expect(ran3, isTrue, reason: "ran3 should be true");
         expect(ran4, isTrue, reason: "ran4 should be true");
       });
+
+      test('1_ms_with_error', () async {
+        bool ok = false;
+        bool okTimeout = false;
+        try {
+          Lock lock = newLock();
+          Completer completer = Completer();
+          unawaited(lock.synchronized(() async {
+            await completer.future;
+          }).catchError((e) {}));
+          try {
+            await lock.synchronized(null, timeout: Duration(milliseconds: 1));
+            fail('should fail');
+          } on TimeoutException catch (_) {}
+          completer.completeError('error');
+          // await future;
+          // await lock.synchronized(null, timeout: Duration(milliseconds: 1000));
+
+          // Make sure these block ran
+          await lock.synchronized(() {
+            ok = true;
+          });
+          await lock.synchronized(() {
+            okTimeout = true;
+          }, timeout: Duration(milliseconds: 1000));
+        } catch (_) {}
+        expect(ok, isTrue);
+        expect(okTimeout, isTrue);
+      });
     });
 
     group('error', () {
@@ -259,7 +276,11 @@ void lockMain([LockFactory lockFactory]) {
           expect(e is TestFailure, isFalse);
         }
 
-        await lock.synchronized(() {});
+        bool ok = false;
+        await lock.synchronized(() {
+          ok = true;
+        });
+        expect(ok, isTrue);
       });
 
       test('queued_throw', () async {
@@ -279,7 +300,11 @@ void lockMain([LockFactory lockFactory]) {
           expect(e is TestFailure, isFalse);
         }
 
-        await lock.synchronized(() {});
+        bool ok = false;
+        await lock.synchronized(() {
+          ok = true;
+        });
+        expect(ok, isTrue);
       });
 
       test('throw_async', () async {
@@ -295,6 +320,64 @@ void lockMain([LockFactory lockFactory]) {
       });
     });
 
-    group('lock', () {});
+    group('locked_in_lock', () {
+      test('simple', () async {
+        var lock = newLock();
+
+        expect(lock.locked, isFalse);
+        expect(lock.inLock, isFalse);
+        await lock.synchronized(() async {
+          expect(lock.locked, isTrue);
+          expect(lock.inLock, isTrue);
+        });
+        expect(lock.locked, isFalse);
+        expect(lock.inLock, isFalse);
+
+        unawaited(lock.synchronized(() async {
+          await sleep(1);
+          expect(lock.locked, isTrue);
+          expect(lock.inLock, isTrue);
+        }));
+
+        await lock.synchronized(() async {
+          await sleep(1);
+          expect(lock.locked, isTrue);
+          expect(lock.inLock, isTrue);
+        });
+        expect(lock.locked, isFalse);
+        expect(lock.inLock, isFalse);
+      });
+
+      test('simple', () async {
+        var lock = newLock();
+
+        expect(lock.locked, isFalse);
+        expect(lock.inLock, isFalse);
+        await lock.synchronized(() async {
+          expect(lock.locked, isTrue);
+          expect(lock.inLock, isTrue);
+        });
+        expect(lock.locked, isFalse);
+        expect(lock.inLock, isFalse);
+      });
+
+      test('locked', () async {
+        Lock lock = newLock();
+        Completer completer = Completer();
+        expect(lock.locked, isFalse);
+        expect(lock.inLock, isFalse);
+        Future future = lock.synchronized(() async {
+          await completer.future;
+        });
+        expect(lock.locked, isTrue);
+        if (lock is BasicLock) {
+          expect(lock.inLock, (lock is BasicLock) ? isTrue : isFalse);
+        }
+        completer.complete();
+        await future;
+        expect(lock.locked, isFalse);
+        expect(lock.inLock, isFalse);
+      });
+    });
   });
 }

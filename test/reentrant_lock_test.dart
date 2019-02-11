@@ -3,19 +3,33 @@
 
 import 'dart:async';
 
-import 'package:synchronized/synchronized.dart' hide SynchronizedLock;
+import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
 
-import 'lock_test.dart';
-import 'test_common.dart';
-import 'test_compat.dart';
+import 'common_lock_test_.dart' as lock_test;
+import 'lock_factory.dart';
 
 void main() {
   var lockFactory = ReentrantLockFactory();
   Lock newLock() => lockFactory.newLock();
 
-  group('SynchronizedLock', () {
-    lockMain(lockFactory);
+  group('ReentrantLock', () {
+    lock_test.lockMain(lockFactory);
+
+    test('reentrant', () async {
+      bool ok;
+      Lock lock = newLock();
+      expect(lock.locked, isFalse);
+      await lock.synchronized(() async {
+        expect(lock.locked, isTrue);
+        await lock.synchronized(() {
+          expect(lock.locked, isTrue);
+          ok = true;
+        });
+      });
+      expect(lock.locked, isFalse);
+      expect(ok, isTrue);
+    });
 
     // only for reentrant-lock
     test('nested', () async {
@@ -108,8 +122,7 @@ void main() {
         await lock2.synchronized(() async {
           expect(Zone.current[lock2], isNotNull);
           expect(Zone.current[lock1], isNotNull);
-          expect(lock1.locked, isFalse);
-          expect(lock2.locked, isFalse);
+
           ok = true;
         });
       });

@@ -1,6 +1,5 @@
 import 'package:synchronized/synchronized.dart' as synchronized_lib;
 
-import 'synchronized_compat.dart' as compat;
 import 'utils.dart';
 
 // A [SynchronizedTask] only complete when all precedent task complete
@@ -41,7 +40,9 @@ class SynchronizedTask {
   String toString() => "SynchronizedTask[${identityHashCode(this)}]";
 }
 
-abstract class LockBase implements synchronized_lib.Lock {
+// You can define synchonized lock object directly
+// for convenient access
+class ReentrantLock implements synchronized_lib.Lock {
   final List<SynchronizedTask> tasks = [];
 
   // implementation when running
@@ -103,8 +104,6 @@ abstract class LockBase implements synchronized_lib.Lock {
     return tasks.last.future;
   }
 
-  Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation());
-
   void removeTask(SynchronizedTask task) {
     tasks.remove(task);
   }
@@ -127,72 +126,11 @@ abstract class LockBase implements synchronized_lib.Lock {
       _cleanUp();
     }
   }
-}
-
-class Lock extends LockBase {
-  bool taskRunning = false;
-
-  @override
-  bool get locked => tasks.isNotEmpty && taskRunning;
-
-  @override
-  Future<T> synchronized<T>(FutureOr<T> computation(), {Duration timeout}) {
-    return _createAndRunTask(computation, timeout: timeout);
-  }
-
-  @override
-  Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation()) {
-    FutureOr<T> result;
-    taskRunning = true;
-    try {
-      result = computation();
-    } catch (_) {
-      taskRunning = false;
-      rethrow;
-    }
-    if (result is Future<T>) {
-      return result.whenComplete(() {
-        taskRunning = false;
-      });
-    } else {
-      return Future.value(result);
-    }
-  }
-
-  @override
-  String toString() => 'Lock[${identityHashCode(this)}]';
-
-  // For standard lock it returns whether currently we have
-  // a synchronized section running
-  // always true from within a section
-  @override
-  bool get inLock => locked;
-}
-
-// You can define synchonized lock object directly
-// for convenient access
-class ReentrantLock extends LockBase implements compat.SynchronizedLockCompat {
-  factory ReentrantLock([Object monitor]) {
-    if (monitor == null) {
-      return ReentrantLock.impl();
-    } else {
-      return makeSynchronizedLock(monitor);
-    }
-  }
-
-  ReentrantLock.impl([this.monitor]);
-
-  Object monitor;
-
-  @deprecated
-  @override
-  bool get inZone => inLock;
 
   // return true if the block is currently locked
   @override
-  bool get locked => tasks.isNotEmpty && (!inLock);
+  bool get locked => tasks.isNotEmpty || inZone;
 
-  @override
   Future<T> _runTask<T>(SynchronizedTask task, FutureOr<T> computation()) {
     return Future.sync(() {
       return runZoned(() {
@@ -236,66 +174,10 @@ class ReentrantLock extends LockBase implements compat.SynchronizedLockCompat {
   }
 
   @override
-  void removeTask(SynchronizedTask task) {
-    super.removeTask(task);
-    // clean up global lock is needed
-    cleanUpLock(this);
-  }
+  String toString() => 'ReentrantLock[${identityHashCode(this)}]';
+
+  bool get inZone => (Zone.current[this] != null);
 
   @override
-  String toString() => 'SynchronizedLock[${monitor ?? identityHashCode(this)}]';
-
-  @override
-  bool get inLock => (Zone.current[this] != null);
-}
-
-// list of waiting/running locks
-// empty when nothing running
-Map<Object, ReentrantLock> synchronizedLocks = {};
-
-// Return the lock itself if the monitor is a lock
-// otherwiser create a re-entrant lock
-synchronized_lib.Lock makeLock(dynamic monitor) {
-  if (monitor is Lock) {
-    return monitor;
-  }
-  return makeSynchronizedLock(monitor);
-}
-
-// Make any object a synchronized lock
-ReentrantLock makeSynchronizedLock(dynamic monitor) {
-  if (monitor == null) {
-    throw ArgumentError('synchronized lock cannot be null');
-  }
-
-  if (monitor is ReentrantLock) {
-    return monitor;
-  }
-
-  // make lock a synchronizedLock object
-  // get or create Lock object
-  ReentrantLock synchronizedLock = synchronizedLocks[monitor];
-  if (synchronizedLock == null) {
-    synchronizedLock = ReentrantLock.impl(monitor);
-    synchronizedLocks[monitor] = synchronizedLock;
-  }
-  return synchronizedLock;
-}
-
-void cleanUpLock(ReentrantLock lock) {
-  if (lock.tasks.isEmpty) {
-    if (lock.monitor != null) {
-      synchronizedLocks.remove(lock.monitor);
-    }
-  }
-}
-
-// Execute [computation] when lock is available. Only one block can run while
-// the lock is retained. Any object can be a lock, locking is based on identity
-Future<T> synchronized<T>(dynamic lock, FutureOr<T> computation(),
-    {Duration timeout}) {
-  // Make any object a lock object
-  var lockImpl = makeLock(lock);
-
-  return lockImpl.synchronized(computation, timeout: timeout);
+  bool get inLock => inZone;
 }
