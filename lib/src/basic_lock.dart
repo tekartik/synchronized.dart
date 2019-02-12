@@ -16,7 +16,12 @@ class BasicLock extends LockBase {
 
       // Run the function and return the result
       if (func != null) {
-        return await func();
+        var result = func();
+        if (result is Future) {
+          return await result;
+        } else {
+          return result;
+        }
       } else {
         return null;
       }

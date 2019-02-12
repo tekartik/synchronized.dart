@@ -30,7 +30,6 @@ abstract class LockBase implements common.Lock {
   void cleanUp(Future prev, Duration timeout, void Function() next) {
     // In case of timeout, wait for the previous one to complete too!
     if (prev != null && timeout != null) {
-      // ignore: unawaited_futures
       prev.then((_) {
         next();
       });

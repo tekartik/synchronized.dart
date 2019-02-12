@@ -35,17 +35,17 @@ dependency_overrides:
 
 ## Run perf test
 
-    pub run test -n "10000 operations" -j 1
+    pub run test -j 1 test/perf_test_.dart 
 
 ```
-00:00 +0: test/lock_test.dart: Lock synchronized perf 10000 operations                                                                                                                                                                                                                                             
-none 0:00:00.000561
-await 0:00:00.173930
-syncd 0:00:00.382899
-00:00 +1: test/synchronized_lock_test.dart: SynchronizedLock synchronized perf 10000 operations                                                                                                                                                                                                                    
-none 0:00:00.000453
-await 0:00:00.132460
-syncd 0:00:00.459393
+00:00 +0: BasicLock 500000 operations                                                                                                                                                                                                                                                                                                                        
+ none 0:00:00.002528
+await 0:00:02.133616
+syncd 0:00:05.874782
+00:08 +1: ReentrantLock 500000 operations                                                                                                                                                                                                                                                                                                                    
+ none 0:00:00.001413
+await 0:00:02.062770
+syncd 0:00:06.111465
 ```
 
 ### Publishing

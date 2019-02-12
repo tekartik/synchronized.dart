@@ -37,11 +37,16 @@ class ReentrantLock extends LockBase {
         }
         if (func != null) {
           // Run in a zone
-          return await runZoned(() {
+          var result = runZoned(() {
             // Clear or futures
             innerFutures.clear();
             return func();
           }, zoneValues: {this: true});
+          if (result is Future) {
+            return await result;
+          } else {
+            return result;
+          }
         } else {
           return null;
         }
@@ -49,7 +54,6 @@ class ReentrantLock extends LockBase {
         void _waitForInner() {
           // Await inner tasks
           if (innerFutures.isNotEmpty) {
-            // ignore: unawaited_futures
             Future.wait(innerFutures).whenComplete(() {
               innerFutures.clear();
               complete(completer);
