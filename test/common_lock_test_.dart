@@ -108,67 +108,6 @@ void lockMain(LockFactory lockFactory) {
         await lock.synchronized(() => {});
         print("syncd ${sw.elapsed}");
         expect(j, count * (count - 1) / 2);
-
-        // 2019-02-11
-        // PC3 2.0.0-dev.1
-        // 00:01 +3: test/basic_lock_test.dart: BasicLock synchronized perf 10000 operations
-        // none 0:00:00.000210
-        // await 0:00:00.090603
-        // syncd 0:00:00.133308
-        // 00:02 +16: test/reentrant_lock_test.dart: ReentrantLock synchronized perf 10000 operations
-        // none 0:00:00.000209
-        // await 0:00:00.096543
-        // syncd 0:00:00.399162
-
-        // 2019-02-09
-        // PC3 1.5.4
-        // none 0:00:00.000237
-        // await 0:00:00.096719
-        // syncd 0:00:00.366971
-
-        // 2018-03-04
-        /*
-        00:00 +0: test/lock_test.dart: Lock synchronized perf 100000 operations
-         none 0:00:00.006750
-        await 0:00:00.767625
-        syncd 0:00:19.848688
-        00:21 +1: test/synchronized_lock_test.dart: SynchronizedLock synchronized perf 100000 operations
-         none 0:00:00.002337
-        await 0:00:00.838564
-        syncd 0:00:20.403227
-
-        00:00 +0: test/lock_test.dart: Lock synchronized perf 10000 operations
-         none 0:00:00.000466
-        await 0:00:00.384491
-        syncd 0:00:00.486831
-        00:01 +1: test/synchronized_lock_test.dart: SynchronizedLock synchronized perf 10000 operations
-         none 0:00:00.000405
-        await 0:00:00.298768
-        syncd 0:00:00.516049
-
-        */
-
-        // For 100 000 operations
-        // 00:00 +0: test/lock_test.dart: synchronized perf 10000 operations
-        // without synchronized
-        // none 0:00:00.012020
-        // await 0:00:00.849461
-        // syncd 0:00:19.949695
-        // 00:21 +1: test/synchronized_lock_test.dart: SynchronizedLock synchronized perf 10000 operations
-        // without synchronized
-        // none 0:00:00.002947
-        // await 0:00:00.902111
-        // syncd 0:00:20.247085
-
-        // 2016-10-14
-        // 0:00:00.000201
-        // 0:00:00.221551
-        // 0:00:00.404036
-
-        // 2017-10-15
-        // 0:00:00.000381
-        // 0:00:00.161558
-        // 0:00:00.603976
       });
     });
 

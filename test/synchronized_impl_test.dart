@@ -38,14 +38,25 @@ void main() {
       });
     });
 
-    group('SynchronizedLock', () {
+    group('ReentrantLock', () {
       group('locked', () {
         test('simple', () async {
           // Make sure the lock state is made immediately
+          // when the function is not async
           // This ensure that calling locked then synchronized is atomic
           _Lock lock = _Lock();
           expect(lock.locked, isFalse);
           Future future = lock.synchronized(() => {});
+          expect(lock.locked, isFalse);
+          await future;
+          expect(lock.locked, isFalse);
+        });
+
+        test('simple_async', () async {
+          // Make sure the lock state is lazy for async method
+          _Lock lock = _Lock();
+          expect(lock.locked, isFalse);
+          Future future = lock.synchronized(() async => {});
           expect(lock.locked, isTrue);
           await future;
           expect(lock.locked, isFalse);
