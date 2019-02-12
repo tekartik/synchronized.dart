@@ -31,6 +31,27 @@ void main() {
       expect(ok, isTrue);
     });
 
+    test('inLock', () async {
+      var enterCompleter = Completer();
+      var completer = Completer();
+      Lock lock = newLock();
+      expect(lock.locked, isFalse);
+      expect(lock.inLock, isFalse);
+      var future = lock.synchronized(() async {
+        enterCompleter.complete();
+        expect(lock.locked, isTrue);
+        expect(lock.inLock, isTrue);
+        await completer.future;
+      });
+      await enterCompleter.future;
+      expect(lock.locked, isTrue);
+      expect(lock.inLock, isFalse);
+      completer.complete();
+      await future;
+      expect(lock.locked, isFalse);
+      expect(lock.inLock, isFalse);
+    });
+
     // only for reentrant-lock
     test('nested', () async {
       Lock lock = newLock();

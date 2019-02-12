@@ -88,9 +88,10 @@ int value = await lock.synchronized(() {
     
 ## How it works
 
-Each `Lock` object keep a list of pending tasks. The next tasks is executed once the previous one is done
+The next tasks is executed once the previous one is done
 
-Re-entrant locks uses `Zone` to know in which context a block is running in order to be reentrant.
+Re-entrant locks uses `Zone` to know in which context a block is running in order to be reentrant. It maintains a list
+of inner tasks to be awaited for.
 
 ## Example
 

@@ -321,7 +321,7 @@ void lockMain(LockFactory lockFactory) {
     });
 
     group('locked_in_lock', () {
-      test('simple', () async {
+      test('two', () async {
         var lock = newLock();
 
         expect(lock.locked, isFalse);
@@ -377,6 +377,24 @@ void lockMain(LockFactory lockFactory) {
         await future;
         expect(lock.locked, isFalse);
         expect(lock.inLock, isFalse);
+      });
+
+      test('locked_with_timeout', () async {
+        Lock lock = newLock();
+        Completer completer = Completer();
+        Future future = lock.synchronized(() async {
+          await completer.future;
+        });
+        expect(lock.locked, isTrue);
+
+        try {
+          await lock.synchronized(null, timeout: Duration(milliseconds: 100));
+          fail('should fail');
+        } on TimeoutException catch (_) {}
+        expect(lock.locked, isTrue);
+        completer.complete();
+        await future;
+        expect(lock.locked, isFalse);
       });
     });
   });

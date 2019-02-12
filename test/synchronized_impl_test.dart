@@ -45,7 +45,7 @@ void main() {
           // This ensure that calling locked then synchronized is atomic
           _Lock lock = _Lock();
           expect(lock.locked, isFalse);
-          Future future = lock.synchronized(null);
+          Future future = lock.synchronized(() => {});
           expect(lock.locked, isTrue);
           await future;
           expect(lock.locked, isFalse);
@@ -121,19 +121,18 @@ void main() {
           Future future = lock.synchronized(() async {
             expect(lock.inLock, isTrue);
 
-            expect(lock.tasks.length, 1);
-            expect(lock.tasks.last.innerFutures, isNull);
+            expect(lock.innerFutures.length, 0);
+
             // don't wait here
             // ignore: unawaited_futures
-            lock.synchronized(() async {
-              expect(lock.tasks.length, 1);
-              expect(lock.tasks.last.innerFutures.length, 1);
+            await lock.synchronized(() async {
+              expect(lock.innerFutures.length, 1);
               expect(lock.inLock, isTrue);
               await sleep(10);
               expect(lock.inLock, isTrue);
-              expect(lock.tasks.length, 1);
+              expect(lock.innerFutures.length, 1);
             });
-            expect(lock.tasks.last.innerFutures.length, 1);
+            expect(lock.innerFutures.length, 0);
           });
           expect(lock.inLock, isFalse);
           await future;
