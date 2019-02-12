@@ -17,51 +17,31 @@ class _Lock extends ReentrantLock {
 
 void main() {
   group('synchronized_impl', () {
-    group('Lock', () {
-      group('Lock', () {
-        test('normal', () {
-          var lock = common.Lock();
-          expect(lock, const TypeMatcher<BasicLock>());
-        });
-
-        test('reentrant', () {
-          var lock = common.Lock(reentrant: true);
-          expect(lock, const TypeMatcher<ReentrantLock>());
-        });
-
-        test('taskRunning', () {});
-        test('toString', () {
-          var lock = common.Lock();
-          expect("$lock", startsWith("Lock["));
-          expect("$lock", endsWith("]"));
-        });
+    group('BasicLock', () {
+      test('type', () {
+        var lock = common.Lock();
+        expect(lock, const TypeMatcher<BasicLock>());
+      });
+      test('toString', () {
+        var lock = common.Lock();
+        expect("$lock", startsWith("Lock["));
+        expect("$lock", endsWith("]"));
       });
     });
 
     group('ReentrantLock', () {
+      test('type', () {
+        var lock = common.Lock(reentrant: true);
+        expect(lock, const TypeMatcher<ReentrantLock>());
+      });
+
+      test('toString', () {
+        var lock = common.Lock(reentrant: true);
+        expect("$lock", startsWith("ReentrantLock["));
+        expect("$lock", endsWith("]"));
+      });
+
       group('locked', () {
-        test('simple', () async {
-          // Make sure the lock state is made immediately
-          // when the function is not async
-          // This ensure that calling locked then synchronized is atomic
-          _Lock lock = _Lock();
-          expect(lock.locked, isFalse);
-          Future future = lock.synchronized(() => {});
-          expect(lock.locked, isFalse);
-          await future;
-          expect(lock.locked, isFalse);
-        });
-
-        test('simple_async', () async {
-          // Make sure the lock state is lazy for async method
-          _Lock lock = _Lock();
-          expect(lock.locked, isFalse);
-          Future future = lock.synchronized(() async => {});
-          expect(lock.locked, isTrue);
-          await future;
-          expect(lock.locked, isFalse);
-        });
-
         test('inner', () async {
           _Lock lock = _Lock();
           Completer completer = Completer();
@@ -88,30 +68,6 @@ void main() {
         });
       });
 
-      group('immediacity', () {
-        test('sync', () async {
-          _Lock lock = _Lock();
-          int value;
-          Future future = lock.synchronized(() {
-            value = 1;
-          });
-          // A sync method is executed right away!
-          expect(value, 1);
-          await future;
-        });
-
-        test('async', () async {
-          _Lock lock = _Lock();
-          int value;
-          Future future = lock.synchronized(() async {
-            value = 1;
-          });
-          // A sync method is executed right away!
-          expect(value, 1);
-
-          await future;
-        });
-      });
       group('inLock', () {
         test('two_locks', () async {
           _Lock lock1 = _Lock();

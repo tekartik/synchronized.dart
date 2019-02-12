@@ -74,30 +74,30 @@ void lockMain(LockFactory lockFactory) {
         int count = operationCount;
         int j;
 
-        Stopwatch sw = Stopwatch();
+        Stopwatch sw1 = Stopwatch();
         j = 0;
-        sw.start();
+        sw1.start();
         for (int i = 0; i < count; i++) {
           j += i;
         }
-        print(" none ${sw.elapsed}");
+        sw1.stop();
         expect(j, count * (count - 1) / 2);
 
-        sw = Stopwatch();
+        final sw2 = Stopwatch();
         j = 0;
-        sw.start();
+        sw2.start();
         for (int i = 0; i < count; i++) {
           await () async {
             j += i;
           }();
         }
-        print("await ${sw.elapsed}");
+        sw2.stop();
         expect(j, count * (count - 1) / 2);
 
         var lock = newLock();
-        sw = Stopwatch();
+        final sw3 = Stopwatch();
         j = 0;
-        sw.start();
+        sw3.start();
         for (int i = 0; i < count; i++) {
           // ignore: unawaited_futures
           lock.synchronized(() {
@@ -106,8 +106,28 @@ void lockMain(LockFactory lockFactory) {
         }
         // final wait
         await lock.synchronized(() => {});
-        print("syncd ${sw.elapsed}");
+        expect(lock.locked, isFalse);
+        sw3.stop();
         expect(j, count * (count - 1) / 2);
+
+        final sw4 = Stopwatch();
+        j = 0;
+        sw4.start();
+        for (int i = 0; i < count; i++) {
+          await lock.synchronized(() async {
+            await Future.value();
+            j += i;
+          });
+        }
+        // final wait
+        expect(lock.locked, isFalse);
+        sw4.stop();
+        expect(j, count * (count - 1) / 2);
+
+        print("  none ${sw1.elapsed}");
+        print(" await ${sw2.elapsed}");
+        print(" syncd ${sw3.elapsed}");
+        print("asyncd ${sw4.elapsed}");
       });
     });
 
@@ -259,6 +279,61 @@ void lockMain(LockFactory lockFactory) {
       });
     });
 
+    group('immediacity', () {
+      test('sync', () async {
+        var lock = newLock();
+        int value;
+        Future future = lock.synchronized(() {
+          value = 1;
+          return Future.value().then((_) {
+            value = 2;
+          });
+        });
+        // A sync method is executed right away!
+        expect(value, 1);
+        await future;
+        expect(value, 2);
+      });
+
+      test('async', () async {
+        var lock = newLock();
+        int value;
+        Future future = lock.synchronized(() async {
+          value = 1;
+          return Future.value().then((_) {
+            value = 2;
+          });
+        });
+        // A sync method is executed right away!
+        expect(value, 1);
+
+        await future;
+        expect(value, 2);
+      });
+    });
+
+    group('locked', () {
+      test('simple', () async {
+        // Make sure the lock state is made immediately
+        // when the function is not async
+        var lock = newLock();
+        expect(lock.locked, isFalse);
+        Future future = lock.synchronized(() => {});
+        expect(lock.locked, isFalse);
+        await future;
+        expect(lock.locked, isFalse);
+      });
+
+      test('simple_async', () async {
+        // Make sure the lock state is lazy for async method
+        var lock = newLock();
+        expect(lock.locked, isFalse);
+        Future future = lock.synchronized(() async => {});
+        expect(lock.locked, isTrue);
+        await future;
+        expect(lock.locked, isFalse);
+      });
+    });
     group('locked_in_lock', () {
       test('two', () async {
         var lock = newLock();
