@@ -158,7 +158,7 @@ void lockMain(LockFactory lockFactory) {
         // hold for 5ms
         // ignore: unawaited_futures
         lock.synchronized(() async {
-          await sleep(500);
+          await sleep(1000);
         });
 
         try {
@@ -179,13 +179,13 @@ void lockMain(LockFactory lockFactory) {
           // ignore: unawaited_futures
           lock.synchronized(() {
             ran4 = true;
-          }, timeout: Duration(milliseconds: 1000));
+          }, timeout: Duration(milliseconds: 2000));
         } on TimeoutException catch (_) {}
 
         // waiting long enough
         await lock.synchronized(() {
           ran3 = true;
-        }, timeout: Duration(milliseconds: 1000));
+        }, timeout: Duration(milliseconds: 2000));
 
         expect(ran1, isFalse, reason: "ran1 should be false");
         expect(ran2, isFalse, reason: "ran2 should be false");

@@ -10,11 +10,6 @@ import 'package:synchronized/src/utils.dart';
 import 'package:synchronized/synchronized.dart' as common;
 import 'package:test/test.dart';
 
-// To make tests less verbose...
-class _Lock extends ReentrantLock {
-  _Lock() : super();
-}
-
 void main() {
   group('synchronized_impl', () {
     group('BasicLock', () {
@@ -43,13 +38,11 @@ void main() {
 
       group('locked', () {
         test('inner', () async {
-          _Lock lock = _Lock();
+          final lock = ReentrantLock();
           Completer completer = Completer();
           Completer innerCompleter = Completer();
           Future future = lock.synchronized(() async {
-            // don't wait here
-            // ignore: unawaited_futures
-            lock.synchronized(() async {
+            await lock.synchronized(() async {
               await sleep(1);
               await innerCompleter.future;
             });
@@ -70,8 +63,8 @@ void main() {
 
       group('inLock', () {
         test('two_locks', () async {
-          _Lock lock1 = _Lock();
-          _Lock lock2 = _Lock();
+          final lock1 = ReentrantLock();
+          final lock2 = ReentrantLock();
           Completer completer = Completer();
           Future future = lock1.synchronized(() async {
             expect(lock1.inLock, isTrue);
@@ -84,36 +77,36 @@ void main() {
         });
 
         test('inner', () async {
-          _Lock lock = _Lock();
+          final lock = ReentrantLock();
+          expect(lock.innerLocks.length, 1);
           Future future = lock.synchronized(() async {
             expect(lock.inLock, isTrue);
 
-            expect(lock.innerFutures.length, 0);
+            expect(lock.innerLocks.length, 2);
 
-            // don't wait here
-            // ignore: unawaited_futures
             await lock.synchronized(() async {
-              expect(lock.innerFutures.length, 1);
+              expect(lock.innerLocks.length, 3);
               expect(lock.inLock, isTrue);
               await sleep(10);
               expect(lock.inLock, isTrue);
-              expect(lock.innerFutures.length, 1);
+              expect(lock.innerLocks.length, 3);
             });
-            expect(lock.innerFutures.length, 0);
+            expect(lock.innerLocks.length, 2);
           });
+          // yes we are right away at level 3!
+          expect(lock.innerLocks.length, 3);
           expect(lock.inLock, isFalse);
           await future;
+          expect(lock.innerLocks.length, 1);
           expect(lock.inLock, isFalse);
         });
 
         test('inner_vs_outer', () async {
           List<int> list = [];
-          _Lock lock = _Lock();
+          final lock = ReentrantLock();
           Future future = lock.synchronized(() async {
             await sleep(10);
-            // don't wait here
-            // ignore: unawaited_futures
-            lock.synchronized(() async {
+            await lock.synchronized(() async {
               await sleep(20);
               list.add(1);
             });

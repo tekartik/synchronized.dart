@@ -1,79 +1,58 @@
-import 'package:synchronized/src/lock_base.dart';
+import 'package:synchronized/src/basic_lock.dart';
+import 'package:synchronized/synchronized.dart';
 
 import 'utils.dart';
 
 /// Reentrant lock
 ///
-/// It uses [Zone] and maintain a list of inner futures
-class ReentrantLock extends LockBase {
-  // list of inner zones
-  final List<Future> innerFutures = [];
+/// It uses [Zone] and maintain a list of inner locks
+class ReentrantLock implements Lock {
+  /// We always have at least one inner lock
+  final List<BasicLock> innerLocks = [BasicLock()];
+
+  int get innerLevel => (Zone.current[this] as int) ?? 0;
 
   @override
   Future<T> synchronized<T>(FutureOr<T> func(), {Duration timeout}) async {
-    if (inZone) {
+    // Handle late synchronized section warning
+    final level = innerLevel;
+
+    // Check that we are still in the proper block
+    // zones could run outside the block so it could lead to an unexpected behavior
+    if (level >= innerLocks.length) {
+      throw StateError(
+          'This can happen if an inner synchronized block is spawned outside the block it was started from. Make sure the inner synchronized blocks are properly awaited');
+    }
+    final lock = innerLocks[level];
+
+    return lock.synchronized(() async {
       if (func != null) {
-        final completer = Completer.sync();
-        // Add a future to the completion list
-        innerFutures.add(completer.future);
+        innerLocks.add(BasicLock());
         try {
-          return await func();
-        } finally {
-          // Remove it
-          innerFutures.remove(completer.future);
-          // Complete in case we are waiting for it
-          completer.complete();
-        }
-      } else {
-        return null;
-      }
-    } else {
-      final prev = last;
-      final completer = init();
-      try {
-        // If there is a previous running block, wait for it
-        if (prev != null) {
-          await waitPrevious(timeout, prev);
-        }
-        if (func != null) {
-          // Run in a zone
           var result = runZoned(() {
-            // Clear or futures
-            innerFutures.clear();
             return func();
-          }, zoneValues: {this: true});
+          }, zoneValues: {this: level + 1});
           if (result is Future) {
             return await result;
           } else {
             return result;
           }
-        } else {
-          return null;
+        } finally {
+          innerLocks.removeLast();
         }
-      } finally {
-        void _waitForInner() {
-          // Await inner tasks
-          if (innerFutures.isNotEmpty) {
-            Future.wait(innerFutures).whenComplete(() {
-              innerFutures.clear();
-              complete(completer);
-            });
-          } else {
-            complete(completer);
-          }
-        }
-
-        cleanUp(prev, timeout, _waitForInner);
       }
-    }
+    }, timeout: timeout);
   }
 
   @override
   String toString() => 'ReentrantLock[${identityHashCode(this)}]';
 
   // We set a zone value to true
-  bool get inZone => Zone.current[this] == true;
+  bool get inZone => innerLevel > 0;
 
   @override
   bool get inLock => inZone;
+
+  @override
+  bool get locked => innerLocks.length > 1;
 }

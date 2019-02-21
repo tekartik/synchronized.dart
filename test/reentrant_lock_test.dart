@@ -95,10 +95,9 @@ void main() {
       lock.synchronized(() async {
         await sleep(1);
         list.add(1);
-        // don't wait here on purpose
-        // to make sure this task is started first
-        // ignore: unawaited_futures
-        lock.synchronized(() async {
+
+        // This one should execute before
+        return lock.synchronized(() async {
           await sleep(1);
           list.add(2);
         });
@@ -112,13 +111,10 @@ void main() {
     test('inner_no_wait', () async {
       Lock lock = newLock();
       List<int> list = [];
-      await lock.synchronized(() async {
-        await sleep(1);
+      // ignore: unawaited_futures
+      lock.synchronized(() {
         list.add(1);
-        // don't wait here on purpose
-        // to make sure this task is started first
-        // ignore: unawaited_futures
-        lock.synchronized(() async {
+        return lock.synchronized(() async {
           await sleep(1);
           list.add(3);
         });
@@ -180,6 +176,71 @@ void main() {
           expect(e is TestFailure, isFalse);
         }
         await sleep(1);
+      });
+    });
+
+    group('inner_lock', () {
+      test('locked_with_timeout', () async {
+        Lock lock = newLock();
+        await lock.synchronized(() async {
+          Completer completer = Completer();
+          Future future = lock.synchronized(() async {
+            await completer.future;
+          });
+          expect(lock.locked, isTrue);
+
+          try {
+            await lock.synchronized(null, timeout: Duration(milliseconds: 100));
+            fail('should fail');
+          } on TimeoutException catch (_) {}
+          expect(lock.locked, isTrue);
+          completer.complete();
+          await future;
+        });
+        expect(lock.locked, isFalse);
+      });
+
+      test('inner_locked_with_timeout', () async {
+        Lock lock = newLock();
+        await lock.synchronized(() async {
+          await lock.synchronized(() async {
+            Completer completer = Completer();
+            Future future = lock.synchronized(() async {
+              await completer.future;
+            });
+            expect(lock.locked, isTrue);
+
+            try {
+              await lock.synchronized(null,
+                  timeout: Duration(milliseconds: 100));
+              fail('should fail');
+            } on TimeoutException catch (_) {}
+            expect(lock.locked, isTrue);
+            completer.complete();
+            await future;
+          });
+        });
+        expect(lock.locked, isFalse);
+      });
+
+      test('late', () async {
+        final lock = newLock();
+        bool hasStateError = false;
+        var completer = Completer();
+        await lock.synchronized(() {
+          sleep(1).then((_) async {
+            try {
+              await lock.synchronized(() {});
+            } on StateError catch (_) {
+              hasStateError = true;
+            } finally {
+              completer.complete();
+            }
+          });
+        });
+        expect(hasStateError, isFalse);
+        await completer.future;
+        expect(hasStateError, isTrue);
       });
     });
   });
