@@ -1,8 +1,12 @@
 # Changelog
 
-## 2.0
+## 2.1.0
 
-- Remove previously depracated `SynchronizedLock` and `synchronized` function
+- Fix reentrant lock to properly synchronize inner blocks
+
+## 2.0.0
+
+- Remove previously deprecated `SynchronizedLock` and `synchronized` function
 
 ## 1.5.2
 
