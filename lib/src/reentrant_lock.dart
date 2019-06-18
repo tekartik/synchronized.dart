@@ -40,6 +40,8 @@ class ReentrantLock implements Lock {
         } finally {
           innerLocks.removeLast();
         }
+      } else {
+        return null;
       }
     }, timeout: timeout);
   }
