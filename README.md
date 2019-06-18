@@ -23,9 +23,9 @@ For single process (single isolate) accessing some resources (database..), it ca
 
 ## Feature
 
- * Synchronized block are reentrant
+ * By default a lock is not reentrant
  * Timeout support
- * Support for non-reentrant lock (not using Zone)
+ * Support for reentrant lock (using Zone)
  * Consistent behavior (i.e. if it is unlocked calling synchronized grab the lock)
  * Values and Errors are properly reported to the caller
  * Work on Browser, DartVM and Flutter
@@ -37,26 +37,25 @@ It differs from the `pool` package used with a resource count of 1 by supporting
 
 A simple usage example:
 
-    import 'package:synchronized/synchronized.dart';
+```dart
+import 'package:synchronized/synchronized.dart';
 
-    main() async {
-      var lock = new Lock();
-      await lock.synchronized(() async {
-        // Only this block can run (once) until done 
-        ...
-      });
-    }
+main() async {
+  // Use this object to prevent concurrent access to data
+  var lock = new Lock();
+  ...
+  await lock.synchronized(() async {
+    // Only this block can run (once) until done 
+    ...
+  });
+}
+```
     
-Any object can become a locker, so in a class method you can use
-
-    synchronized(this, () async {
-      // do some stuff
-    });
-
 If you need a re-entrant lock you can use
 
-````
+```dart
 var lock = new Lock(reentrant: true);
+// ...
 await lock.synchronized(() async {
   // do some stuff
   // ... 
@@ -65,67 +64,98 @@ await lock.synchronized(() async {
     // other stuff
   }
 });
-````
+```
         
 A basic lock is not reentrant by default and does not use Zone. It behaves like an async executor with a pool capacity
 of 1
 
-````
+```dart
 var lock = Lock();
+// ...
 lock.synchronized(() async {
   // do some stuff
   // ...
 });
-````
+```
     
 The return value is preserved
 
-    int value = await lock.synchronized(() {
-      return 1;
-    });
+```dart
+int value = await lock.synchronized(() {
+  return 1;
+});
+```
     
 ## How it works
 
-Each `Lock` object keep a list of pending tasks. The next tasks is executed once the previous one is done
+The next tasks is executed once the previous one is done
 
-Re-entrant locks uses `Zone` to know in which context a block is running in order to be reentrant.
+Re-entrant locks uses `Zone` to know in which context a block is running in order to be reentrant. It maintains a list
+of inner tasks to be awaited for.
 
 ## Example
 
 Consider the following dummy code
 
-    Future writeSlow(int value) async {
-      new Future.delayed(new Duration(milliseconds: 1));
-      stdout.write(value);
-    }
-    
-    Future write(List<int> values) async {
-      for (int value in values) {
-        await writeSlow(value);
-      }
-    }
-    
-    Future write1234() async {
-      await write([1, 2, 3, 4]);
-    }
+```dart
+Future writeSlow(int value) async {
+  await Future.delayed(new Duration(milliseconds: 1));
+  stdout.write(value);
+}
+
+Future write(List<int> values) async {
+  for (int value in values) {
+    await writeSlow(value);
+  }
+}
+
+Future write1234() async {
+  await write([1, 2, 3, 4]);
+}
+```
 
 Doing 
 
-    write1234();
-    write1234();
-    
+```dart
+write1234();
+write1234();
+```
 would print
 
     11223344
     
 while doing
 
-    lock.synchronized(write1234);
-    lock.synchronized(write1234);
+```dart
+lock.synchronized(write1234);
+lock.synchronized(write1234);
+```
 
 would print
 
     12341234
+
+## The Lock instance
+
+Have in mind that the `Lock` instance must be shared between calls in order to effectively prevent concurrent execution. For instance, in the example below the lock instance is the same between all `myMethod()` calls.
+
+```dart
+class MyClass {
+  final _lock = new Lock();
+
+  Future<void> myMethod() async {
+    await _lock.synchronized(() async {
+      step1();
+      step2();
+      step3();
+    });
+  }
+}
+```
+
+Typically you would create a global or static instance Lock to prevent concurrent access to
+a global resource or a class instance Lock to prevent concurrent modifications of
+class instance data and resources.
 
 ## Features and bugs
 

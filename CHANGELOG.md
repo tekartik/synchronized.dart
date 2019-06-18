@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.0
+
+- Fix reentrant lock to properly synchronize inner blocks
+
+## 2.0.0
+
+- Remove previously deprecated `SynchronizedLock` and `synchronized` function
+
+## 1.5.2
+
+- Remove dev_test dependency
+
 ## 1.5.1
 
 - Dart2 stable support

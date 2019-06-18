@@ -7,4 +7,4 @@ set -e
 # quick run before checking
 dartfmt -w .
 dartanalyzer .
-pub run test
+pub run test -j 1

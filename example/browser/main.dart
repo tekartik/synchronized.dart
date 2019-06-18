@@ -4,15 +4,15 @@ import 'package:synchronized/synchronized.dart';
 
 PreElement outElement;
 
-print(msg) {
+void print(dynamic msg) {
   if (outElement == null) {
     outElement = querySelector("#output") as PreElement;
   }
-  outElement.text += "${msg}\n";
+  outElement.text += "$msg\n";
 }
 
 Future writeSlow(int value) async {
-  new Future.delayed(new Duration(milliseconds: 1));
+  await Future.delayed(Duration(milliseconds: 1));
   print(value);
 }
 
@@ -30,35 +30,41 @@ class Demo {
   Future test1() async {
     print("not synchronized");
     //await Future.wait([write1234(), write1234()]);
+    // ignore: unawaited_futures
     write1234();
+    // ignore: unawaited_futures
     write1234();
 
-    await new Future.delayed(new Duration(milliseconds: 50));
+    await Future.delayed(Duration(milliseconds: 50));
   }
 
   Future test2() async {
     print("synchronized");
-    var lock = new Lock();
+    var lock = Lock();
 
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
 
-    await new Future.delayed(new Duration(milliseconds: 50));
+    await Future.delayed(Duration(milliseconds: 50));
   }
 
   Future test3() async {
     print("lock.synchronized");
 
-    var lock = new Lock();
+    var lock = Lock();
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
+    // ignore: unawaited_futures
     lock.synchronized(write1234);
 
-    await new Future.delayed(new Duration(milliseconds: 50));
+    await Future.delayed(Duration(milliseconds: 50));
   }
 
   Future test4() async {
     print("basic");
-    var lock = new Lock();
+    var lock = Lock();
     await lock.synchronized(() async {
       // do you stuff
       // await ...
@@ -66,7 +72,7 @@ class Demo {
   }
 
   Future readme1() async {
-    var lock = new Lock();
+    var lock = Lock();
 
     // ...
     await lock.synchronized(() async {
@@ -75,26 +81,26 @@ class Demo {
   }
 
   Future readme2() async {
-    var lock = new Lock();
+    var lock = Lock();
     if (!lock.locked) {
-      lock.synchronized(() async {
+      await lock.synchronized(() async {
         // do some stuff
       });
     }
   }
 
   Future readme3() async {
-    var lock = new Lock();
+    var lock = Lock();
 
     int value = await lock.synchronized(() {
       return 1;
     });
-    print("got value: ${value}");
+    print("got value: $value");
   }
 }
 
-main() async {
-  Demo demo = new Demo();
+Future main() async {
+  Demo demo = Demo();
 
   await demo.test1();
   await demo.test2();
