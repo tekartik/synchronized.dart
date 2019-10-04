@@ -3,13 +3,14 @@ import 'package:synchronized/synchronized.dart';
 
 import 'utils.dart';
 
-/// Reentrant lock
+/// Reentrant lock.
 ///
-/// It uses [Zone] and maintain a list of inner locks
+/// It uses [Zone] and maintain a list of inner locks.
 class ReentrantLock implements Lock {
   /// We always have at least one inner lock
   final List<BasicLock> innerLocks = [BasicLock()];
 
+  /// Inner level count.
   int get innerLevel => (Zone.current[this] as int) ?? 0;
 
   @override
@@ -49,7 +50,7 @@ class ReentrantLock implements Lock {
   @override
   String toString() => 'ReentrantLock[${identityHashCode(this)}]';
 
-  // We set a zone value to true
+  /// We are in zone as soon as we enter the first lock level.
   bool get inZone => innerLevel > 0;
 
   @override
