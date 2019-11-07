@@ -139,7 +139,8 @@ void lockMain(LockFactory lockFactory) {
           await completer.future;
         });
         try {
-          await lock.synchronized(null, timeout: Duration(milliseconds: 1));
+          await lock.synchronized(null,
+              timeout: const Duration(milliseconds: 1));
           fail('should fail');
         } on TimeoutException catch (_) {}
         completer.complete();
@@ -164,14 +165,14 @@ void lockMain(LockFactory lockFactory) {
         try {
           await lock.synchronized(() {
             ran1 = true;
-          }, timeout: Duration(milliseconds: 1));
+          }, timeout: const Duration(milliseconds: 1));
         } on TimeoutException catch (_) {}
 
         try {
           await lock.synchronized(() async {
             await sleep(5000);
             ran2 = true;
-          }, timeout: Duration(milliseconds: 1));
+          }, timeout: const Duration(milliseconds: 1));
           // fail('should fail');
         } on TimeoutException catch (_) {}
 
@@ -179,13 +180,13 @@ void lockMain(LockFactory lockFactory) {
           // ignore: unawaited_futures
           lock.synchronized(() {
             ran4 = true;
-          }, timeout: Duration(milliseconds: 2000));
+          }, timeout: const Duration(milliseconds: 2000));
         } on TimeoutException catch (_) {}
 
         // waiting long enough
         await lock.synchronized(() {
           ran3 = true;
-        }, timeout: Duration(milliseconds: 2000));
+        }, timeout: const Duration(milliseconds: 2000));
 
         expect(ran1, isFalse, reason: "ran1 should be false");
         expect(ran2, isFalse, reason: "ran2 should be false");
@@ -203,7 +204,8 @@ void lockMain(LockFactory lockFactory) {
             await completer.future;
           }).catchError((e) {}));
           try {
-            await lock.synchronized(null, timeout: Duration(milliseconds: 1));
+            await lock.synchronized(null,
+                timeout: const Duration(milliseconds: 1));
             fail('should fail');
           } on TimeoutException catch (_) {}
           completer.completeError('error');
@@ -216,7 +218,7 @@ void lockMain(LockFactory lockFactory) {
           });
           await lock.synchronized(() {
             okTimeout = true;
-          }, timeout: Duration(milliseconds: 1000));
+          }, timeout: const Duration(milliseconds: 1000));
         } catch (_) {}
         expect(ok, isTrue);
         expect(okTimeout, isTrue);
@@ -402,7 +404,8 @@ void lockMain(LockFactory lockFactory) {
         expect(lock.locked, isTrue);
 
         try {
-          await lock.synchronized(null, timeout: Duration(milliseconds: 100));
+          await lock.synchronized(null,
+              timeout: const Duration(milliseconds: 100));
           fail('should fail');
         } on TimeoutException catch (_) {}
         expect(lock.locked, isTrue);

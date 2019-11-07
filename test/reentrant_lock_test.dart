@@ -190,7 +190,8 @@ void main() {
           expect(lock.locked, isTrue);
 
           try {
-            await lock.synchronized(null, timeout: Duration(milliseconds: 100));
+            await lock.synchronized(null,
+                timeout: const Duration(milliseconds: 100));
             fail('should fail');
           } on TimeoutException catch (_) {}
           expect(lock.locked, isTrue);
@@ -212,7 +213,7 @@ void main() {
 
             try {
               await lock.synchronized(null,
-                  timeout: Duration(milliseconds: 100));
+                  timeout: const Duration(milliseconds: 100));
               fail('should fail');
             } on TimeoutException catch (_) {}
             expect(lock.locked, isTrue);

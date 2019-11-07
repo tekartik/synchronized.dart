@@ -12,7 +12,7 @@ void print(dynamic msg) {
 }
 
 Future writeSlow(int value) async {
-  await Future.delayed(Duration(milliseconds: 1));
+  await Future.delayed(const Duration(milliseconds: 1));
   print(value);
 }
 
@@ -35,7 +35,7 @@ class Demo {
     // ignore: unawaited_futures
     write1234();
 
-    await Future.delayed(Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 50));
   }
 
   Future test2() async {
@@ -47,7 +47,7 @@ class Demo {
     // ignore: unawaited_futures
     lock.synchronized(write1234);
 
-    await Future.delayed(Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 50));
   }
 
   Future test3() async {
@@ -59,7 +59,7 @@ class Demo {
     // ignore: unawaited_futures
     lock.synchronized(write1234);
 
-    await Future.delayed(Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 50));
   }
 
   Future test4() async {

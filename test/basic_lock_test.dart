@@ -22,7 +22,7 @@ void main() {
       var exception;
       await lock.synchronized(() async {
         try {
-          await lock.synchronized(() {}, timeout: Duration(seconds: 1));
+          await lock.synchronized(() {}, timeout: const Duration(seconds: 1));
         } catch (_exception) {
           exception = _exception;
         }
