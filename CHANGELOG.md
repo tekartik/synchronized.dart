@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0+1
+## 2.1.0+2
 
 - Fix reentrant lock to properly synchronize inner blocks
 
