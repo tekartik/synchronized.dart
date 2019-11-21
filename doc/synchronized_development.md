@@ -54,3 +54,9 @@ syncd 0:00:13.592300
 
      pub publish
 
+
+Post publish
+
+    git tag vX.Y.Z
+    git push origin --tags
+
