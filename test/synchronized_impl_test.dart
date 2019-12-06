@@ -19,8 +19,8 @@ void main() {
       });
       test('toString', () {
         var lock = common.Lock();
-        expect("$lock", startsWith("Lock["));
-        expect("$lock", endsWith("]"));
+        expect('$lock', startsWith('Lock['));
+        expect('$lock', endsWith(']'));
       });
     });
 
@@ -32,16 +32,16 @@ void main() {
 
       test('toString', () {
         var lock = common.Lock(reentrant: true);
-        expect("$lock", startsWith("ReentrantLock["));
-        expect("$lock", endsWith("]"));
+        expect('$lock', startsWith('ReentrantLock['));
+        expect('$lock', endsWith(']'));
       });
 
       group('locked', () {
         test('inner', () async {
           final lock = ReentrantLock();
-          Completer completer = Completer();
-          Completer innerCompleter = Completer();
-          Future future = lock.synchronized(() async {
+          final completer = Completer();
+          final innerCompleter = Completer();
+          final future = lock.synchronized(() async {
             await lock.synchronized(() async {
               await sleep(1);
               await innerCompleter.future;
@@ -66,8 +66,8 @@ void main() {
         test('two_locks', () async {
           final lock1 = ReentrantLock();
           final lock2 = ReentrantLock();
-          Completer completer = Completer();
-          Future future = lock1.synchronized(() async {
+          final completer = Completer();
+          final future = lock1.synchronized(() async {
             expect(lock1.inLock, isTrue);
             expect(lock2.inLock, isFalse);
             await completer.future;
@@ -80,7 +80,7 @@ void main() {
         test('inner', () async {
           final lock = ReentrantLock();
           expect(lock.innerLocks.length, 1);
-          Future future = lock.synchronized(() async {
+          final future = lock.synchronized(() async {
             expect(lock.inLock, isTrue);
 
             expect(lock.innerLocks.length, 2);
@@ -103,9 +103,9 @@ void main() {
         });
 
         test('inner_vs_outer', () async {
-          List<int> list = [];
+          final list = <int>[];
           final lock = ReentrantLock();
-          Future future = lock.synchronized(() async {
+          final future = lock.synchronized(() async {
             await sleep(10);
             await lock.synchronized(() async {
               await sleep(20);
@@ -113,11 +113,11 @@ void main() {
             });
           });
           expect(lock.inLock, isFalse);
-          Future future2 = lock.synchronized(() async {
+          final future2 = lock.synchronized(() async {
             await sleep(10);
             list.add(2);
           });
-          Future future3 = sleep(20).whenComplete(() async {
+          final future3 = sleep(20).whenComplete(() async {
             await lock.synchronized(() async {
               list.add(3);
             });

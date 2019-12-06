@@ -14,37 +14,37 @@ void main() {
 
 void run(LockFactory factory) {
   Lock newLock() => factory.newLock();
-  int operationCount = 500000;
+  final operationCount = 500000;
 
   test('$operationCount operations', () async {
-    int count = operationCount;
+    final count = operationCount;
     int j;
 
-    Stopwatch sw = Stopwatch();
+    var sw = Stopwatch();
     j = 0;
     sw.start();
-    for (int i = 0; i < count; i++) {
+    for (var i = 0; i < count; i++) {
       j += i;
     }
-    print(" none ${sw.elapsed}");
+    print(' none ${sw.elapsed}');
     expect(j, count * (count - 1) / 2);
 
     sw = Stopwatch();
     j = 0;
     sw.start();
-    for (int i = 0; i < count; i++) {
+    for (var i = 0; i < count; i++) {
       await () async {
         j += i;
       }();
     }
-    print("await ${sw.elapsed}");
+    print('await ${sw.elapsed}');
     expect(j, count * (count - 1) / 2);
 
     var lock = newLock();
     sw = Stopwatch();
     j = 0;
     sw.start();
-    for (int i = 0; i < count; i++) {
+    for (var i = 0; i < count; i++) {
       // ignore: unawaited_futures
       lock.synchronized(() {
         j += i;
@@ -52,7 +52,7 @@ void run(LockFactory factory) {
     }
     // final wait
     await lock.synchronized(() => {});
-    print("syncd ${sw.elapsed}");
+    print('syncd ${sw.elapsed}');
     expect(j, count * (count - 1) / 2);
   });
 }

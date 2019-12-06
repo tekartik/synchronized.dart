@@ -8,7 +8,7 @@ Future writeSlow(int value) async {
 }
 
 Future write(List<int> values) async {
-  for (int value in values) {
+  for (var value in values) {
     await writeSlow(value);
   }
 }
@@ -19,7 +19,7 @@ Future write1234() async {
 
 class Demo {
   Future test1() async {
-    stdout.writeln("not synchronized");
+    stdout.writeln('not synchronized');
     //await Future.wait([write1234(), write1234()]);
     // ignore: unawaited_futures
     write1234();
@@ -31,7 +31,7 @@ class Demo {
   }
 
   Future test2() async {
-    stdout.writeln("synchronized");
+    stdout.writeln('synchronized');
 
     var lock = Lock();
     // ignore: unawaited_futures
@@ -64,10 +64,10 @@ class Demo {
 
   Future readme3() async {
     var lock = Lock();
-    int value = await lock.synchronized(() {
+    var value = await lock.synchronized(() {
       return 1;
     });
-    stdout.writeln("got value: ${value}");
+    stdout.writeln('got value: ${value}');
   }
 }
 

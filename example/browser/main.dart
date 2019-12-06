@@ -5,10 +5,8 @@ import 'package:synchronized/synchronized.dart';
 PreElement outElement;
 
 void print(dynamic msg) {
-  if (outElement == null) {
-    outElement = querySelector("#output") as PreElement;
-  }
-  outElement.text += "$msg\n";
+  outElement ??= querySelector('#output') as PreElement;
+  outElement.text += '$msg\n';
 }
 
 Future writeSlow(int value) async {
@@ -17,7 +15,7 @@ Future writeSlow(int value) async {
 }
 
 Future write(List<int> values) async {
-  for (int value in values) {
+  for (var value in values) {
     await writeSlow(value);
   }
 }
@@ -28,7 +26,7 @@ Future write1234() async {
 
 class Demo {
   Future test1() async {
-    print("not synchronized");
+    print('not synchronized');
     //await Future.wait([write1234(), write1234()]);
     // ignore: unawaited_futures
     write1234();
@@ -39,7 +37,7 @@ class Demo {
   }
 
   Future test2() async {
-    print("synchronized");
+    print('synchronized');
     var lock = Lock();
 
     // ignore: unawaited_futures
@@ -51,7 +49,7 @@ class Demo {
   }
 
   Future test3() async {
-    print("lock.synchronized");
+    print('lock.synchronized');
 
     var lock = Lock();
     // ignore: unawaited_futures
@@ -63,7 +61,7 @@ class Demo {
   }
 
   Future test4() async {
-    print("basic");
+    print('basic');
     var lock = Lock();
     await lock.synchronized(() async {
       // do you stuff
@@ -92,15 +90,15 @@ class Demo {
   Future readme3() async {
     var lock = Lock();
 
-    int value = await lock.synchronized(() {
+    var value = await lock.synchronized(() {
       return 1;
     });
-    print("got value: $value");
+    print('got value: $value');
   }
 }
 
 Future main() async {
-  Demo demo = Demo();
+  var demo = Demo();
 
   await demo.test1();
   await demo.test2();

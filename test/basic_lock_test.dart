@@ -18,7 +18,7 @@ void main() {
     lock_test.lockMain(lockFactory);
 
     test('non-reentrant', () async {
-      Lock lock = Lock();
+      final lock = Lock();
       var exception;
       await lock.synchronized(() async {
         try {

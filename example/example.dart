@@ -4,7 +4,7 @@ import 'package:synchronized/synchronized.dart';
 
 class Demo {
   Future runNotSynchronized() async {
-    stdout.writeln("not synchronized");
+    stdout.writeln('not synchronized');
     // this should print 11223344
     // ignore: unawaited_futures
     write1234();
@@ -16,7 +16,7 @@ class Demo {
   }
 
   Future runSynchronized() async {
-    stdout.writeln("synchronized");
+    stdout.writeln('synchronized');
 
     final lock = Lock();
     // this should print 12341234
@@ -46,7 +46,7 @@ Future writeSlow(int value) async {
 
 /// write a list of int, 1 char every 1 ms
 Future write(List<int> values) async {
-  for (int value in values) {
+  for (var value in values) {
     await writeSlow(value);
   }
 }

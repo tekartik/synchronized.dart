@@ -48,7 +48,8 @@ abstract class Lock {
   /// Executes [computation] when lock is available.
   ///
   /// Only one asynchronous block can run while the lock is retained.
-  Future<T> synchronized<T>(FutureOr<T> computation(), {Duration timeout});
+  Future<T> synchronized<T>(FutureOr<T> Function() computation,
+      {Duration timeout});
 
   /// returns true if the lock is currently locked.
   bool get locked;

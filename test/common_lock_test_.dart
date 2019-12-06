@@ -35,49 +35,49 @@ void lockMain(LockFactory lockFactory) {
     });
 
     test('order', () async {
-      Lock lock = newLock();
-      List<int> list = [];
-      Future future1 = lock.synchronized(() async {
+      final lock = newLock();
+      final list = <int>[];
+      final future1 = lock.synchronized(() async {
         list.add(1);
       });
-      Future<String> future2 = lock.synchronized(() async {
+      final future2 = lock.synchronized(() async {
         await sleep(10);
         list.add(2);
-        return "text";
+        return 'text';
       });
-      Future<int> future3 = lock.synchronized(() {
+      final future3 = lock.synchronized(() {
         list.add(3);
         return 1234;
       });
       expect(list, [1]);
       await Future.wait([future1, future2, future3]);
       expect(await future1, isNull);
-      expect(await future2, "text");
+      expect(await future2, 'text');
       expect(await future3, 1234);
       expect(list, [1, 2, 3]);
     });
 
     test('queued_value', () async {
-      Lock lock = newLock();
-      Future<String> value1 = lock.synchronized(() async {
+      final lock = newLock();
+      final value1 = lock.synchronized(() async {
         await sleep(1);
-        return "value1";
+        return 'value1';
       });
-      expect(await lock.synchronized(() => "value2"), "value2");
-      expect(await value1, "value1");
+      expect(await lock.synchronized(() => 'value2'), 'value2');
+      expect(await value1, 'value1');
     });
 
     group('perf', () {
-      int operationCount = 10000;
+      final operationCount = 10000;
 
       test('$operationCount operations', () async {
-        int count = operationCount;
+        var count = operationCount;
         int j;
 
-        Stopwatch sw1 = Stopwatch();
+        final sw1 = Stopwatch();
         j = 0;
         sw1.start();
-        for (int i = 0; i < count; i++) {
+        for (var i = 0; i < count; i++) {
           j += i;
         }
         sw1.stop();
@@ -86,7 +86,7 @@ void lockMain(LockFactory lockFactory) {
         final sw2 = Stopwatch();
         j = 0;
         sw2.start();
-        for (int i = 0; i < count; i++) {
+        for (var i = 0; i < count; i++) {
           await () async {
             j += i;
           }();
@@ -98,7 +98,7 @@ void lockMain(LockFactory lockFactory) {
         final sw3 = Stopwatch();
         j = 0;
         sw3.start();
-        for (int i = 0; i < count; i++) {
+        for (var i = 0; i < count; i++) {
           // ignore: unawaited_futures
           lock.synchronized(() {
             j += i;
@@ -113,7 +113,7 @@ void lockMain(LockFactory lockFactory) {
         final sw4 = Stopwatch();
         j = 0;
         sw4.start();
-        for (int i = 0; i < count; i++) {
+        for (var i = 0; i < count; i++) {
           await lock.synchronized(() async {
             await Future.value();
             j += i;
@@ -124,18 +124,18 @@ void lockMain(LockFactory lockFactory) {
         sw4.stop();
         expect(j, count * (count - 1) / 2);
 
-        print("  none ${sw1.elapsed}");
-        print(" await ${sw2.elapsed}");
-        print(" syncd ${sw3.elapsed}");
-        print("asyncd ${sw4.elapsed}");
+        print('  none ${sw1.elapsed}');
+        print(' await ${sw2.elapsed}');
+        print(' syncd ${sw3.elapsed}');
+        print('asyncd ${sw4.elapsed}');
       });
     });
 
     group('timeout', () {
       test('1_ms', () async {
-        Lock lock = newLock();
-        Completer completer = Completer();
-        Future future = lock.synchronized(() async {
+        final lock = newLock();
+        final completer = Completer();
+        final future = lock.synchronized(() async {
           await completer.future;
         });
         try {
@@ -150,12 +150,12 @@ void lockMain(LockFactory lockFactory) {
       test('100_ms', () async {
         // var isNewTiming = await isDart2AsyncTiming();
         // hoping timint is ok...
-        Lock lock = newLock();
+        final lock = newLock();
 
-        bool ran1 = false;
-        bool ran2 = false;
-        bool ran3 = false;
-        bool ran4 = false;
+        var ran1 = false;
+        var ran2 = false;
+        var ran3 = false;
+        var ran4 = false;
         // hold for 5ms
         // ignore: unawaited_futures
         lock.synchronized(() async {
@@ -188,18 +188,18 @@ void lockMain(LockFactory lockFactory) {
           ran3 = true;
         }, timeout: const Duration(milliseconds: 2000));
 
-        expect(ran1, isFalse, reason: "ran1 should be false");
-        expect(ran2, isFalse, reason: "ran2 should be false");
-        expect(ran3, isTrue, reason: "ran3 should be true");
-        expect(ran4, isTrue, reason: "ran4 should be true");
+        expect(ran1, isFalse, reason: 'ran1 should be false');
+        expect(ran2, isFalse, reason: 'ran2 should be false');
+        expect(ran3, isTrue, reason: 'ran3 should be true');
+        expect(ran4, isTrue, reason: 'ran4 should be true');
       });
 
       test('1_ms_with_error', () async {
-        bool ok = false;
-        bool okTimeout = false;
+        var ok = false;
+        var okTimeout = false;
         try {
-          Lock lock = newLock();
-          Completer completer = Completer();
+          final lock = newLock();
+          final completer = Completer();
           unawaited(lock.synchronized(() async {
             await completer.future;
           }).catchError((e) {}));
@@ -227,17 +227,17 @@ void lockMain(LockFactory lockFactory) {
 
     group('error', () {
       test('throw', () async {
-        Lock lock = newLock();
+        final lock = newLock();
         try {
           await lock.synchronized(() {
-            throw "throwing";
+            throw 'throwing';
           });
-          fail("should throw");
+          fail('should throw');
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
 
-        bool ok = false;
+        var ok = false;
         await lock.synchronized(() {
           ok = true;
         });
@@ -245,7 +245,7 @@ void lockMain(LockFactory lockFactory) {
       });
 
       test('queued_throw', () async {
-        Lock lock = newLock();
+        final lock = newLock();
 
         // delay so that it is queued
         // ignore: unawaited_futures
@@ -254,14 +254,14 @@ void lockMain(LockFactory lockFactory) {
         });
         try {
           await lock.synchronized(() async {
-            throw "throwing";
+            throw 'throwing';
           });
-          fail("should throw");
+          fail('should throw');
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
 
-        bool ok = false;
+        var ok = false;
         await lock.synchronized(() {
           ok = true;
         });
@@ -269,12 +269,12 @@ void lockMain(LockFactory lockFactory) {
       });
 
       test('throw_async', () async {
-        Lock lock = newLock();
+        final lock = newLock();
         try {
           await lock.synchronized(() async {
-            throw "throwing";
+            throw 'throwing';
           });
-          fail("should throw");
+          fail('should throw');
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
@@ -285,7 +285,7 @@ void lockMain(LockFactory lockFactory) {
       test('sync', () async {
         var lock = newLock();
         int value;
-        Future future = lock.synchronized(() {
+        final future = lock.synchronized(() {
           value = 1;
           return Future.value().then((_) {
             value = 2;
@@ -300,7 +300,7 @@ void lockMain(LockFactory lockFactory) {
       test('async', () async {
         var lock = newLock();
         int value;
-        Future future = lock.synchronized(() async {
+        final future = lock.synchronized(() async {
           value = 1;
           return Future.value().then((_) {
             value = 2;
@@ -320,7 +320,7 @@ void lockMain(LockFactory lockFactory) {
         // when the function is not async
         var lock = newLock();
         expect(lock.locked, isFalse);
-        Future future = lock.synchronized(() => {});
+        final future = lock.synchronized(() => {});
         expect(lock.locked, isFalse);
         await future;
         expect(lock.locked, isFalse);
@@ -330,7 +330,7 @@ void lockMain(LockFactory lockFactory) {
         // Make sure the lock state is lazy for async method
         var lock = newLock();
         expect(lock.locked, isFalse);
-        Future future = lock.synchronized(() async => {});
+        final future = lock.synchronized(() async => {});
         expect(lock.locked, isTrue);
         await future;
         expect(lock.locked, isFalse);
@@ -378,11 +378,11 @@ void lockMain(LockFactory lockFactory) {
       });
 
       test('locked', () async {
-        Lock lock = newLock();
-        Completer completer = Completer();
+        final lock = newLock();
+        final completer = Completer();
         expect(lock.locked, isFalse);
         expect(lock.inLock, isFalse);
-        Future future = lock.synchronized(() async {
+        final future = lock.synchronized(() async {
           await completer.future;
         });
         expect(lock.locked, isTrue);
@@ -396,9 +396,9 @@ void lockMain(LockFactory lockFactory) {
       });
 
       test('locked_with_timeout', () async {
-        Lock lock = newLock();
-        Completer completer = Completer();
-        Future future = lock.synchronized(() async {
+        final lock = newLock();
+        final completer = Completer();
+        final future = lock.synchronized(() async {
           await completer.future;
         });
         expect(lock.locked, isTrue);

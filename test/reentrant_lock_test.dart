@@ -18,7 +18,7 @@ void main() {
 
     test('reentrant', () async {
       bool ok;
-      Lock lock = newLock();
+      final lock = newLock();
       expect(lock.locked, isFalse);
       await lock.synchronized(() async {
         expect(lock.locked, isTrue);
@@ -34,7 +34,7 @@ void main() {
     test('inLock', () async {
       var enterCompleter = Completer();
       var completer = Completer();
-      Lock lock = newLock();
+      final lock = newLock();
       expect(lock.locked, isFalse);
       expect(lock.inLock, isFalse);
       var future = lock.synchronized(() async {
@@ -54,9 +54,9 @@ void main() {
 
     // only for reentrant-lock
     test('nested', () async {
-      Lock lock = newLock();
+      final lock = newLock();
 
-      List<int> list = [];
+      final list = <int>[];
       var future1 = lock.synchronized(() async {
         list.add(1);
         await lock.synchronized(() async {
@@ -73,24 +73,24 @@ void main() {
     });
 
     test('inner_value', () async {
-      Lock lock = newLock();
+      final lock = newLock();
 
       expect(
           await lock.synchronized(() async {
             expect(
                 await lock.synchronized(() {
-                  return "inner";
+                  return 'inner';
                 }),
-                "inner");
-            return "outer";
+                'inner');
+            return 'outer';
           }),
-          "outer");
+          'outer');
     });
 
     test('inner_vs_outer', () async {
-      Lock lock = newLock();
+      final lock = newLock();
 
-      List<int> list = [];
+      final list = <int>[];
       // ignore: unawaited_futures
       lock.synchronized(() async {
         await sleep(1);
@@ -109,8 +109,8 @@ void main() {
     });
 
     test('inner_no_wait', () async {
-      Lock lock = newLock();
-      List<int> list = [];
+      final lock = newLock();
+      final list = <int>[];
       // ignore: unawaited_futures
       lock.synchronized(() {
         list.add(1);
@@ -148,14 +148,14 @@ void main() {
 
     group('error', () {
       test('inner_throw', () async {
-        Lock lock = newLock();
+        final lock = newLock();
         try {
           await lock.synchronized(() async {
             await lock.synchronized(() {
-              throw "throwing";
+              throw 'throwing';
             });
           });
-          fail("should throw");
+          fail('should throw');
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
@@ -164,14 +164,14 @@ void main() {
       });
 
       test('inner_throw_async', () async {
-        Lock lock = newLock();
+        final lock = newLock();
         try {
           await lock.synchronized(() async {
             await lock.synchronized(() async {
-              throw "throwing";
+              throw 'throwing';
             });
           });
-          fail("should throw");
+          fail('should throw');
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
@@ -181,10 +181,10 @@ void main() {
 
     group('inner_lock', () {
       test('locked_with_timeout', () async {
-        Lock lock = newLock();
+        final lock = newLock();
         await lock.synchronized(() async {
-          Completer completer = Completer();
-          Future future = lock.synchronized(() async {
+          final completer = Completer();
+          final future = lock.synchronized(() async {
             await completer.future;
           });
           expect(lock.locked, isTrue);
@@ -202,11 +202,11 @@ void main() {
       });
 
       test('inner_locked_with_timeout', () async {
-        Lock lock = newLock();
+        final lock = newLock();
         await lock.synchronized(() async {
           await lock.synchronized(() async {
-            Completer completer = Completer();
-            Future future = lock.synchronized(() async {
+            final completer = Completer();
+            final future = lock.synchronized(() async {
               await completer.future;
             });
             expect(lock.locked, isTrue);
@@ -226,7 +226,7 @@ void main() {
 
       test('late', () async {
         final lock = newLock();
-        bool hasStateError = false;
+        var hasStateError = false;
         var completer = Completer();
         await lock.synchronized(() {
           sleep(1).then((_) async {

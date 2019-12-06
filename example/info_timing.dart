@@ -7,17 +7,13 @@ Future<bool> isDart2AsyncTiming() async {
     // in dart1 the first line won't be executed directly
     // in dart2 it should
     Future method() async {
-      if (_isDart2AsyncTiming == null) {
-        _isDart2AsyncTiming = true;
-      }
+      _isDart2AsyncTiming ??= true;
     }
 
     // Calling the async function not waiting for it
     // ignore: unawaited_futures
     method();
-    if (_isDart2AsyncTiming == null) {
-      _isDart2AsyncTiming = false;
-    }
+    _isDart2AsyncTiming ??= false;
   }
   return _isDart2AsyncTiming;
 }

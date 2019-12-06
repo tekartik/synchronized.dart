@@ -15,7 +15,7 @@ void main() {
       var value = '';
       var lock = Lock(reentrant: true);
 
-      Future outer1 = lock.synchronized(() async {
+      final outer1 = lock.synchronized(() async {
         expect(value, equals(''));
         value = 'outer1';
 
@@ -28,13 +28,13 @@ void main() {
         });
       });
 
-      Future outer2 = lock.synchronized(() async {
+      final outer2 = lock.synchronized(() async {
         await sleep(30);
         expect(value, equals('inner1'));
         value = 'outer2';
       });
 
-      Future outer3 = sleep(30).whenComplete(() {
+      final outer3 = sleep(30).whenComplete(() {
         return lock.synchronized(() async {
           expect(value, equals('outer2'));
           value = 'outer3';
