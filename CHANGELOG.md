@@ -1,8 +1,9 @@
 # Changelog
 
-## 2.1.0+2
+## 2.1.0+3
 
 - Fix reentrant lock to properly synchronize inner blocks
+- pedantic 1.9 support
 
 ## 2.0.0
 
