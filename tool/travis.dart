@@ -22,7 +22,7 @@ pub run test -p chrome,firefox -j 1
 
   // Fails on Dart 2.5.0
   var dartVersion = parsePlatformVersion(Platform.version);
-  if (dartVersion >= Version(2, 5, 0)) {
+  if (dartVersion > Version(2, 5, 0)) {
     await shell.run('''
     pub run build_runner test -- -p chrome -j 1
   ''');
