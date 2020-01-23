@@ -398,20 +398,32 @@ void lockMain(LockFactory lockFactory) {
       test('locked_with_timeout', () async {
         final lock = newLock();
         final completer = Completer();
+
+        // Lock it forever
         final future = lock.synchronized(() async {
           await completer.future;
         });
         expect(lock.locked, isTrue);
 
+        // Expect a time out exception
+        var hasTimeoutException = false;
         try {
           await lock.synchronized(null,
               timeout: const Duration(milliseconds: 100));
           fail('should fail');
-        } on TimeoutException catch (_) {}
+        } on TimeoutException catch (_) {
+          // Timeout exception expected
+          hasTimeoutException = true;
+        }
+        expect(hasTimeoutException, isTrue);
         expect(lock.locked, isTrue);
+        // Release the forever waiting lock
         completer.complete();
         await future;
         expect(lock.locked, isFalse);
+
+        // Should succeed right away
+        await lock.synchronized(null, timeout: const Duration(seconds: 10));
       });
     });
   });

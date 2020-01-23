@@ -30,3 +30,44 @@ class MyClass {
   }
 }
 ```
+
+### Turn any object into a lock
+
+Add lock ability to any object.
+
+```dart
+import 'package:synchronized/extension.dart';
+```
+
+Then you can simple call on any object.
+
+ ```dart
+myObject.synchronized(() async {
+  // ...uninterrupted action
+});
+
+class MyClass {
+  /// Perform a long action that won't be called more than once at a time.
+  /// 
+  Future performAction() {
+    // Lock at the instance level
+    return synchronized(() async {
+      // ...uninterrupted action
+    });
+  }
+}
+```
+
+Or you can synchronize at the class level
+
+ ```dart
+class MyClass {
+  /// Perform a long action that won't be called more than once at a time.
+  Future performClassAction() {
+    // Lock at the class level
+    return runtimeType.synchronized(() async {
+      // ...uninterrupted action
+    });
+  }
+}
+```

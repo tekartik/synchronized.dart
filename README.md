@@ -85,6 +85,24 @@ int value = await lock.synchronized(() {
   return 1;
 });
 ```
+
+Using the `package:synchronized/extension.dart` import, you can turn any object into a lock. `synchronized()` can then be called on any
+object
+
+```dart
+import 'package:synchronized/extension.dart';
+
+class MyClass {
+
+  /// Perform a long action that won't be called more than one at a time.
+  Future performAction() {
+    // Lock at the instance level
+    return synchronized(() async {
+      // ...uninterrupted action
+    });
+  }
+}
+```
     
 ## How it works
 

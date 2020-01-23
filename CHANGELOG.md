@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.0
+
+- Add `SynchronizedLock` extension to turn any object into a lock.
+
 ## 2.1.1
 
 - pedantic 1.9 support
