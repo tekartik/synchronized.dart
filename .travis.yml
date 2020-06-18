@@ -2,7 +2,6 @@ language: dart
 sudo: required
 dist: trusty
 dart:
-  - 2.6.0
   - stable
   - beta
   - dev
@@ -11,6 +10,6 @@ before_script:
   - source $(pub run chrome_travis:env_rc)
 script:
   - dart tool/travis.dart
-matrix:
-  allow_failures:
-    - dart: dev
+# matrix:
+#  allow_failures:
+#    - dart: dev
