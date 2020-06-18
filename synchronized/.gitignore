@@ -3,6 +3,7 @@
 .packages
 .pub/
 build/
+packages
 # Remove the following pattern if you wish to check in your lock file
 pubspec.lock
 
@@ -21,5 +22,3 @@ doc/api/
 *.iml
 *.ipr
 *.iws
-# VS code ide
-.vscode/
