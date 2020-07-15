@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.2.0+1
+## 2.2.0+2
 
 - Add `SynchronizedLock` extension to turn any object into a lock.
 
