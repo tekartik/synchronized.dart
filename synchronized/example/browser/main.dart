@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:html';
 import 'package:synchronized/synchronized.dart';
 
-PreElement outElement;
+PreElement? outElement;
 
 void print(dynamic msg) {
-  outElement ??= querySelector('#output') as PreElement;
-  outElement.text += '$msg\n';
+  outElement ??= querySelector('#output') as PreElement?;
+  var existing = outElement?.text ?? '';
+  outElement?.text = '$existing$msg\n';
 }
 
 Future<void> writeSlow(int value) async {

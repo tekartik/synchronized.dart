@@ -17,7 +17,7 @@ void main() {
     lock_test.lockMain(lockFactory);
 
     test('reentrant', () async {
-      bool ok;
+      bool? ok;
       final lock = newLock();
       expect(lock.locked, isFalse);
       await lock.synchronized(() async {
@@ -132,7 +132,7 @@ void main() {
 
       expect(Zone.current[lock1], isNull);
 
-      bool ok;
+      bool? ok;
       await lock1.synchronized(() async {
         expect(Zone.current[lock1], isNotNull);
         expect(Zone.current[lock2], isNull);

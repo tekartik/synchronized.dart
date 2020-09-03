@@ -11,11 +11,11 @@ class ReentrantLock implements Lock {
   final List<BasicLock> innerLocks = [BasicLock()];
 
   /// Inner level count.
-  int get innerLevel => (Zone.current[this] as int) ?? 0;
+  int get innerLevel => (Zone.current[this] as int?) ?? 0;
 
   @override
-  Future<T> synchronized<T>(FutureOr<T> Function() func,
-      {Duration timeout}) async {
+  Future<T?> synchronized<T>(FutureOr<T?> Function()? func,
+      {Duration? timeout}) async {
     // Handle late synchronized section warning
     final level = innerLevel;
 
@@ -27,25 +27,27 @@ class ReentrantLock implements Lock {
     }
     final lock = innerLocks[level];
 
-    return lock.synchronized(() async {
-      if (func != null) {
-        innerLocks.add(BasicLock());
-        try {
-          var result = runZoned(() {
-            return func();
-          }, zoneValues: {this: level + 1});
-          if (result is Future) {
-            return await result;
+    return lock.synchronized(
+        () async {
+          if (func != null) {
+            innerLocks.add(BasicLock());
+            try {
+              var result = runZoned(() {
+                return func();
+              }, zoneValues: {this: level + 1});
+              if (result is Future) {
+                return await result;
+              } else {
+                return result;
+              }
+            } finally {
+              innerLocks.removeLast();
+            }
           } else {
-            return result;
+            return null;
           }
-        } finally {
-          innerLocks.removeLast();
-        }
-      } else {
-        return null;
-      }
-    }, timeout: timeout);
+        } as FutureOr<T> Function(),
+        timeout: timeout);
   }
 
   @override

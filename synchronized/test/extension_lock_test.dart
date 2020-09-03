@@ -30,7 +30,7 @@ class MyClass {
   }
 
   @override
-  int get hashCode => text?.hashCode ?? 0;
+  int get hashCode => text.hashCode;
 
   @override
   bool operator ==(other) {

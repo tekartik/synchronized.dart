@@ -1,7 +1,7 @@
 import 'dart:async';
 
-bool _isDart2AsyncTiming;
-Future<bool> isDart2AsyncTiming() async {
+bool? _isDart2AsyncTiming;
+Future<bool?> isDart2AsyncTiming() async {
   if (_isDart2AsyncTiming == null) {
     // Create an async function
     // in dart1 the first line won't be executed directly
