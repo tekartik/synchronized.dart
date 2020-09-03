@@ -7,7 +7,7 @@ Version parsePlatformVersion(String text) {
   return Version.parse(text.split(' ').first);
 }
 
-Future main() async {
+Future<void> main() async {
   var shell = Shell();
 
   await shell.run('''

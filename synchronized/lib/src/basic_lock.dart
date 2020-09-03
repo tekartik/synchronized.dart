@@ -5,7 +5,7 @@ import 'package:synchronized/synchronized.dart';
 /// Basic (non-reentrant) lock
 class BasicLock implements Lock {
   /// The last running block
-  Future last;
+  Future<dynamic> last;
 
   @override
   bool get locked => last != null;

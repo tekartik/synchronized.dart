@@ -2,7 +2,7 @@ import 'dart:async';
 export 'dart:async';
 
 /// Helper for a simple pause à la C.
-Future sleep(int ms) => Future.delayed(Duration(milliseconds: ms));
+Future<void> sleep(int ms) => Future.delayed(Duration(milliseconds: ms));
 
 @deprecated
 

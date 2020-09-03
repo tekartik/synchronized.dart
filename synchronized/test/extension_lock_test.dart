@@ -14,7 +14,7 @@ class MyClass {
   final String text;
 
   /// Perform a long action that won't be called more than once at a time.
-  Future performClassAction() {
+  Future<void> performClassAction() {
     // Lock at the class level
     return runtimeType.synchronized(() async {
       // ...uninterrupted action
@@ -22,7 +22,7 @@ class MyClass {
   }
 
   /// Perform a long action that won't be called more than once at a time.
-  Future performAction() {
+  Future<void> performAction() {
     // Lock at the class level
     return synchronized(() async {
       // ...uninterrupted action
