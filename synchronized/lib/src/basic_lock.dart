@@ -11,7 +11,7 @@ class BasicLock implements Lock {
   bool get locked => last != null;
 
   @override
-  Future<T?> synchronized<T>(FutureOr<T?> Function()? func,
+  Future<T> synchronized<T>(FutureOr<T> Function()? func,
       {Duration? timeout}) async {
     final prev = last;
     final completer = Completer.sync();
@@ -36,7 +36,8 @@ class BasicLock implements Lock {
           return result;
         }
       } else {
-        return null;
+        // as T needed for NNBD
+        return null as T;
       }
     } finally {
       // Cleanup

@@ -232,7 +232,7 @@ void lockMain(LockFactory lockFactory) {
           await lock.synchronized(() {
             throw 'throwing';
           });
-          fail('should throw');
+          fail('should throw'); // ignore: dead_code
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
@@ -256,7 +256,7 @@ void lockMain(LockFactory lockFactory) {
           await lock.synchronized(() async {
             throw 'throwing';
           });
-          fail('should throw');
+          fail('should throw'); // ignore: dead_code
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
@@ -274,7 +274,7 @@ void lockMain(LockFactory lockFactory) {
           await lock.synchronized(() async {
             throw 'throwing';
           });
-          fail('should throw');
+          fail('should throw'); // ignore: dead_code
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
