@@ -4,10 +4,10 @@ import 'package:pub_semver/pub_semver.dart';
 Future<void> main() async {
   var shell = Shell();
 
-  var enableNnbd = dartVersion > Version(2, 10, 0, pre: '92');
+  var nnbdEnabled = dartVersion > Version(2, 10, 0, pre: '92');
   var dartExtraOptions = '';
   var dartRunExtraOptions = '';
-  if (enableNnbd) {
+  if (nnbdEnabled) {
     // Temp dart extra option. To remove once nnbd supported on stable without flags
     dartExtraOptions = '--enable-experiment=non-nullable';
     // Needed for run and test

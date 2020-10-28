@@ -139,7 +139,7 @@ void lockMain(LockFactory lockFactory) {
           await completer.future;
         });
         try {
-          await lock.synchronized(null,
+          await lock.synchronized(() {},
               timeout: const Duration(milliseconds: 1));
           fail('should fail');
         } on TimeoutException catch (_) {}
@@ -204,7 +204,7 @@ void lockMain(LockFactory lockFactory) {
             await completer.future;
           }).catchError((e) {}));
           try {
-            await lock.synchronized(null,
+            await lock.synchronized(() {},
                 timeout: const Duration(milliseconds: 1));
             fail('should fail');
           } on TimeoutException catch (_) {}
@@ -408,7 +408,7 @@ void lockMain(LockFactory lockFactory) {
         // Expect a time out exception
         var hasTimeoutException = false;
         try {
-          await lock.synchronized(null,
+          await lock.synchronized(() {},
               timeout: const Duration(milliseconds: 100));
           fail('should fail');
         } on TimeoutException catch (_) {
@@ -423,7 +423,7 @@ void lockMain(LockFactory lockFactory) {
         expect(lock.locked, isFalse);
 
         // Should succeed right away
-        await lock.synchronized(null, timeout: const Duration(seconds: 10));
+        await lock.synchronized(() {}, timeout: const Duration(seconds: 10));
       });
     });
   });
