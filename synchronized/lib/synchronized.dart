@@ -30,24 +30,30 @@ import 'package:synchronized/src/reentrant_lock.dart';
 ///
 /// A [Lock] can be reentrant (in this case it will use a [Zone]).
 ///
-/// non-reentrant lock is used like an aync executor with a capacity of 1.
+/// non-reentrant lock is used like an async executor with a capacity of 1.
 ///
 /// if [timeout] is not null, it will timeout after the specified duration.
 abstract class Lock {
   /// Creates a [Lock] object.
   ///
   /// if [reentrant], it uses [Zone] to allow inner [synchronized] calls.
-  factory Lock({bool reentrant = false}) {
+  ///
+  /// If [enableStackTraces]  is set to true (default is false) then when
+  /// a timeout occurs a stacktrace will be dumped for each synchronized
+  /// block that is waiting on that lock.
+  factory Lock({bool reentrant = false, bool enableStackTraces = true}) {
     if (reentrant == true) {
-      return ReentrantLock();
+      return ReentrantLock(enableStackTraces: enableStackTraces);
     } else {
-      return BasicLock();
+      return BasicLock(enableStackTraces: enableStackTraces);
     }
   }
 
   /// Executes [computation] when lock is available.
   ///
   /// Only one asynchronous block can run while the lock is retained.
+  ///
+  /// if [timeout] is not null, it will timeout after the specified duration.
   Future<T> synchronized<T>(FutureOr<T> Function() computation,
       {Duration timeout});
 
