@@ -6,12 +6,12 @@ import 'package:pub_semver/pub_semver.dart';
 Future<void> main() async {
   var shell = Shell();
 
-  var nnbdEnabled = dartVersion > Version(2, 11, 0, pre: '0');
+  var nnbdEnabled = dartVersion > Version(2, 12, 0, pre: '0');
   var dartExtraOptions = '';
   var dartRunExtraOptions = '';
+  var dart = Platform.executable;
+
   if (nnbdEnabled) {
-    // Temp dart extra option. To remove once nnbd supported on stable without flags
-    dartExtraOptions = '--enable-experiment=non-nullable';
     // Needed for run and test
     dartRunExtraOptions = '$dartExtraOptions --no-sound-null-safety';
 
@@ -20,8 +20,8 @@ Future<void> main() async {
       stdout.writeln('package: $dir');
       await shell.run('''
 
-dart $dartExtraOptions pub get
-dart $dartRunExtraOptions run tool/travis.dart
+$dart $dartExtraOptions pub get
+$dart $dartRunExtraOptions run tool/travis.dart
 
     ''');
       shell = shell.popd();
