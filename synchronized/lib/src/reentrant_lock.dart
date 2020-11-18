@@ -7,6 +7,15 @@ import 'utils.dart';
 ///
 /// It uses [Zone] and maintain a list of inner locks.
 class ReentrantLock implements Lock {
+  /// Creates a re-entrant lock
+  /// If [enableStackTraces]  is set to true (default is false) then when
+  /// a timeout occurs a stacktrace will be dumped for each synchronized
+  /// block that is waiting on that lock.
+  ReentrantLock({bool enableStackTraces = true})
+      : _enableStackTraces = enableStackTraces;
+
+  final bool _enableStackTraces;
+
   /// We always have at least one inner lock
   final List<BasicLock> innerLocks = [BasicLock()];
 
@@ -29,7 +38,7 @@ class ReentrantLock implements Lock {
 
     return lock.synchronized(() async {
       if (func != null) {
-        innerLocks.add(BasicLock());
+        innerLocks.add(BasicLock(enableStackTraces: _enableStackTraces));
         try {
           var result = runZoned(() {
             return func();
