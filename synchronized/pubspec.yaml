@@ -1,10 +1,10 @@
 name: synchronized
 description: Lock mechanism to prevent concurrent access to asynchronous code.
-version: 3.0.0-nullsafety.0
+version: 3.0.0-nullsafety.1
 homepage: https://github.com/tekartik/synchronized.dart/tree/master/synchronized
 
 environment:
-  sdk: '>=2.12.29-0 <3.0.0'
+  sdk: '>=2.12.0-29 <3.0.0'
 
 dev_dependencies:
   pedantic: '>=1.10.0-nullsafety.3 <3.0.0'
