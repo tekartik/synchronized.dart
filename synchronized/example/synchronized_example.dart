@@ -67,7 +67,7 @@ class Demo {
     var value = await lock.synchronized(() {
       return 1;
     });
-    stdout.writeln('got value: ${value}');
+    stdout.writeln('got value: $value');
   }
 }
 

@@ -6,10 +6,12 @@ dart:
   - beta
   - dev
 before_script:
-  - pub run chrome_travis:init
-  - source $(pub run chrome_travis:env_rc)
+  - cd repo_support
+  - dart pub get
+  - dart pub run chrome_travis:init
+  - source $(dart pub run chrome_travis:env_rc)
 script:
-  - dart tool/travis.dart
-# matrix:
-#  allow_failures:
-#    - dart: dev
+  - dart run tool/travis.dart
+matrix:
+  allow_failures:
+    - dart: dev
