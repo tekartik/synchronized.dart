@@ -5,14 +5,14 @@ import 'package:synchronized/synchronized.dart';
 /// Basic (non-reentrant) lock
 class BasicLock implements Lock {
   /// The last running block
-  Future<dynamic> last;
+  Future<dynamic>? last;
 
   @override
   bool get locked => last != null;
 
   @override
   Future<T> synchronized<T>(FutureOr<T> Function() func,
-      {Duration timeout}) async {
+      {Duration? timeout}) async {
     final prev = last;
     final completer = Completer.sync();
     last = completer.future;
@@ -28,15 +28,11 @@ class BasicLock implements Lock {
       }
 
       // Run the function and return the result
-      if (func != null) {
-        var result = func();
-        if (result is Future) {
-          return await result;
-        } else {
-          return result;
-        }
+      var result = func();
+      if (result is Future) {
+        return await result;
       } else {
-        return null;
+        return result;
       }
     } finally {
       // Cleanup

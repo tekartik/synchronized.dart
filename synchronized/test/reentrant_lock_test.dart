@@ -17,7 +17,7 @@ void main() {
     lock_test.lockMain(lockFactory);
 
     test('reentrant', () async {
-      bool ok;
+      bool? ok;
       final lock = newLock();
       expect(lock.locked, isFalse);
       await lock.synchronized(() async {
@@ -132,7 +132,7 @@ void main() {
 
       expect(Zone.current[lock1], isNull);
 
-      bool ok;
+      bool? ok;
       await lock1.synchronized(() async {
         expect(Zone.current[lock1], isNotNull);
         expect(Zone.current[lock2], isNull);
@@ -155,7 +155,7 @@ void main() {
               throw 'throwing';
             });
           });
-          fail('should throw');
+          fail('should throw'); // ignore: dead_code
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
@@ -171,7 +171,7 @@ void main() {
               throw 'throwing';
             });
           });
-          fail('should throw');
+          fail('should throw'); // ignore: dead_code
         } catch (e) {
           expect(e is TestFailure, isFalse);
         }
@@ -190,7 +190,7 @@ void main() {
           expect(lock.locked, isTrue);
 
           try {
-            await lock.synchronized(null,
+            await lock.synchronized(() {},
                 timeout: const Duration(milliseconds: 100));
             fail('should fail');
           } on TimeoutException catch (_) {}
@@ -212,7 +212,7 @@ void main() {
             expect(lock.locked, isTrue);
 
             try {
-              await lock.synchronized(null,
+              await lock.synchronized(() {},
                   timeout: const Duration(milliseconds: 100));
               fail('should fail');
             } on TimeoutException catch (_) {}

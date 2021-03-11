@@ -43,7 +43,7 @@ extension SynchronizedLock on Object {
   ///
   /// Only one asynchronous block can run while the lock is retained.
   Future<T> synchronized<T>(FutureOr<T> Function() computation,
-      {Duration timeout}) {
+      {Duration? timeout}) {
     return impl.objectSynchronized<T>(this, computation, timeout: timeout);
   }
 }

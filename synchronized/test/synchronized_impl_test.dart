@@ -51,7 +51,7 @@ void main() {
           expect(lock.locked, isTrue);
           completer.complete();
           try {
-            await lock.synchronized(null,
+            await lock.synchronized(() {},
                 timeout: const Duration(milliseconds: 100));
             fail('should fail');
           } on TimeoutException catch (_) {}

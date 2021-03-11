@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:process_run/shell.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:path/path.dart';
 
 Future<void> main() async {
   // Uncomment to use a different dart installation
@@ -11,13 +14,18 @@ Future<void> main() async {
 
   var nnbdEnabled = dartVersion > Version(2, 12, 0, pre: '0');
   if (nnbdEnabled) {
-    await shell.run('''
+    for (var dir in ['synchronized']) {
+      shell = shell.pushd(join('..', dir));
+      stdout.writeln('package: $dir');
+      await shell.run('''
 
-dart analyze --fatal-warnings --fatal-infos .
-dart format -o none --set-exit-if-changed .
+dart pub get
+dart run tool/travis.dart
 
-dart test -p vm,chrome,firefox -j 1
-dart run build_runner test -- -p vm,chrome -j 1
-  ''');
+    ''');
+      shell = shell.popd();
+    }
+  } else {
+    stderr.writeln('NNBD skipped on dart $dartVersion');
   }
 }
