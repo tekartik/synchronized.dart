@@ -19,7 +19,7 @@ void main() {
 
     test('non-reentrant', () async {
       final lock = Lock();
-      var exception;
+      Object? exception;
       await lock.synchronized(() async {
         try {
           await lock.synchronized(() {}, timeout: const Duration(seconds: 1));
