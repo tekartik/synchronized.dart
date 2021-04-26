@@ -67,7 +67,7 @@ void main() {
     });
 
     test('non-reentrant', () async {
-      var exception;
+      Object? exception;
       await 'non-reentrant'.synchronized(() async {
         try {
           await 'non-reentrant'
