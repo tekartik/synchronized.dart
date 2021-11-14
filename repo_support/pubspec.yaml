@@ -10,5 +10,6 @@ dependencies:
   process_run: '>=0.10.0'
 
 dev_dependencies:
+  lints:
   test: '>=1.0.0'
   dev_test: '>=0.13.4-dev.1'
