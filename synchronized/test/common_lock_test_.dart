@@ -2,7 +2,6 @@
 
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
-import 'package:pedantic/pedantic.dart';
 import 'package:synchronized/src/basic_lock.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
