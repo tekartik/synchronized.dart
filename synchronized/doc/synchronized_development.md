@@ -30,7 +30,7 @@ pub run build_runner test -- -p chrome -p firefox -p vm
 ```
 dependency_overrides:
   synchronized:
-    git: git://github.com/tekartik/synchronized.dart
+    git: https://github.com/tekartik/synchronized.dart
 ```
 
 ## Run perf test
