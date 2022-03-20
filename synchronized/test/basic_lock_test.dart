@@ -20,8 +20,8 @@ void main() {
       await lock.synchronized(() async {
         try {
           await lock.synchronized(() {}, timeout: const Duration(seconds: 1));
-        } catch (_exception) {
-          exception = _exception;
+        } catch (e) {
+          exception = e;
         }
       });
       expect(exception, const TypeMatcher<TimeoutException>());

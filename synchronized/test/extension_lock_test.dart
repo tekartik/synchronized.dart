@@ -70,8 +70,8 @@ void main() {
         try {
           await 'non-reentrant'
               .synchronized(() {}, timeout: const Duration(seconds: 1));
-        } catch (_exception) {
-          exception = _exception;
+        } catch (e) {
+          exception = e;
         }
       });
       expect(exception, const TypeMatcher<TimeoutException>());
