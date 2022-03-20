@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   process_run: '>=0.10.0'
-
+  path:
 dev_dependencies:
   lints:
   test: '>=1.0.0'
