@@ -1,8 +1,8 @@
 # Changelog
 
-## 3.0.0+1
+## 3.0.0+2
 
-- `null safery` support, breaking change
+- `null safety` support, breaking change
 
 ## 2.2.0+2
 

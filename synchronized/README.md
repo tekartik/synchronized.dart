@@ -1,6 +1,8 @@
 # synchronized
 
-Basic lock mechanism to prevent concurrent access to asynchronous code
+Basic lock mechanism to prevent concurrent access to asynchronous code.
+
+[![pub package](https://img.shields.io/pub/v/synchronized.svg)](https://pub.dev/packages/synchronized)
 
 ## Goal
 
