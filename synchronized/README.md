@@ -183,5 +183,5 @@ Please feel free to:
 
 [tracker]: https://github.com/tekartik/synchronized.dart/issues
 [contact_me]: https://contact.tekartik.com/
-[how_to]: https://github.com/tekartik/synchronized.dart/blob/master/doc/how_to.md
+[how_to]: https://github.com/tekartik/synchronized.dart/blob/master/synchronized/doc/how_to.md
 
