@@ -33,7 +33,7 @@ class ReentrantLock implements Lock {
         var result = runZoned(() {
           return func();
         }, zoneValues: {this: level + 1});
-        if (result is Future) {
+        if (result is Future && result is! T) {
           return await result;
         } else {
           return result;

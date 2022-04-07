@@ -29,7 +29,7 @@ class BasicLock implements Lock {
 
       // Run the function and return the result
       var result = func();
-      if (result is Future) {
+      if (result is Future && result is! T) {
         return await result;
       } else {
         return result;

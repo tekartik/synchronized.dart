@@ -63,6 +63,44 @@ void lockMain(LockFactory lockFactory) {
       expect(await value1, 'value1');
     });
 
+    group('futures', () {
+      // if the return type is a not a future, return the result of the future
+      test('future_awaited', () async {
+        final lock = newLock();
+        final future = Future.delayed(const Duration(seconds: 1), () => true);
+
+        final value = await lock.synchronized(() {
+          return future;
+        });
+
+        expect(value, isA<bool>());
+      });
+
+      // if the return type is a Future, return the future
+      test('future_returned', () async {
+        final lock = newLock();
+        final future = Future.delayed(const Duration(seconds: 1), () => true);
+
+        final value = await lock.synchronized<Future<bool>>(() {
+          return future;
+        });
+
+        expect(value, isA<Future<bool>>());
+      });
+
+      // if the function is async, return the correct type
+      test('future_async', () async {
+        final lock = newLock();
+        final future = Future.delayed(const Duration(seconds: 1), () => true);
+
+        final value = await lock.synchronized<Future<bool>>(() async {
+          return future;
+        });
+
+        expect(value, isA<Future<bool>>());
+      });
+    });
+
     group('perf', () {
       final operationCount = 10000;
 
