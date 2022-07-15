@@ -8,6 +8,40 @@ import 'package:test/test.dart';
 
 void main() {
   group('issues', () {
+    // https://github.com/tekartik/synchronized.dart/issues/22
+    test('issue_22_1', () async {
+      var lock = Lock();
+
+      // Create a long synchronized function but don't wait for it
+      unawaited(lock.synchronized(() async {
+        await Future.delayed(const Duration(hours: 1));
+      }));
+
+      // Try to grab the lock, this should fail with a time out exception
+      try {
+        await lock.synchronized(() async {
+          // We should never get there
+          fail('should timeout');
+        }, timeout: const Duration(milliseconds: 100));
+      } on TimeoutException catch (_) {}
+    });
+
+    test('issue_22_timeout', () async {
+      var lock = Lock();
+
+      try {
+        // Create a long synchronized function that times out
+        await lock.synchronized(() async {
+          Future<void> longAction() async {
+            // Do you action here...
+            await Future.delayed(const Duration(hours: 1));
+          }
+
+          // Release the lock before the end
+          await longAction().timeout(const Duration(milliseconds: 100));
+        });
+      } on TimeoutException catch (_) {}
+    });
     // https://github.com/tekartik/synchronized.dart/issues/1
     test('issue_1', () async {
       var value = '';
