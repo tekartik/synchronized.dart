@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0+3
+
+- Add MIT licence
+
 ## 3.0.0+2
 
 - `null safety` support, breaking change
