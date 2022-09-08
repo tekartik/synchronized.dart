@@ -12,3 +12,10 @@ Future<void> sleep(int ms) => Future.delayed(Duration(milliseconds: ms));
 void devPrint(Object object) {
   print(object);
 }
+
+/// Used to debug lock acqusitions and releases
+void debug(String? debugLabel, String message) {
+  if (debugLabel != null) {
+    print('[LOCK - $debugLabel]: $message');
+  }
+}

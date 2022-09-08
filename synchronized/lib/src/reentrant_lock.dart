@@ -15,7 +15,7 @@ class ReentrantLock implements Lock {
 
   @override
   Future<T> synchronized<T>(FutureOr<T> Function() func,
-      {Duration? timeout}) async {
+      {Duration? timeout, String? debugLabel}) async {
     // Handle late synchronized section warning
     final level = innerLevel;
 
@@ -30,14 +30,13 @@ class ReentrantLock implements Lock {
     return lock.synchronized(() async {
       innerLocks.add(BasicLock());
       try {
-        var result = runZoned(() {
-          return func();
+        var result = runZoned(() async {
+          debug(debugLabel, 'Executing synchronized function');
+          final res = await func();
+          debug(debugLabel, 'Executed synchronized function');
+          return res;
         }, zoneValues: {this: level + 1});
-        if (result is Future) {
-          return await result;
-        } else {
-          return result;
-        }
+        return await result;
       } finally {
         innerLocks.removeLast();
       }

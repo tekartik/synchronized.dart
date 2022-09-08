@@ -53,7 +53,7 @@ abstract class Lock {
   /// call the computation callback and throw a [TimeoutExpection] is the lock
   /// cannot be grabbed in the given duration.
   Future<T> synchronized<T>(FutureOr<T> Function() computation,
-      {Duration? timeout});
+      {Duration? timeout, String? debugLabel});
 
   /// returns true if the lock is currently locked.
   bool get locked;

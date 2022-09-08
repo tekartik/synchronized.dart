@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:synchronized/src/utils.dart';
 import 'package:synchronized/synchronized.dart';
 
 /// Basic (non-reentrant) lock
@@ -12,7 +13,7 @@ class BasicLock implements Lock {
 
   @override
   Future<T> synchronized<T>(FutureOr<T> Function() func,
-      {Duration? timeout}) async {
+      {Duration? timeout, String? debugLabel}) async {
     final prev = last;
     final completer = Completer.sync();
     last = completer.future;
@@ -28,12 +29,10 @@ class BasicLock implements Lock {
       }
 
       // Run the function and return the result
-      var result = func();
-      if (result is Future) {
-        return await result;
-      } else {
-        return result;
-      }
+      debug(debugLabel, 'Executing synchronized function');
+      final result = await func();
+      debug(debugLabel, 'Executed synchronized function');
+      return result;
     } finally {
       // Cleanup
       // waiting for the previous task to be done in case of timeout
