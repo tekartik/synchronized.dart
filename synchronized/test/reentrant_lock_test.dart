@@ -30,8 +30,8 @@ void main() {
     });
 
     test('inLock', () async {
-      var enterCompleter = Completer();
-      var completer = Completer();
+      var enterCompleter = Completer<void>();
+      var completer = Completer<void>();
       final lock = newLock();
       expect(lock.locked, isFalse);
       expect(lock.inLock, isFalse);
@@ -181,7 +181,7 @@ void main() {
       test('locked_with_timeout', () async {
         final lock = newLock();
         await lock.synchronized(() async {
-          final completer = Completer();
+          final completer = Completer<void>();
           final future = lock.synchronized(() async {
             await completer.future;
           });
@@ -203,7 +203,7 @@ void main() {
         final lock = newLock();
         await lock.synchronized(() async {
           await lock.synchronized(() async {
-            final completer = Completer();
+            final completer = Completer<void>();
             final future = lock.synchronized(() async {
               await completer.future;
             });
@@ -225,7 +225,7 @@ void main() {
       test('late', () async {
         final lock = newLock();
         var hasStateError = false;
-        var completer = Completer();
+        var completer = Completer<void>();
         await lock.synchronized(() {
           sleep(1).then((_) async {
             try {

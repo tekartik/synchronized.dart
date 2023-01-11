@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:synchronized/synchronized.dart';
 
 Future<void> writeSlow(int value) async {
-  await Future.delayed(const Duration(milliseconds: 1));
+  await Future<void>.delayed(const Duration(milliseconds: 1));
   stdout.write(value);
 }
 
@@ -26,7 +26,7 @@ class Demo {
     // ignore: unawaited_futures
     write1234();
 
-    await Future.delayed(const Duration(milliseconds: 50));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
     stdout.writeln();
   }
 
@@ -39,7 +39,7 @@ class Demo {
     // ignore: unawaited_futures
     lock.synchronized(write1234);
 
-    await Future.delayed(const Duration(milliseconds: 50));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
 
     stdout.writeln();
   }

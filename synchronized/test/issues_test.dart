@@ -14,7 +14,7 @@ void main() {
 
       // Create a long synchronized function but don't wait for it
       unawaited(lock.synchronized(() async {
-        await Future.delayed(const Duration(hours: 1));
+        await Future<void>.delayed(const Duration(hours: 1));
       }));
 
       // Try to grab the lock, this should fail with a time out exception
@@ -34,7 +34,7 @@ void main() {
         await lock.synchronized(() async {
           Future<void> longAction() async {
             // Do you action here...
-            await Future.delayed(const Duration(hours: 1));
+            await Future<void>.delayed(const Duration(hours: 1));
           }
 
           // Release the lock before the end

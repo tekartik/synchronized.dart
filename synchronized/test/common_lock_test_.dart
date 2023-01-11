@@ -111,7 +111,7 @@ void lockMain(LockFactory lockFactory) {
         sw4.start();
         for (var i = 0; i < count; i++) {
           await lock.synchronized(() async {
-            await Future.value();
+            await Future<void>.value();
             j += i;
           });
         }
@@ -130,7 +130,7 @@ void lockMain(LockFactory lockFactory) {
     group('timeout', () {
       test('1_ms', () async {
         final lock = newLock();
-        final completer = Completer();
+        final completer = Completer<void>();
         final future = lock.synchronized(() async {
           await completer.future;
         });
@@ -195,7 +195,7 @@ void lockMain(LockFactory lockFactory) {
         var okTimeout = false;
         try {
           final lock = newLock();
-          final completer = Completer();
+          final completer = Completer<void>();
           unawaited(lock.synchronized(() async {
             await completer.future;
           }).catchError((e) {}));
@@ -283,7 +283,7 @@ void lockMain(LockFactory lockFactory) {
         int? value;
         final future = lock.synchronized(() {
           value = 1;
-          return Future.value().then((_) {
+          return Future<void>.value().then((_) {
             value = 2;
           });
         });
@@ -298,7 +298,7 @@ void lockMain(LockFactory lockFactory) {
         int? value;
         final future = lock.synchronized(() async {
           value = 1;
-          return Future.value().then((_) {
+          return Future<void>.value().then((_) {
             value = 2;
           });
         });
@@ -375,7 +375,7 @@ void lockMain(LockFactory lockFactory) {
 
       test('locked', () async {
         final lock = newLock();
-        final completer = Completer();
+        final completer = Completer<void>();
         expect(lock.locked, isFalse);
         expect(lock.inLock, isFalse);
         final future = lock.synchronized(() async {
@@ -393,7 +393,7 @@ void lockMain(LockFactory lockFactory) {
 
       test('locked_with_timeout', () async {
         final lock = newLock();
-        final completer = Completer();
+        final completer = Completer<void>();
 
         // Lock it forever
         final future = lock.synchronized(() async {

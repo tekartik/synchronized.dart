@@ -37,8 +37,8 @@ void main() {
       group('locked', () {
         test('inner', () async {
           final lock = ReentrantLock();
-          final completer = Completer();
-          final innerCompleter = Completer();
+          final completer = Completer<void>();
+          final innerCompleter = Completer<void>();
           final future = lock.synchronized(() async {
             await lock.synchronized(() async {
               await sleep(1);
@@ -64,7 +64,7 @@ void main() {
         test('two_locks', () async {
           final lock1 = ReentrantLock();
           final lock2 = ReentrantLock();
-          final completer = Completer();
+          final completer = Completer<void>();
           final future = lock1.synchronized(() async {
             expect(lock1.inLock, isTrue);
             expect(lock2.inLock, isFalse);

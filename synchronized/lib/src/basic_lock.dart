@@ -14,7 +14,7 @@ class BasicLock implements Lock {
   Future<T> synchronized<T>(FutureOr<T> Function() func,
       {Duration? timeout}) async {
     final prev = last;
-    final completer = Completer.sync();
+    final completer = Completer<void>.sync();
     last = completer.future;
     try {
       // If there is a previous running block, wait for it
