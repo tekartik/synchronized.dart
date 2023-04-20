@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.0
+
+* Dart 3 support
+
 ## 3.0.1
 
 * strict-casts and sdk 2.18 support
