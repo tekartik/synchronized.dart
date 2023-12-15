@@ -50,7 +50,7 @@ abstract class Lock {
   /// Only one asynchronous block can run while the lock is retained.
   ///
   /// If [timeout] is specified, it will try to grab the lock and will not
-  /// call the computation callback and throw a [TimeoutExpection] is the lock
+  /// call the computation callback and throw a [TimeoutExpection] if the lock
   /// cannot be grabbed in the given duration.
   Future<T> synchronized<T>(FutureOr<T> Function() computation,
       {Duration? timeout});
