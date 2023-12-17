@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.0
+## 3.1.0+1
 
 * Dart 3 support
 
