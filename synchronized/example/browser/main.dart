@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'dart:html';
+import 'package:web/web.dart' as web;
 import 'package:synchronized/synchronized.dart';
 
-PreElement? outElement;
+web.HTMLPreElement? outElement;
 
 void print(dynamic msg) {
-  outElement ??= querySelector('#output') as PreElement?;
-  var existing = outElement?.text ?? '';
+  outElement ??= web.document.querySelector('#output') as web.HTMLPreElement?;
+  var existing = outElement?.textContent ?? '';
   outElement?.text = '$existing$msg\n';
 }
 
