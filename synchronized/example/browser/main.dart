@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'package:web/web.dart' as web;
+
 import 'package:synchronized/synchronized.dart';
+import 'package:web/web.dart' as web;
 
 web.HTMLPreElement? outElement;
 
