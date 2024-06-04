@@ -2,6 +2,8 @@
 
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: avoid_print
+
 import 'package:synchronized/src/basic_lock.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
