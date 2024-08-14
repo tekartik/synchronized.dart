@@ -8,6 +8,8 @@ funding:
 topics:
   - mutex
   - lock
+  - async
+  - concurrency
 
 environment:
   sdk: ^3.5.0
