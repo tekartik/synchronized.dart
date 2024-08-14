@@ -38,7 +38,7 @@ abstract class Lock {
   ///
   /// if [reentrant], it uses [Zone] to allow inner [synchronized] calls.
   factory Lock({bool reentrant = false}) {
-    if (reentrant == true) {
+    if (reentrant) {
       return ReentrantLock();
     } else {
       return BasicLock();
