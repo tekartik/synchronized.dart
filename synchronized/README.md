@@ -181,7 +181,7 @@ class instance data and resources.
 
 For basic and reentrant lock, `locked` returns whether the lock is currently locked.
 
-For combined lock, it returns true if all inner locks `locked` values are true.
+For multi lock, it returns true if all inner locks `locked` values are true.
 
 ### inLock
 
@@ -191,7 +191,7 @@ i.e. it is true if the current block is running inside a `synchronized` block of
 For basic lock, it matches the `locked` property and since it does mean anything,
 it should not be used as behavior may change in the future.
 
-For combined lock, it returns true if all inner locks `inLock` values are true.
+For multi lock, it returns true if all inner locks `inLock` values are true.
 
 ### canLock
 
@@ -201,19 +201,19 @@ For basic lock, it is true if the lock is not locked.
 
 For reentrant lock, it is true if the lock is not locked or if the current zone is locked by the lock.
 
-For combined lock, it returns true if all inner locks `canLock` values are true.
+For multi lock, it returns true if all inner locks `canLock` values are true.
 
 
-## CombinedLock
+## MultiLock
 
-As of version 3.3.0, a `CombinedLock` is available. It is a lock that can be used to synchronize multiple locks at once.
+As of version 3.3.0, a `MultiLock` is available. It is a lock that can be used to synchronize multiple locks at once.
 
 ```dart
 var lock1 = Lock();
 var lock2 = Lock();
-var combinedLock = CombinedLock([lock1, lock2]);
+var multiLock = MultiLock([lock1, lock2]);
 
-combinedLock.synchronized(() async {
+multiLock.synchronized(() async {
   // lock1 and lock2 are locked at this point
   ...
 });

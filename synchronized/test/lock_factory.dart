@@ -18,7 +18,7 @@ class ReentrantLockFactory implements LockFactory {
   Lock newLock() => ReentrantLock();
 }
 
-class CombinedLockFactory implements LockFactory {
+class MultiLockFactory implements LockFactory {
   @override
-  Lock newLock() => CombinedLock(locks: [BasicLock(), ReentrantLock()]);
+  Lock newLock() => MultiLock(locks: [BasicLock(), ReentrantLock()]);
 }

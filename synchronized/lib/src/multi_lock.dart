@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:synchronized/synchronized.dart';
 
-/// A combined lock that locks multiple locks at the same time.
-class CombinedLock implements Lock {
+/// A multi lock that locks multiple locks at the same time.
+class MultiLock implements Lock {
   final Iterable<Lock> _locks;
 
-  /// Creates a new combined lock.
-  CombinedLock({required Iterable<Lock> locks}) : _locks = locks;
+  /// Creates a new multi lock.
+  MultiLock({required Iterable<Lock> locks}) : _locks = locks;
 
   @override
   bool get canLock => _locks.every((it) => it.canLock);

@@ -25,7 +25,7 @@ import 'dart:async';
 
 import 'package:synchronized/src/basic_lock.dart';
 import 'package:synchronized/src/reentrant_lock.dart';
-export 'src/combined_lock.dart';
+export 'src/multi_lock.dart';
 
 /// Object providing the implicit lock.
 ///
@@ -66,6 +66,6 @@ abstract class Lock {
   /// It returns true if the lock can be locked. For basic lock (reentrant or
   /// not), it is when the lock is not locked.
   ///
-  /// For combined lock, it is when any lock is locked.
+  /// For multi lock, it is when any lock is locked.
   bool get canLock;
 }

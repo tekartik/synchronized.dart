@@ -9,30 +9,30 @@ import 'common_lock_test_.dart' as lock_test;
 import 'lock_factory.dart';
 
 void main() {
-  final lockFactory = CombinedLockFactory();
-  group('CombinedLock', () {
+  final lockFactory = MultiLockFactory();
+  group('MultiLock', () {
     // Common tests
     lock_test.lockMain(lockFactory);
 
-    test('combined', () async {
+    test('multi', () async {
       var lock1 = Lock();
       var lock2 = Lock(reentrant: true);
-      var combinedLock = CombinedLock(locks: [lock1, lock2]);
+      var multiLock = MultiLock(locks: [lock1, lock2]);
       var completer = Completer<void>();
       var future = lock1.synchronized(() async {
-        expect(combinedLock.inLock, isFalse);
-        expect(combinedLock.locked, isFalse);
-        expect(combinedLock.canLock, isFalse);
+        expect(multiLock.inLock, isFalse);
+        expect(multiLock.locked, isFalse);
+        expect(multiLock.canLock, isFalse);
         await completer.future;
       });
-      expect(combinedLock.inLock, isFalse);
-      expect(combinedLock.locked, isFalse);
-      expect(combinedLock.canLock, isFalse);
+      expect(multiLock.inLock, isFalse);
+      expect(multiLock.locked, isFalse);
+      expect(multiLock.canLock, isFalse);
 
       // Expect a time out exception
       var hasTimeoutException = false;
       try {
-        await combinedLock.synchronized(() {},
+        await multiLock.synchronized(() {},
             timeout: const Duration(milliseconds: 100));
         fail('should fail');
       } on TimeoutException catch (_) {
@@ -44,13 +44,13 @@ void main() {
       completer = Completer<void>();
 
       await future;
-      expect(combinedLock.inLock, isFalse);
-      expect(combinedLock.locked, isFalse);
-      expect(combinedLock.canLock, isTrue);
-      future = combinedLock.synchronized(() async {
-        expect(combinedLock.inLock, isTrue);
-        expect(combinedLock.locked, isTrue);
-        expect(combinedLock.canLock, isFalse);
+      expect(multiLock.inLock, isFalse);
+      expect(multiLock.locked, isFalse);
+      expect(multiLock.canLock, isTrue);
+      future = multiLock.synchronized(() async {
+        expect(multiLock.inLock, isTrue);
+        expect(multiLock.locked, isTrue);
+        expect(multiLock.canLock, isFalse);
         expect(lock1.inLock, isTrue);
         expect(lock1.locked, isTrue);
         expect(lock1.canLock, isFalse);
@@ -59,9 +59,9 @@ void main() {
         expect(lock2.canLock, isTrue);
         await completer.future;
       });
-      expect(combinedLock.inLock, isFalse); // Cause using a reentrant lock
-      expect(combinedLock.locked, isTrue);
-      expect(combinedLock.canLock, isFalse);
+      expect(multiLock.inLock, isFalse); // Cause using a reentrant lock
+      expect(multiLock.locked, isTrue);
+      expect(multiLock.canLock, isFalse);
       expect(lock1.inLock, isTrue);
       expect(lock1.locked, isTrue);
       expect(lock1.canLock, isFalse);
@@ -92,15 +92,15 @@ void main() {
       completer.complete();
       await future;
       await lock2.synchronized(() async {
-        expect(combinedLock.inLock, isFalse);
-        expect(combinedLock.locked, isFalse);
-        expect(combinedLock.canLock, isTrue);
+        expect(multiLock.inLock, isFalse);
+        expect(multiLock.locked, isFalse);
+        expect(multiLock.canLock, isTrue);
 
         await lock1.synchronized(() async {
-          expect(combinedLock.inLock,
-              isTrue); // Not what we would expect but ok...
-          expect(combinedLock.locked, isTrue);
-          expect(combinedLock.canLock, isFalse);
+          expect(
+              multiLock.inLock, isTrue); // Not what we would expect but ok...
+          expect(multiLock.locked, isTrue);
+          expect(multiLock.canLock, isFalse);
         });
       });
     });
