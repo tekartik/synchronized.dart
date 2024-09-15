@@ -12,6 +12,9 @@ void main() {
   group('ReentrantLock', () {
     run(ReentrantLockFactory());
   });
+  group('CombinedLock', () {
+    run(CombinedLockFactory());
+  });
 }
 
 void run(LockFactory factory) {

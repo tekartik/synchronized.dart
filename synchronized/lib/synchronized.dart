@@ -25,6 +25,7 @@ import 'dart:async';
 
 import 'package:synchronized/src/basic_lock.dart';
 import 'package:synchronized/src/reentrant_lock.dart';
+export 'src/combined_lock.dart';
 
 /// Object providing the implicit lock.
 ///
