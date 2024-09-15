@@ -4,8 +4,8 @@
 
 // ignore_for_file: avoid_print
 
-import 'package:synchronized/src/basic_lock.dart';
-import 'package:synchronized/src/reentrant_lock.dart';
+import 'package:synchronized/src/basic_lock.dart' show BasicLock;
+import 'package:synchronized/src/reentrant_lock.dart' show ReentrantLock;
 import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
 

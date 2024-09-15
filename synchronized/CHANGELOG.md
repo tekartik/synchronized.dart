@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.0
+
+* Add CombinedLock (thanks to @saibotma)
+
 ## 3.2.0
 
 * Required dart 3.5

@@ -17,7 +17,7 @@ Future<void> main() async {
   await sharedStdIn.first;
   await shell.run('''
 git tag v$version
-git push origin --tags
+git push origin --follow-tags
 ''');
   await sharedStdIn.terminate();
 }
