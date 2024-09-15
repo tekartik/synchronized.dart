@@ -2,7 +2,7 @@
 
 ## 3.3.0
 
-* Add CombinedLock (thanks to @saibotma)
+* Add MultiLock (thanks to @saibotma)
 
 ## 3.2.0
 
