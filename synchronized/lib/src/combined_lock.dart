@@ -10,6 +10,9 @@ class CombinedLock implements Lock {
   CombinedLock({required Iterable<Lock> locks}) : _locks = locks;
 
   @override
+  bool get canLock => _locks.every((it) => it.canLock);
+
+  @override
   bool get inLock => _locks.every((it) => it.inLock);
 
   @override

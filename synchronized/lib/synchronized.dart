@@ -62,4 +62,10 @@ abstract class Lock {
   /// for reentrant, test whether we are currently in the synchronized section.
   /// for non reentrant, it returns the [locked] status.
   bool get inLock;
+
+  /// It returns true if the lock can be locked. For basic lock (reentrant or
+  /// not), it is when the lock is not locked.
+  ///
+  /// For combined lock, it is when any lock is locked.
+  bool get canLock;
 }

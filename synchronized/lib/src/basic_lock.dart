@@ -11,6 +11,9 @@ class BasicLock implements Lock {
   bool get locked => last != null;
 
   @override
+  bool get canLock => !locked;
+
+  @override
   Future<T> synchronized<T>(FutureOr<T> Function() func,
       {Duration? timeout}) async {
     final prev = last;

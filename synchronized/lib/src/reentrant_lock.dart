@@ -55,4 +55,7 @@ class ReentrantLock implements Lock {
 
   @override
   bool get locked => innerLocks.length > 1;
+
+  @override
+  bool get canLock => !locked || inLock;
 }

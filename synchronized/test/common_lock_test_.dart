@@ -5,6 +5,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:synchronized/src/basic_lock.dart';
+import 'package:synchronized/src/reentrant_lock.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
 
@@ -25,6 +26,7 @@ void lockMain(LockFactory lockFactory) {
       bool? ok;
       await lock1.synchronized(() async {
         await lock2.synchronized(() async {
+          expect(lock1.locked, isTrue);
           expect(lock2.locked, isTrue);
           ok = true;
         });
@@ -319,6 +321,7 @@ void lockMain(LockFactory lockFactory) {
         var lock = newLock();
         expect(lock.locked, isFalse);
         final future = lock.synchronized(() => {});
+
         expect(lock.locked, isFalse);
         await future;
         expect(lock.locked, isFalse);
@@ -375,18 +378,29 @@ void lockMain(LockFactory lockFactory) {
         expect(lock.inLock, isFalse);
       });
 
-      test('locked', () async {
+      test('locked/canLock', () async {
         final lock = newLock();
         final completer = Completer<void>();
         expect(lock.locked, isFalse);
         expect(lock.inLock, isFalse);
         final future = lock.synchronized(() async {
-          await completer.future;
+          expect(lock.locked, isTrue);
+          expect(lock.inLock, isTrue);
+          if (lock is BasicLock) {
+            expect(lock.canLock, isFalse);
+          } else if (lock is ReentrantLock) {
+            expect(lock.canLock, isTrue);
+          }
         });
         expect(lock.locked, isTrue);
-        if (lock is BasicLock) {
+        expect(lock.canLock, isFalse);
+
+        if (lock is ReentrantLock) {
+          expect(lock.inLock, isFalse);
+        } else if (lock is BasicLock) {
           expect(lock.inLock, isTrue);
         }
+
         completer.complete();
         await future;
         expect(lock.locked, isFalse);
