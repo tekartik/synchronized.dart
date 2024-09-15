@@ -211,7 +211,7 @@ As of version 3.3.0, a `MultiLock` is available. It is a lock that can be used t
 ```dart
 var lock1 = Lock();
 var lock2 = Lock();
-var multiLock = MultiLock([lock1, lock2]);
+var multiLock = MultiLock(locks: [lock1, lock2]);
 
 multiLock.synchronized(() async {
   // lock1 and lock2 are locked at this point
