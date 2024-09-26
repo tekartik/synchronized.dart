@@ -19,7 +19,7 @@
 ///  }
 /// ```
 //}
-library synchronized;
+library;
 
 import 'dart:async';
 
