@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.1
+
+* Required dart 3.7
+
 ## 3.3.0+3
 
 * Add MultiLock (thanks to @saibotma)
