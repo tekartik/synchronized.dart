@@ -13,9 +13,11 @@ void main() {
       var lock = Lock();
 
       // Create a long synchronized function but don't wait for it
-      unawaited(lock.synchronized(() async {
-        await Future<void>.delayed(const Duration(hours: 1));
-      }));
+      unawaited(
+        lock.synchronized(() async {
+          await Future<void>.delayed(const Duration(hours: 1));
+        }),
+      );
 
       // Try to grab the lock, this should fail with a time out exception
       try {

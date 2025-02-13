@@ -32,8 +32,10 @@ void main() {
       // Expect a time out exception
       var hasTimeoutException = false;
       try {
-        await multiLock.synchronized(() {},
-            timeout: const Duration(milliseconds: 100));
+        await multiLock.synchronized(
+          () {},
+          timeout: const Duration(milliseconds: 100),
+        );
         fail('should fail');
       } on TimeoutException catch (_) {
         // Timeout exception expected
@@ -70,8 +72,10 @@ void main() {
       expect(lock2.canLock, isFalse);
       hasTimeoutException = false;
       try {
-        await lock1.synchronized(() {},
-            timeout: const Duration(milliseconds: 100));
+        await lock1.synchronized(
+          () {},
+          timeout: const Duration(milliseconds: 100),
+        );
         fail('should fail');
       } on TimeoutException catch (_) {
         // Timeout exception expected
@@ -80,8 +84,10 @@ void main() {
       expect(hasTimeoutException, isTrue);
       hasTimeoutException = false;
       try {
-        await lock2.synchronized(() {},
-            timeout: const Duration(milliseconds: 100));
+        await lock2.synchronized(
+          () {},
+          timeout: const Duration(milliseconds: 100),
+        );
         fail('should fail');
       } on TimeoutException catch (_) {
         // Timeout exception expected
@@ -98,7 +104,9 @@ void main() {
 
         await lock1.synchronized(() async {
           expect(
-              multiLock.inLock, isTrue); // Not what we would expect but ok...
+            multiLock.inLock,
+            isTrue,
+          ); // Not what we would expect but ok...
           expect(multiLock.locked, isTrue);
           expect(multiLock.canLock, isFalse);
         });

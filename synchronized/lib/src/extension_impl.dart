@@ -26,8 +26,10 @@ void cleanUpLock(Object monitor) {
 /// Execute [computation] when lock is available. Only one block can run while
 /// the lock is retained. Any object can be a lock, locking is based on identity.
 Future<T> objectSynchronized<T>(
-    Object monitor, FutureOr<T> Function() computation,
-    {Duration? timeout}) async {
+  Object monitor,
+  FutureOr<T> Function() computation, {
+  Duration? timeout,
+}) async {
   // Make any object a lock object
   var lockImpl = objectMakeLock(monitor);
   try {

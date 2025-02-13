@@ -14,8 +14,10 @@ class ReentrantLock implements Lock {
   int get innerLevel => (Zone.current[this] as int?) ?? 0;
 
   @override
-  Future<T> synchronized<T>(FutureOr<T> Function() func,
-      {Duration? timeout}) async {
+  Future<T> synchronized<T>(
+    FutureOr<T> Function() func, {
+    Duration? timeout,
+  }) async {
     // Handle late synchronized section warning
     final level = innerLevel;
 
@@ -23,7 +25,8 @@ class ReentrantLock implements Lock {
     // zones could run outside the block so it could lead to an unexpected behavior
     if (level >= innerLocks.length) {
       throw StateError(
-          'This can happen if an inner synchronized block is spawned outside the block it was started from. Make sure the inner synchronized blocks are properly awaited');
+        'This can happen if an inner synchronized block is spawned outside the block it was started from. Make sure the inner synchronized blocks are properly awaited',
+      );
     }
     final lock = innerLocks[level];
 

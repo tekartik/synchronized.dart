@@ -139,8 +139,10 @@ void lockMain(LockFactory lockFactory) {
           await completer.future;
         });
         try {
-          await lock.synchronized(() {},
-              timeout: const Duration(milliseconds: 1));
+          await lock.synchronized(
+            () {},
+            timeout: const Duration(milliseconds: 1),
+          );
           fail('should fail');
         } on TimeoutException catch (_) {}
         completer.complete();
@@ -200,12 +202,18 @@ void lockMain(LockFactory lockFactory) {
         try {
           final lock = newLock();
           final completer = Completer<void>();
-          unawaited(lock.synchronized(() async {
-            await completer.future;
-          }).catchError((e) {}));
+          unawaited(
+            lock
+                .synchronized(() async {
+                  await completer.future;
+                })
+                .catchError((e) {}),
+          );
           try {
-            await lock.synchronized(() {},
-                timeout: const Duration(milliseconds: 1));
+            await lock.synchronized(
+              () {},
+              timeout: const Duration(milliseconds: 1),
+            );
             fail('should fail');
           } on TimeoutException catch (_) {}
           completer.completeError('error');
@@ -350,11 +358,13 @@ void lockMain(LockFactory lockFactory) {
         expect(lock.locked, isFalse);
         expect(lock.inLock, isFalse);
 
-        unawaited(lock.synchronized(() async {
-          await sleep(1);
-          expect(lock.locked, isTrue);
-          expect(lock.inLock, isTrue);
-        }));
+        unawaited(
+          lock.synchronized(() async {
+            await sleep(1);
+            expect(lock.locked, isTrue);
+            expect(lock.inLock, isTrue);
+          }),
+        );
 
         await lock.synchronized(() async {
           await sleep(1);
@@ -420,8 +430,10 @@ void lockMain(LockFactory lockFactory) {
         // Expect a time out exception
         var hasTimeoutException = false;
         try {
-          await lock.synchronized(() {},
-              timeout: const Duration(milliseconds: 100));
+          await lock.synchronized(
+            () {},
+            timeout: const Duration(milliseconds: 100),
+          );
           fail('should fail');
         } on TimeoutException catch (_) {
           // Timeout exception expected

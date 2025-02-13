@@ -68,8 +68,10 @@ void main() {
       Object? exception;
       await 'non-reentrant'.synchronized(() async {
         try {
-          await 'non-reentrant'
-              .synchronized(() {}, timeout: const Duration(seconds: 1));
+          await 'non-reentrant'.synchronized(
+            () {},
+            timeout: const Duration(seconds: 1),
+          );
         } catch (e) {
           exception = e;
         }
@@ -79,8 +81,9 @@ void main() {
 
     test('Myclass non-reentrant', () async {
       await MyClass('non-reentrant').synchronized(() async {
-        await MyClass('non-reentrant-distinct')
-            .synchronized(() {}, timeout: const Duration(seconds: 1));
+        await MyClass(
+          'non-reentrant-distinct',
+        ).synchronized(() {}, timeout: const Duration(seconds: 1));
       });
     });
 

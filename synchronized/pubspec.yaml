@@ -12,7 +12,7 @@ topics:
   - concurrency
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.7.0
 
 dev_dependencies:
   web: '>=0.5.0'

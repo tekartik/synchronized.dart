@@ -74,15 +74,17 @@ void main() {
       final lock = newLock();
 
       expect(
-          await lock.synchronized(() async {
-            expect(
-                await lock.synchronized(() {
-                  return 'inner';
-                }),
-                'inner');
-            return 'outer';
-          }),
-          'outer');
+        await lock.synchronized(() async {
+          expect(
+            await lock.synchronized(() {
+              return 'inner';
+            }),
+            'inner',
+          );
+          return 'outer';
+        }),
+        'outer',
+      );
     });
 
     test('inner_vs_outer', () async {
@@ -188,8 +190,10 @@ void main() {
           expect(lock.locked, isTrue);
 
           try {
-            await lock.synchronized(() {},
-                timeout: const Duration(milliseconds: 100));
+            await lock.synchronized(
+              () {},
+              timeout: const Duration(milliseconds: 100),
+            );
             fail('should fail');
           } on TimeoutException catch (_) {}
           expect(lock.locked, isTrue);
@@ -210,8 +214,10 @@ void main() {
             expect(lock.locked, isTrue);
 
             try {
-              await lock.synchronized(() {},
-                  timeout: const Duration(milliseconds: 100));
+              await lock.synchronized(
+                () {},
+                timeout: const Duration(milliseconds: 100),
+              );
               fail('should fail');
             } on TimeoutException catch (_) {}
             expect(lock.locked, isTrue);
