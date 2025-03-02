@@ -8,7 +8,7 @@ web.HTMLPreElement? outElement;
 void print(dynamic msg) {
   outElement ??= web.document.querySelector('#output') as web.HTMLPreElement?;
   var existing = outElement?.textContent ?? '';
-  outElement?.text = '$existing$msg\n';
+  outElement?.textContent = '$existing$msg\n';
 }
 
 Future<void> writeSlow(int value) async {
