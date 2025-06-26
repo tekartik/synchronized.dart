@@ -25,7 +25,9 @@ import 'dart:async';
 
 import 'package:synchronized/src/basic_lock.dart';
 import 'package:synchronized/src/reentrant_lock.dart';
-export 'src/multi_lock.dart';
+
+export 'src/lock_extension.dart' show TekartikLockExtension;
+export 'src/multi_lock.dart' show MultiLock;
 
 /// Object providing the implicit lock.
 ///
@@ -63,6 +65,9 @@ abstract class Lock {
 
   /// for reentrant, test whether we are currently in the synchronized section.
   /// for non reentrant, it returns the [locked] status.
+  ///
+  /// For non-reentrant lock, it matches the [locked] status and since it does
+  /// not mean anything, it should not be used as behavior may change in the future.
   bool get inLock;
 
   /// It returns true if the lock can be locked. For basic lock (reentrant or

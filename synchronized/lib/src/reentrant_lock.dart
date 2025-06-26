@@ -59,6 +59,11 @@ class ReentrantLock implements Lock {
   @override
   bool get locked => innerLocks.length > 1;
 
+  /// Only to use when locked
+  bool get _currentLevelLocked {
+    return innerLocks[innerLevel].locked;
+  }
+
   @override
-  bool get canLock => !locked || inLock;
+  bool get canLock => !locked || !_currentLevelLocked;
 }

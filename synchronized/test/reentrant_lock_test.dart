@@ -248,5 +248,34 @@ void main() {
         expect(hasStateError, isTrue);
       });
     });
+
+    test('synchronizedSync', () async {
+      final lock = newLock();
+      await lock.synchronized(() async {
+        final list = <int>[];
+        int add(int value) {
+          list.add(value);
+          return value;
+        }
+
+        final futureOr1 = lock.synchronizedSync(() {
+          return add(1);
+        });
+        expect(list, [1]);
+        expect(futureOr1, 1);
+        final future1 = lock.synchronized(() async {
+          await sleep(10);
+          return add(2);
+        });
+        final futureOr3 = lock.synchronizedSync(() {
+          return add(3);
+        });
+        expect(futureOr3, isA<Future>());
+        expect(await future1, 2);
+        expect(await futureOr3, 3);
+
+        expect(list, [1, 2, 3]);
+      });
+    });
   });
 }

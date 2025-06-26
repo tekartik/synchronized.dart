@@ -188,7 +188,7 @@ For multi lock, it returns true if all inner locks `locked` values are true.
 For reentrant locks, `inLock` returns whether the current zone is locked by the lock.
 i.e. it is true if the current block is running inside a `synchronized` block of the lock.
 
-For basic lock, it matches the `locked` property and since it does mean anything,
+For basic lock, it matches the `locked` property and since it does not mean anything,
 it should not be used as behavior may change in the future.
 
 For multi lock, it returns true if all inner locks `inLock` values are true.
@@ -199,7 +199,7 @@ canLock returns whether the lock can be locked immediately.
 
 For basic lock, it is true if the lock is not locked.
 
-For reentrant lock, it is true if the lock is not locked or if the current zone is locked by the lock.
+For reentrant lock, it is true if the lock is not locked or if the current zone lock level is locked by the lock.
 
 For multi lock, it returns true if all inner locks `canLock` values are true.
 
