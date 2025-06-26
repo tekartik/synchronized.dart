@@ -1,6 +1,6 @@
 name: synchronized
 description: Lock mechanism to prevent concurrent access to asynchronous code.
-version: 3.3.1
+version: 3.4.0
 homepage: https://github.com/tekartik/synchronized.dart/tree/master/synchronized
 funding:
   - https://github.com/sponsors/alextekartik
@@ -12,7 +12,7 @@ topics:
   - concurrency
 
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.8.0
 
 dev_dependencies:
   web: '>=0.5.0'

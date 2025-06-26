@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.0
+
+* Requires dart 3.8
+* Add `synchronizedSync` for synchronous computation that returns a `FutureOr`
+
 ## 3.3.1
 
 * Required dart 3.7
