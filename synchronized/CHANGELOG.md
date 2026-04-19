@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.4.0+1
+
+* Requires dart 3.11
+
 ## 3.4.0
 
 * Requires dart 3.8
