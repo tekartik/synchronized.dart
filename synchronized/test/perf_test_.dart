@@ -19,10 +19,10 @@ void main() {
 
 void run(LockFactory factory) {
   Lock newLock() => factory.newLock();
-  final operationCount = 500000;
+  const operationCount = 500000;
 
   test('$operationCount operations', () async {
-    final count = operationCount;
+    const count = operationCount;
     int j;
 
     var sw = Stopwatch();

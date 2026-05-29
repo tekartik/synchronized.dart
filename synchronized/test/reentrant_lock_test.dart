@@ -152,7 +152,7 @@ void main() {
         try {
           await lock.synchronized(() async {
             await lock.synchronized(() {
-              throw 'throwing';
+              throw StateError('throwing');
             });
           });
           fail('should throw'); // ignore: dead_code
@@ -168,7 +168,7 @@ void main() {
         try {
           await lock.synchronized(() async {
             await lock.synchronized(() async {
-              throw 'throwing';
+              throw StateError('throwing');
             });
           });
           fail('should throw'); // ignore: dead_code

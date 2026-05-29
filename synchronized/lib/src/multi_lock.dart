@@ -4,10 +4,10 @@ import 'package:synchronized/synchronized.dart';
 
 /// A multi lock that locks multiple locks at the same time.
 class MultiLock implements Lock {
-  final Iterable<Lock> _locks;
-
   /// Creates a new multi lock.
-  MultiLock({required Iterable<Lock> locks}) : _locks = locks;
+  MultiLock({required this._locks});
+
+  final Iterable<Lock> _locks;
 
   @override
   bool get canLock => _locks.every((it) => it.canLock);

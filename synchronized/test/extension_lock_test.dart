@@ -42,7 +42,7 @@ class MyClass {
 void main() {
   group('extension', () {
     test('order', () async {
-      final lock = 'test';
+      const lock = 'test';
       final list = <int>[];
       final future1 = lock.synchronized(() async {
         list.add(1);

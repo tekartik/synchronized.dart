@@ -68,7 +68,7 @@ void lockMain(LockFactory lockFactory) {
     });
 
     group('perf', () {
-      final operationCount = 10000;
+      const operationCount = 10000;
 
       test('$operationCount operations', () async {
         var count = operationCount;
@@ -238,7 +238,7 @@ void lockMain(LockFactory lockFactory) {
         final lock = newLock();
         try {
           await lock.synchronized(() {
-            throw 'throwing';
+            throw StateError('throwing');
           });
           fail('should throw'); // ignore: dead_code
         } catch (e) {
@@ -262,7 +262,7 @@ void lockMain(LockFactory lockFactory) {
         });
         try {
           await lock.synchronized(() async {
-            throw 'throwing';
+            throw StateError('throwing');
           });
           fail('should throw'); // ignore: dead_code
         } catch (e) {
@@ -280,7 +280,7 @@ void lockMain(LockFactory lockFactory) {
         final lock = newLock();
         try {
           await lock.synchronized(() async {
-            throw 'throwing';
+            throw StateError('throwing');
           });
           fail('should throw'); // ignore: dead_code
         } catch (e) {
