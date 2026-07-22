@@ -2,9 +2,18 @@ import 'dart:async';
 
 import 'package:synchronized/synchronized.dart';
 
-/// A multi lock that locks multiple locks at the same time.
+/// A [Lock] that atomically acquires several other locks together.
+///
+/// [synchronized] acquires each underlying lock in the order given to
+/// [MultiLock.new], running the computation once all of them are held, then
+/// releases them in reverse order. To avoid deadlocks, always acquire the
+/// same set of underlying locks in the same relative order across every
+/// [MultiLock] (or direct [Lock.synchronized] call) that shares any of them.
 class MultiLock implements Lock {
-  /// Creates a new multi lock.
+  /// Creates a lock that acquires every lock in `locks` together.
+  ///
+  /// [_locks] is iterated once per [synchronized] call, in order, to acquire
+  /// (and, in reverse, to release) each underlying lock.
   MultiLock({required this._locks});
 
   final Iterable<Lock> _locks;

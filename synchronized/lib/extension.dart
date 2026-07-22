@@ -39,9 +39,19 @@ import 'package:synchronized/src/extension_impl.dart' as impl;
 /// example using String object).
 ///
 extension SynchronizedLock on Object {
-  /// Executes [computation] when lock is available.
+  /// Runs [computation] once this object's implicit lock is available,
+  /// preventing any other call to [synchronized] on the same object
+  /// (compared by identity) from running concurrently.
   ///
-  /// Only one asynchronous block can run while the lock is retained.
+  /// If [timeout] is specified, this waits at most that [Duration] to
+  /// acquire the lock; [computation] is never called and a
+  /// [TimeoutException] is thrown if the lock cannot be acquired in time. If
+  /// [timeout] is `null` (the default), this waits indefinitely.
+  ///
+  /// Returns a [Future] that completes with the value returned by
+  /// [computation] (or its awaited result, if it returns a [Future]) once
+  /// [computation] finishes and the lock is released. Any error thrown by
+  /// [computation] is rethrown through the returned [Future].
   Future<T> synchronized<T>(
     FutureOr<T> Function() computation, {
     Duration? timeout,
