@@ -1,8 +1,9 @@
 # Changelog
 
-## 3.4.1
+## 3.4.1+1
 
 * Requires dart 3.12
+* Improve documentation
 
 ## 3.4.0+1
 
