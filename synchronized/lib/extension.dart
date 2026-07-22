@@ -37,7 +37,6 @@ import 'package:synchronized/src/extension_impl.dart' as impl;
 ///
 /// The lock mechanism is based on identity so beware of potential conflicts (for
 /// example using String object).
-///
 extension SynchronizedLock on Object {
   /// Runs [computation] once this object's implicit lock is available,
   /// preventing any other call to [synchronized] on the same object
