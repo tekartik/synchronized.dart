@@ -175,7 +175,7 @@ void lockMain(LockFactory lockFactory) {
             await sleep(5000);
             ran2 = true;
           }, timeout: const Duration(milliseconds: 1));
-          // fail('should fail');
+          fail('should time out while the lock is held');
         } on TimeoutException catch (_) {}
 
         try {
@@ -199,35 +199,33 @@ void lockMain(LockFactory lockFactory) {
       test('1_ms_with_error', () async {
         var ok = false;
         var okTimeout = false;
+        final lock = newLock();
+        final completer = Completer<void>();
+        // The holder fails on purpose; its error must not leak to the
+        // waiters, so it is swallowed here and nowhere else.
+        unawaited(
+          lock
+              .synchronized(() async {
+                await completer.future;
+              })
+              .catchError((Object _) {}),
+        );
         try {
-          final lock = newLock();
-          final completer = Completer<void>();
-          unawaited(
-            lock
-                .synchronized(() async {
-                  await completer.future;
-                })
-                .catchError((e) {}),
+          await lock.synchronized(
+            () {},
+            timeout: const Duration(milliseconds: 1),
           );
-          try {
-            await lock.synchronized(
-              () {},
-              timeout: const Duration(milliseconds: 1),
-            );
-            fail('should fail');
-          } on TimeoutException catch (_) {}
-          completer.completeError('error');
-          // await future;
-          // await lock.synchronized(null, timeout: Duration(milliseconds: 1000));
+          fail('should fail');
+        } on TimeoutException catch (_) {}
+        completer.completeError('error');
 
-          // Make sure these block ran
-          await lock.synchronized(() {
-            ok = true;
-          });
-          await lock.synchronized(() {
-            okTimeout = true;
-          }, timeout: const Duration(milliseconds: 1000));
-        } catch (_) {}
+        // Make sure these blocks ran: a failed holder must still release.
+        await lock.synchronized(() {
+          ok = true;
+        });
+        await lock.synchronized(() {
+          okTimeout = true;
+        }, timeout: const Duration(milliseconds: 1000));
         expect(ok, isTrue);
         expect(okTimeout, isTrue);
       });
@@ -390,7 +388,6 @@ void lockMain(LockFactory lockFactory) {
 
       test('locked/canLock', () async {
         final lock = newLock();
-        final completer = Completer<void>();
         expect(lock.locked, isFalse);
         expect(lock.inLock, isFalse);
         final future = lock.synchronized(() async {
@@ -411,7 +408,6 @@ void lockMain(LockFactory lockFactory) {
           expect(lock.inLock, isTrue);
         }
 
-        completer.complete();
         await future;
         expect(lock.locked, isFalse);
         expect(lock.inLock, isFalse);
