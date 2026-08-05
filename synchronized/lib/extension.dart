@@ -35,12 +35,16 @@ import 'package:synchronized/src/extension_impl.dart' as impl;
 /// }
 /// ```
 ///
-/// The lock mechanism is based on identity so beware of potential conflicts (for
-/// example using String object).
+/// The lock mechanism is based on equality (`==`/`hashCode`), not identity, so
+/// any two objects that compare equal share the same lock. Beware of potential
+/// conflicts: the lock cache is global to the process, so value types such as
+/// `String` or `int` are effectively a namespace shared with every other
+/// library in the application. Lock on a private instance
+/// (`final _lock = Object();`) when isolation matters.
 extension SynchronizedLock on Object {
   /// Runs [computation] once this object's implicit lock is available,
-  /// preventing any other call to [synchronized] on the same object
-  /// (compared by identity) from running concurrently.
+  /// preventing any other call to [synchronized] on an equal object
+  /// (compared with `==`) from running concurrently.
   ///
   /// If [timeout] is specified, this waits at most that [Duration] to
   /// acquire the lock; [computation] is never called and a
