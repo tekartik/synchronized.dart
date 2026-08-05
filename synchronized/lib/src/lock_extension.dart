@@ -21,15 +21,32 @@ extension TekartikLockExtension on Lock {
   /// acquired in time. If [timeout] is `null` (the default), this waits
   /// indefinitely. [timeout] has no effect when the lock is acquired
   /// immediately.
+  ///
+  /// [computation] must be synchronous. The lock is only held while
+  /// [computation] itself runs, so a [computation] that returns a [Future]
+  /// would let that future complete outside the lock, silently losing mutual
+  /// exclusion. Returning a [Future] therefore trips an assertion in debug
+  /// mode; use [Lock.synchronized] for asynchronous work.
   FutureOr<T> synchronizedSync<T>(
     T Function() computation, {
     Duration? timeout,
   }) {
+    T compute() {
+      var result = computation();
+      assert(result is! Future, _asyncComputationMessage);
+      return result;
+    }
+
     if (canLock) {
-      return computation();
+      return compute();
     }
     return synchronized<T>(() async {
-      return computation();
+      return compute();
     }, timeout: timeout);
   }
 }
+
+const _asyncComputationMessage =
+    'synchronizedSync() requires a synchronous computation: the lock is '
+    'released as soon as it returns, so a Future result would complete '
+    'outside the lock. Use synchronized() instead.';

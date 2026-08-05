@@ -452,7 +452,7 @@ void lockMain(LockFactory lockFactory) {
     });
 
     test('synchronizedSync', () async {
-      final lock = Lock();
+      final lock = newLock();
       final list = <int>[];
       int add(int value) {
         list.add(value);
@@ -476,6 +476,47 @@ void lockMain(LockFactory lockFactory) {
       expect(await futureOr3, 3);
 
       expect(list, [1, 2, 3]);
+    });
+
+    group('synchronizedSync async computation', () {
+      // The lock is released as soon as the computation returns, so a Future
+      // result would complete outside the lock. Both paths must assert:
+      // which one runs depends on contention, so a one-sided check would
+      // only catch the misuse some of the time.
+      test('asserts on the immediate path', () {
+        final lock = newLock();
+        expect(lock.canLock, isTrue);
+        expect(
+          () => lock.synchronizedSync(() => Future<void>.value()),
+          throwsA(isA<AssertionError>()),
+        );
+      });
+
+      test('asserts on the queued path', () async {
+        final lock = newLock();
+        final completer = Completer<void>();
+        // Hold the lock so synchronizedSync has to queue.
+        final held = lock.synchronized(() => completer.future);
+        expect(lock.canLock, isFalse);
+
+        final queued = lock.synchronizedSync(() => Future<void>.value());
+        completer.complete();
+        await expectLater(queued, throwsA(isA<AssertionError>()));
+        await held;
+      });
+
+      test('synchronous computation is unaffected', () async {
+        final lock = newLock();
+        expect(lock.synchronizedSync(() => 1), 1);
+
+        final completer = Completer<void>();
+        final held = lock.synchronized(() => completer.future);
+        final queued = lock.synchronizedSync(() => 2);
+        expect(queued, isA<Future>());
+        completer.complete();
+        expect(await queued, 2);
+        await held;
+      });
     });
   });
 }

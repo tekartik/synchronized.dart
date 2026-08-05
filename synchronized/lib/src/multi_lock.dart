@@ -10,13 +10,19 @@ import 'package:synchronized/synchronized.dart';
 /// same set of underlying locks in the same relative order across every
 /// [MultiLock] (or direct [Lock.synchronized] call) that shares any of them.
 class MultiLock implements Lock {
-  /// Creates a lock that acquires every lock in `locks` together.
+  /// Creates a lock that acquires every lock in [locks] together.
   ///
-  /// [_locks] is iterated once per [synchronized] call, in order, to acquire
-  /// (and, in reverse, to release) each underlying lock.
-  MultiLock({required this._locks});
+  /// [locks] is copied, so the lock set is fixed at construction: iterating
+  /// it later must not be able to yield a different result. Passing a lazy
+  /// [Iterable] that rebuilds its elements on each iteration would otherwise
+  /// mean acquiring a different lock every time, silently providing no
+  /// mutual exclusion at all.
+  ///
+  /// The captured list is walked in order on each [synchronized] call to
+  /// acquire (and, in reverse, to release) each underlying lock.
+  MultiLock({required Iterable<Lock> locks}) : _locks = List<Lock>.of(locks);
 
-  final Iterable<Lock> _locks;
+  final List<Lock> _locks;
 
   @override
   bool get canLock => _locks.every((it) => it.canLock);
@@ -32,6 +38,20 @@ class MultiLock implements Lock {
     FutureOr<T> Function() computation, {
     Duration? timeout,
   }) async {
+    // [timeout] bounds the whole acquisition, not each lock in turn, so the
+    // budget is spent against a single deadline. Passing [timeout] down
+    // unchanged would let a caller wait up to `locks.length * timeout`.
+    final deadline = timeout == null ? null : DateTime.now().add(timeout);
+
+    Duration? remaining() {
+      if (deadline == null) {
+        return null;
+      }
+      final left = deadline.difference(DateTime.now());
+      // A non-positive budget must still time out rather than wait forever.
+      return left > Duration.zero ? left : Duration.zero;
+    }
+
     FutureOr<T> runWithLocks(Iterator<Lock> iterator) {
       if (!iterator.moveNext()) {
         return computation();
@@ -39,7 +59,7 @@ class MultiLock implements Lock {
         final currentLock = iterator.current;
         return currentLock.synchronized(
           () => runWithLocks(iterator),
-          timeout: timeout,
+          timeout: remaining(),
         );
       }
     }

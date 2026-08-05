@@ -20,14 +20,7 @@ class ReentrantLock implements Lock {
   }) async {
     // Handle late synchronized section warning
     final level = innerLevel;
-
-    // Check that we are still in the proper block
-    // zones could run outside the block so it could lead to an unexpected behavior
-    if (level >= innerLocks.length) {
-      throw StateError(
-        'This can happen if an inner synchronized block is spawned outside the block it was started from. Make sure the inner synchronized blocks are properly awaited',
-      );
-    }
+    _checkLevel(level);
     final lock = innerLocks[level];
 
     return lock.synchronized(() async {
@@ -59,11 +52,27 @@ class ReentrantLock implements Lock {
   @override
   bool get locked => innerLocks.length > 1;
 
-  /// Only to use when locked
-  bool get _currentLevelLocked {
-    return innerLocks[innerLevel].locked;
+  /// Check that we are still in the proper block.
+  ///
+  /// Zones can run outside the block they were created for, so a captured
+  /// zone may report a level that has since been popped from [innerLocks].
+  /// Indexing with it would throw an opaque `RangeError`, so fail with the
+  /// same explanation [synchronized] gives.
+  void _checkLevel(int level) {
+    if (level >= innerLocks.length) {
+      throw StateError(
+        'This can happen if an inner synchronized block is spawned outside the block it was started from. Make sure the inner synchronized blocks are properly awaited',
+      );
+    }
   }
 
   @override
-  bool get canLock => !locked || !_currentLevelLocked;
+  bool get canLock {
+    // Validated unconditionally: a stale zone cannot lock whatever `locked`
+    // says, so short-circuiting on `!locked` here would report `true` for a
+    // call that is about to throw.
+    final level = innerLevel;
+    _checkLevel(level);
+    return !locked || !innerLocks[level].locked;
+  }
 }

@@ -112,5 +112,75 @@ void main() {
         });
       });
     });
+
+    group('lock set is captured at construction', () {
+      test('serialises over a lazy Iterable', () async {
+        var built = 0;
+        final inner = [Lock(), Lock()];
+        // A lazy Iterable: re-iterating it rebuilds the sequence. The
+        // MultiLock must not depend on that happening to be idempotent.
+        Iterable<Lock> lazy() sync* {
+          built++;
+          yield* inner;
+        }
+
+        final multiLock = MultiLock(locks: lazy());
+        expect(built, 1, reason: 'copied once, at construction');
+
+        final order = <String>[];
+        final first = multiLock.synchronized(() async {
+          order.add('a-start');
+          await sleep(20);
+          order.add('a-end');
+        });
+        final second = multiLock.synchronized(() async {
+          order.add('b-start');
+          await sleep(1);
+          order.add('b-end');
+        });
+        await Future.wait([first, second]);
+
+        expect(order, ['a-start', 'a-end', 'b-start', 'b-end']);
+        expect(built, 1, reason: 'never re-iterated after construction');
+      });
+
+      test('rebuilt elements would lose exclusion without the copy', () async {
+        // Guards the actual failure mode: an Iterable yielding fresh locks.
+        // The copy pins the first batch, so exclusion still holds.
+        Iterable<Lock> fresh() sync* {
+          yield Lock();
+        }
+
+        final multiLock = MultiLock(locks: fresh());
+        final order = <String>[];
+        final first = multiLock.synchronized(() async {
+          order.add('a-start');
+          await sleep(20);
+          order.add('a-end');
+        });
+        final second = multiLock.synchronized(() async {
+          order.add('b-start');
+        });
+        await Future.wait([first, second]);
+        expect(order, ['a-start', 'a-end', 'b-start']);
+      });
+
+      test('mutating the source list does not change the lock set', () async {
+        final held = Lock();
+        final source = [held];
+        final multiLock = MultiLock(locks: source);
+
+        source.add(Lock());
+        source.removeAt(0);
+
+        final completer = Completer<void>();
+        final future = held.synchronized(() => completer.future);
+        // Still bound to `held`, not to whatever `source` now contains.
+        expect(multiLock.canLock, isFalse);
+        completer.complete();
+        await future;
+        expect(multiLock.canLock, isTrue);
+      });
+    });
   });
 }
