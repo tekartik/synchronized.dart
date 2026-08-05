@@ -228,6 +228,41 @@ void main() {
         expect(lock.locked, isFalse);
       });
 
+      test('stale zone reports StateError, not RangeError', () async {
+        final lock = newLock();
+        Zone? deepZone;
+        await lock.synchronized(() async {
+          await lock.synchronized(() async {
+            deepZone = Zone.current; // level 2
+          });
+          // The inner block has unwound, so level 2 no longer exists, but
+          // the outer block still holds the lock.
+          expect(lock.locked, isTrue);
+          deepZone!.run(() {
+            expect(() => lock.canLock, throwsA(isA<StateError>()));
+            expect(
+              () => lock.synchronizedSync(() => 1),
+              throwsA(isA<StateError>()),
+            );
+          });
+        });
+      });
+
+      test('stale zone reports StateError even when unlocked', () async {
+        final lock = newLock();
+        Zone? zone;
+        await lock.synchronized(() async {
+          zone = Zone.current; // level 1
+        });
+        // Block finished: the level is gone even though nothing is locked.
+        // `canLock` must not answer `true` for a call that would throw.
+        zone!.run(() {
+          expect(lock.locked, isFalse);
+          expect(() => lock.canLock, throwsA(isA<StateError>()));
+          expect(() => lock.synchronized(() {}), throwsA(isA<StateError>()));
+        });
+      });
+
       test('late', () async {
         final lock = newLock();
         var hasStateError = false;

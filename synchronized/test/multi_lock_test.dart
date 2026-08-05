@@ -113,6 +113,32 @@ void main() {
       });
     });
 
+    test('timeout bounds the whole acquisition', () async {
+      final lock1 = Lock();
+      final lock2 = Lock();
+      final multiLock = MultiLock(locks: [lock1, lock2]);
+      final completer = Completer<void>();
+
+      // lock1 frees partway through the budget; lock2 never does. A per-lock
+      // timeout would restart the clock for lock2 and wait 250 + 300 ms.
+      final held1 = lock1.synchronized(() => sleep(250));
+      final held2 = lock2.synchronized(() => completer.future);
+
+      final sw = Stopwatch()..start();
+      await expectLater(
+        multiLock.synchronized(
+          () {},
+          timeout: const Duration(milliseconds: 300),
+        ),
+        throwsA(isA<TimeoutException>()),
+      );
+      sw.stop();
+      expect(sw.elapsedMilliseconds, lessThan(450));
+
+      completer.complete();
+      await Future.wait([held1, held2]);
+    });
+
     group('lock set is captured at construction', () {
       test('serialises over a lazy Iterable', () async {
         var built = 0;
