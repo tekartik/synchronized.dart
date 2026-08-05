@@ -113,6 +113,39 @@ void main() {
       });
     });
 
+    group('composite state', () {
+      // These pin the current `every`-based semantics rather than endorsing
+      // them. Both cases are self-contradictory and are what ARCH-01 would
+      // change, so they are expected to flip if `locked`/`inLock` move to
+      // `any`. Pinning them makes that change visible instead of silent.
+      test('empty lock set reports locked and lockable at once', () {
+        final multiLock = MultiLock(locks: <Lock>[]);
+        expect(multiLock.locked, isTrue);
+        expect(multiLock.canLock, isTrue);
+        expect(multiLock.inLock, isTrue);
+      });
+
+      test('partial hold reports not-locked yet not-lockable', () async {
+        final lock1 = Lock();
+        final lock2 = Lock();
+        final multiLock = MultiLock(locks: [lock1, lock2]);
+        final completer = Completer<void>();
+        final held = lock1.synchronized(() => completer.future);
+
+        expect(lock1.locked, isTrue);
+        expect(lock2.locked, isFalse);
+        // `every` over a partial hold: reports unlocked while refusing to
+        // lock. A caller guarding on `if (!lock.locked)` would then block.
+        expect(multiLock.locked, isFalse);
+        expect(multiLock.canLock, isFalse);
+
+        completer.complete();
+        await held;
+        expect(multiLock.locked, isFalse);
+        expect(multiLock.canLock, isTrue);
+      });
+    });
+
     test('timeout bounds the whole acquisition', () async {
       final lock1 = Lock();
       final lock2 = Lock();

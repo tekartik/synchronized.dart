@@ -87,6 +87,49 @@ void main() {
       });
     });
 
+    group('lock keying contract', () {
+      // The lock cache is a plain Map, so it keys on ==/hashCode rather than
+      // identity. Nothing else pins this, which is how the dartdoc managed to
+      // claim the opposite for years.
+      test('equal but distinct objects share a lock', () async {
+        final a = MyClass('keying');
+        final b = MyClass('keying');
+        expect(identical(a, b), isFalse);
+        expect(a == b, isTrue);
+
+        Object? exception;
+        await a.synchronized(() async {
+          try {
+            await b.synchronized(
+              () {},
+              timeout: const Duration(milliseconds: 100),
+            );
+          } catch (e) {
+            exception = e;
+          }
+        });
+        expect(
+          exception,
+          const TypeMatcher<TimeoutException>(),
+          reason: 'equal objects must contend for the same lock',
+        );
+      });
+
+      test('unequal objects do not contend', () async {
+        final a = MyClass('keying-a');
+        final b = MyClass('keying-b');
+        expect(a == b, isFalse);
+
+        var ran = false;
+        await a.synchronized(() async {
+          await b.synchronized(() {
+            ran = true;
+          }, timeout: const Duration(seconds: 1));
+        });
+        expect(ran, isTrue);
+      });
+    });
+
     test('doc', () async {
       var myObject = MyClass('doc');
 
