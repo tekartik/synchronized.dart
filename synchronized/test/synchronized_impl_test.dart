@@ -127,5 +127,26 @@ void main() {
         });
       });
     });
+
+    group('MultiLock', () {
+      test('type', () {
+        var lock = common.MultiLock(locks: [common.Lock()]);
+        expect(lock, const TypeMatcher<common.Lock>());
+      });
+
+      test('toString', () {
+        var lock = common.MultiLock(locks: [common.Lock(), common.Lock()]);
+        expect('$lock', startsWith('MultiLock['));
+        expect('$lock', endsWith(']'));
+      });
+
+      test('toString distinguishes instances', () {
+        var inner = common.Lock();
+        // Same member locks, so only the identity hash tells them apart.
+        var lock1 = common.MultiLock(locks: [inner]);
+        var lock2 = common.MultiLock(locks: [inner]);
+        expect('$lock1', isNot('$lock2'));
+      });
+    });
   });
 }

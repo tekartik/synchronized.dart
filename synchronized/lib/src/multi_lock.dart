@@ -46,4 +46,7 @@ class MultiLock implements Lock {
 
     return runWithLocks(_locks.iterator);
   }
+
+  @override
+  String toString() => 'MultiLock[${identityHashCode(this)}]';
 }
