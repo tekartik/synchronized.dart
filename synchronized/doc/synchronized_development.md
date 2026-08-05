@@ -43,10 +43,10 @@ dependency_overrides:
 
 ## Run perf test
 
-`perf_test_.dart` ends with an underscore so the default `*_test.dart` glob
+`perf_test_runner.dart` does not end in `_test.dart`, so the default glob
 skips it. Run it explicitly:
 
-    dart test -j 1 test/perf_test_.dart
+    dart test -j 1 test/perf_test_runner.dart
 
 Historical numbers, kept for reference only — they are not a regression gate:
 

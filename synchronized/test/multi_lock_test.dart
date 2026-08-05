@@ -5,7 +5,7 @@
 import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
 
-import 'common_lock_test_.dart' as lock_test;
+import 'common_lock_test_runner.dart' as lock_test;
 import 'lock_factory.dart';
 
 void main() {
