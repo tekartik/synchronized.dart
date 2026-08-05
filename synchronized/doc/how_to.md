@@ -7,7 +7,7 @@
 ### basic usage
 
 ```dart
-var lock = new Lock();
+var lock = Lock();
 // ...
 await lock.synchronized(() async {
   // do you stuff
@@ -19,7 +19,7 @@ Have in mind that the `Lock` instance must be shared between calls in order to e
 
 ```
 class MyClass {
-  Lock _lock = new Lock();
+  final _lock = Lock();
 
   Future<void> myMethod() async {
     await _lock.synchronized(() async {
@@ -49,7 +49,7 @@ myObject.synchronized(() async {
 class MyClass {
   /// Perform a long action that won't be called more than once at a time.
   /// 
-  Future performAction() {
+  Future<void> performAction() {
     // Lock at the instance level
     return synchronized(() async {
       // ...uninterrupted action
@@ -63,7 +63,7 @@ Or you can synchronize at the class level
  ```dart
 class MyClass {
   /// Perform a long action that won't be called more than once at a time.
-  Future performClassAction() {
+  Future<void> performClassAction() {
     // Lock at the class level
     return runtimeType.synchronized(() async {
       // ...uninterrupted action

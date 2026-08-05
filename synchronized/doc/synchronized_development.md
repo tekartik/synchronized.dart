@@ -4,25 +4,33 @@
 
 * run tests
 * no warning
-* string mode / implicit-casts: false
+* `strict-casts` and `strict-inference` are enabled (see `analysis_options.yaml`)
 
 ````
-# quick run before commiting
+# quick run before committing
 
-dartfmt -w .
-dartanalyzer .
-pub run test
+dart format .
+dart analyze
+dart test
+````
+
+The full gate that CI runs (analyze + format + test, for every package in the
+repo) is:
+
+````
+cd repo_support
+dart run tool/run_ci.dart
 ````
 
 ## Browser and node test
 
 ````
-pub run test -p chrome
+dart test -p chrome
 
 # full test in one
-pub run test -p chrome -p firefox -p vm
+dart test -p chrome -p node -p vm
 # Using build_runner
-pub run build_runner test -- -p chrome -p firefox -p vm
+dart run build_runner test -- -p chrome -p vm
 ````
     
 ## Use the git version
@@ -35,7 +43,12 @@ dependency_overrides:
 
 ## Run perf test
 
-    pub run test -j 1 test/perf_test_.dart 
+`perf_test_.dart` ends with an underscore so the default `*_test.dart` glob
+skips it. Run it explicitly:
+
+    dart test -j 1 test/perf_test_.dart
+
+Historical numbers, kept for reference only — they are not a regression gate:
 
 ```
 2019-02-21
@@ -52,7 +65,7 @@ syncd 0:00:13.592300
 
 ### Publishing
 
-     pub publish
+     dart pub publish
 
 
 Post publish

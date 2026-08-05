@@ -40,29 +40,29 @@ A simple usage example:
 ```dart
 import 'package:synchronized/synchronized.dart';
 
-main() async {
+Future<void> main() async {
   // Use this object to prevent concurrent access to data
-  var lock = new Lock();
-  ...
+  var lock = Lock();
+  // ...
   await lock.synchronized(() async {
-    // Only this block can run (once) until done 
-    ...
+    // Only this block can run (once) until done
+    // ...
   });
 }
 ```
-    
+
 If you need a re-entrant lock you can use
 
 ```dart
-var lock = new Lock(reentrant: true);
+var lock = Lock(reentrant: true);
 // ...
 await lock.synchronized(() async {
   // do some stuff
-  // ... 
-  
+  // ...
+
   await lock.synchronized(() async {
     // other stuff
-  }
+  });
 });
 ```
         
@@ -95,7 +95,7 @@ import 'package:synchronized/extension.dart';
 class MyClass {
 
   /// Perform a long action that won't be called more than one at a time.
-  Future performAction() {
+  Future<void> performAction() {
     // Lock at the instance level
     return synchronized(() async {
       // ...uninterrupted action
@@ -116,18 +116,18 @@ of inner tasks to be awaited for.
 Consider the following dummy code
 
 ```dart
-Future writeSlow(int value) async {
-  await Future.delayed(new Duration(milliseconds: 1));
+Future<void> writeSlow(int value) async {
+  await Future<void>.delayed(const Duration(milliseconds: 1));
   stdout.write(value);
 }
 
-Future write(List<int> values) async {
-  for (int value in values) {
+Future<void> write(List<int> values) async {
+  for (var value in values) {
     await writeSlow(value);
   }
 }
 
-Future write1234() async {
+Future<void> write1234() async {
   await write([1, 2, 3, 4]);
 }
 ```
@@ -159,7 +159,7 @@ Have in mind that the `Lock` instance must be shared between calls in order to e
 
 ```dart
 class MyClass {
-  final _lock = new Lock();
+  final _lock = Lock();
 
   Future<void> myMethod() async {
     await _lock.synchronized(() async {
@@ -174,6 +174,54 @@ class MyClass {
 Typically you would create a global or static instance Lock to prevent concurrent access to
 a global resource or a class instance Lock to prevent concurrent modifications of
 class instance data and resources.
+
+## Timeout
+
+`synchronized()` accepts an optional `timeout`:
+
+```dart
+try {
+  await lock.synchronized(() async {
+    // ...
+  }, timeout: const Duration(seconds: 1));
+} on TimeoutException catch (_) {
+  // The lock could not be acquired in time.
+}
+```
+
+The timeout bounds **acquiring** the lock, not running the computation. If it
+expires, the computation is never called and a `TimeoutException` is thrown.
+Once the computation has started it runs to completion: there is no
+cancellation, so a computation may well outlive the timeout that let it start.
+
+For a `MultiLock` the timeout is the budget for acquiring the whole set, not
+for each member lock in turn.
+
+## Locking on any object
+
+With `package:synchronized/extension.dart`, the lock associated with an object
+is found by **equality** (`==`/`hashCode`), not by identity, and the cache is
+global to the process. Two objects that compare equal therefore share one lock,
+which makes value types such as `String` and `int` a namespace shared with
+every other library in the application:
+
+```dart
+// These contend with each other, and with any other library
+// that happens to lock on the same text.
+await 'my-key'.synchronized(() async { /* ... */ });
+```
+
+When you want isolation, lock on a private instance instead:
+
+```dart
+class MyClass {
+  final _lock = Object();
+
+  Future<void> myMethod() => _lock.synchronized(() async {
+        // ...
+      });
+}
+```
 
 ## locked/inLock/canLock status
 
