@@ -39,15 +39,15 @@ class MultiLock implements Lock {
     Duration? timeout,
   }) async {
     // [timeout] bounds the whole acquisition, not each lock in turn, so the
-    // budget is spent against a single deadline. Passing [timeout] down
+    // budget is spent against a single stopwatch. Passing [timeout] down
     // unchanged would let a caller wait up to `locks.length * timeout`.
-    final deadline = timeout == null ? null : DateTime.now().add(timeout);
+    final stopwatch = timeout == null ? null : (Stopwatch()..start());
 
     Duration? remaining() {
-      if (deadline == null) {
+      if (timeout == null) {
         return null;
       }
-      final left = deadline.difference(DateTime.now());
+      final left = timeout - stopwatch!.elapsed;
       // A non-positive budget must still time out rather than wait forever.
       return left > Duration.zero ? left : Duration.zero;
     }
