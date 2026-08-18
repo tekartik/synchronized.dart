@@ -1,0 +1,15 @@
+name: Analyze Flutter (downgrade and upgrade)
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'  # every sunday at midnight
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Full flutter analysis
+        uses: tekartik/ci.dart/.github/actions/run_ci_flutter_analyze@v1
+        with:
+          flutter-channel: stable

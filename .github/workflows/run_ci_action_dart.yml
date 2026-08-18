@@ -1,7 +1,6 @@
-name: Run CI
+name: Run CI action dart
 on:
   push:
-  pull_request:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * 0'  # every sunday at midnight
@@ -10,9 +9,6 @@ jobs:
   test:
     name: Test on ${{ matrix.os }} / dart ${{ matrix.dart }}
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: repo_support
     strategy:
       fail-fast: false
       matrix:
@@ -28,10 +24,8 @@ jobs:
           - os: macos-latest
             dart: stable
     steps:
-      - uses: actions/checkout@v7
-      - uses: dart-lang/setup-dart@v1
+      - name: Run ci dart
+        uses: tekartik/ci.dart/.github/actions/run_ci_dart@v1
         with:
-          sdk: ${{ matrix.dart }}
-      - run: dart --version
-      - run: dart pub get
-      - run: dart run tool/run_ci.dart
+          dart-channel: ${{ matrix.dart }}
+
