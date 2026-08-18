@@ -149,32 +149,28 @@ void main() {
     group('error', () {
       test('inner_throw', () async {
         final lock = newLock();
-        try {
-          await lock.synchronized(() async {
+        await expectLater(
+          lock.synchronized(() async {
             await lock.synchronized(() {
               throw StateError('throwing');
             });
-          });
-          fail('should throw'); // ignore: dead_code
-        } catch (e) {
-          expect(e is TestFailure, isFalse);
-        }
+          }),
+          throwsA(isA<StateError>()),
+        );
 
         await lock.synchronized(() {});
       });
 
       test('inner_throw_async', () async {
         final lock = newLock();
-        try {
-          await lock.synchronized(() async {
+        await expectLater(
+          lock.synchronized(() async {
             await lock.synchronized(() async {
               throw StateError('throwing');
             });
-          });
-          fail('should throw'); // ignore: dead_code
-        } catch (e) {
-          expect(e is TestFailure, isFalse);
-        }
+          }),
+          throwsA(isA<StateError>()),
+        );
         await sleep(1);
       });
     });

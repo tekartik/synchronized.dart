@@ -2,14 +2,13 @@
 
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: avoid_print
-
 import 'package:synchronized/src/basic_lock.dart' show BasicLock;
 import 'package:synchronized/src/reentrant_lock.dart' show ReentrantLock;
 import 'package:synchronized/synchronized.dart';
 import 'package:test/test.dart';
 
 import 'lock_factory.dart';
+import 'perf_test_runner.dart' show lockPerfTest;
 
 void main() {
   lockMain(BasicLockFactory());
@@ -68,67 +67,9 @@ void lockMain(LockFactory lockFactory) {
     });
 
     group('perf', () {
-      const operationCount = 10000;
-
-      test('$operationCount operations', () async {
-        var count = operationCount;
-        int j;
-
-        final sw1 = Stopwatch();
-        j = 0;
-        sw1.start();
-        for (var i = 0; i < count; i++) {
-          j += i;
-        }
-        sw1.stop();
-        expect(j, count * (count - 1) / 2);
-
-        final sw2 = Stopwatch();
-        j = 0;
-        sw2.start();
-        for (var i = 0; i < count; i++) {
-          await () async {
-            j += i;
-          }();
-        }
-        sw2.stop();
-        expect(j, count * (count - 1) / 2);
-
-        var lock = newLock();
-        final sw3 = Stopwatch();
-        j = 0;
-        sw3.start();
-        for (var i = 0; i < count; i++) {
-          // ignore: unawaited_futures
-          lock.synchronized(() {
-            j += i;
-          });
-        }
-        // final wait
-        await lock.synchronized(() => {});
-        expect(lock.locked, isFalse);
-        sw3.stop();
-        expect(j, count * (count - 1) / 2);
-
-        final sw4 = Stopwatch();
-        j = 0;
-        sw4.start();
-        for (var i = 0; i < count; i++) {
-          await lock.synchronized(() async {
-            await Future<void>.value();
-            j += i;
-          });
-        }
-        // final wait
-        expect(lock.locked, isFalse);
-        sw4.stop();
-        expect(j, count * (count - 1) / 2);
-
-        print('  none ${sw1.elapsed}');
-        print(' await ${sw2.elapsed}');
-        print(' syncd ${sw3.elapsed}');
-        print('asyncd ${sw4.elapsed}');
-      });
+      // A small smoke run of the manual benchmark: it stresses the queue and
+      // asserts the lock drains. See perf_test_runner.dart to run it for real.
+      lockPerfTest(lockFactory, operationCount: 10000);
     });
 
     group('timeout', () {
@@ -234,14 +175,12 @@ void lockMain(LockFactory lockFactory) {
     group('error', () {
       test('throw', () async {
         final lock = newLock();
-        try {
-          await lock.synchronized(() {
+        await expectLater(
+          lock.synchronized(() {
             throw StateError('throwing');
-          });
-          fail('should throw'); // ignore: dead_code
-        } catch (e) {
-          expect(e is TestFailure, isFalse);
-        }
+          }),
+          throwsA(isA<StateError>()),
+        );
 
         var ok = false;
         await lock.synchronized(() {
@@ -258,14 +197,12 @@ void lockMain(LockFactory lockFactory) {
         lock.synchronized(() {
           return sleep(1);
         });
-        try {
-          await lock.synchronized(() async {
+        await expectLater(
+          lock.synchronized(() async {
             throw StateError('throwing');
-          });
-          fail('should throw'); // ignore: dead_code
-        } catch (e) {
-          expect(e is TestFailure, isFalse);
-        }
+          }),
+          throwsA(isA<StateError>()),
+        );
 
         var ok = false;
         await lock.synchronized(() {
@@ -276,14 +213,12 @@ void lockMain(LockFactory lockFactory) {
 
       test('throw_async', () async {
         final lock = newLock();
-        try {
-          await lock.synchronized(() async {
+        await expectLater(
+          lock.synchronized(() async {
             throw StateError('throwing');
-          });
-          fail('should throw'); // ignore: dead_code
-        } catch (e) {
-          expect(e is TestFailure, isFalse);
-        }
+          }),
+          throwsA(isA<StateError>()),
+        );
       });
     });
 
@@ -423,19 +358,10 @@ void lockMain(LockFactory lockFactory) {
         });
         expect(lock.locked, isTrue);
 
-        // Expect a time out exception
-        var hasTimeoutException = false;
-        try {
-          await lock.synchronized(
-            () {},
-            timeout: const Duration(milliseconds: 100),
-          );
-          fail('should fail');
-        } on TimeoutException catch (_) {
-          // Timeout exception expected
-          hasTimeoutException = true;
-        }
-        expect(hasTimeoutException, isTrue);
+        await expectLater(
+          lock.synchronized(() {}, timeout: const Duration(milliseconds: 100)),
+          throwsA(isA<TimeoutException>()),
+        );
         expect(lock.locked, isTrue);
         // Release the forever waiting lock
         completer.complete();

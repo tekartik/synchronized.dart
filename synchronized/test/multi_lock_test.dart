@@ -30,18 +30,13 @@ void main() {
       expect(multiLock.canLock, isFalse);
 
       // Expect a time out exception
-      var hasTimeoutException = false;
-      try {
-        await multiLock.synchronized(
+      await expectLater(
+        multiLock.synchronized(
           () {},
           timeout: const Duration(milliseconds: 100),
-        );
-        fail('should fail');
-      } on TimeoutException catch (_) {
-        // Timeout exception expected
-        hasTimeoutException = true;
-      }
-      expect(hasTimeoutException, isTrue);
+        ),
+        throwsA(isA<TimeoutException>()),
+      );
       completer.complete();
       completer = Completer<void>();
 
@@ -70,30 +65,14 @@ void main() {
       expect(lock2.inLock, isFalse);
       expect(lock2.locked, isTrue);
       expect(lock2.canLock, isFalse);
-      hasTimeoutException = false;
-      try {
-        await lock1.synchronized(
-          () {},
-          timeout: const Duration(milliseconds: 100),
-        );
-        fail('should fail');
-      } on TimeoutException catch (_) {
-        // Timeout exception expected
-        hasTimeoutException = true;
-      }
-      expect(hasTimeoutException, isTrue);
-      hasTimeoutException = false;
-      try {
-        await lock2.synchronized(
-          () {},
-          timeout: const Duration(milliseconds: 100),
-        );
-        fail('should fail');
-      } on TimeoutException catch (_) {
-        // Timeout exception expected
-        hasTimeoutException = true;
-      }
-      expect(hasTimeoutException, isTrue);
+      await expectLater(
+        lock1.synchronized(() {}, timeout: const Duration(milliseconds: 100)),
+        throwsA(isA<TimeoutException>()),
+      );
+      await expectLater(
+        lock2.synchronized(() {}, timeout: const Duration(milliseconds: 100)),
+        throwsA(isA<TimeoutException>()),
+      );
 
       completer.complete();
       await future;
