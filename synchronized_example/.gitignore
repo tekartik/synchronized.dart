@@ -1,0 +1,11 @@
+# Files and directories created by pub
+.dart_tool/
+build/
+pubspec.lock
+
+# Skills installed by `dart run skills@ get` (see tool/get_skills.dart)
+.agents/
+.claude/
+.gemini/
+.github/
+.config/
