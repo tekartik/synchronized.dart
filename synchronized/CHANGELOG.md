@@ -1,9 +1,10 @@
 # Changelog
 
-## 3.4.1+2
+## 3.4.2
 
 * Requires dart 3.12
 * Improve documentation
+* Add `synchronized-lock` agent skill (`skills/`), installable with `dart run skills@ get`
 
 ## 3.4.0+1
 
