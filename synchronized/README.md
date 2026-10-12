@@ -272,11 +272,11 @@ multiLock.synchronized(() async {
 Please feel free to: 
 * file feature requests and bugs at the [issue tracker][tracker]
 * or [contact me][contact_me]
-* or visit [tekartik.com](https://www.tekartik.com)
+* or visit [tekartik.com](https://tekartik.com/)
 * [How to][how_to] guide
 
 
 [tracker]: https://github.com/tekartik/synchronized.dart/issues
-[contact_me]: https://tekartik-info.web.app/contact
+[contact_me]: https://tekartik.com/contact/
 [how_to]: https://github.com/tekartik/synchronized.dart/blob/master/synchronized/doc/how_to.md
 
