@@ -130,8 +130,27 @@ void main() {
 
     group('MultiLock', () {
       test('type', () {
-        var lock = common.MultiLock(locks: [common.Lock()]);
-        expect(lock, const TypeMatcher<common.Lock>());
+        // Checked through a Lock typed value, a MultiLock static type would
+        // make the check always true.
+        common.Lock lock = common.MultiLock(locks: [common.Lock()]);
+        expect(lock, isA<common.MultiLock>());
+        expect(lock, isNot(isA<BasicLock>()));
+        expect(lock, isNot(isA<ReentrantLock>()));
+      });
+
+      test('locks are copied', () async {
+        var inner = common.Lock();
+        var locks = <common.Lock>[inner];
+        var lock = common.MultiLock(locks: locks);
+        // Not part of the multi lock
+        locks.add(common.Lock());
+        var completer = Completer<void>();
+        var future = inner.synchronized(() => completer.future);
+        expect(lock.locked, isTrue);
+        expect(lock.canLock, isFalse);
+        completer.complete();
+        await future;
+        expect(lock.canLock, isTrue);
       });
 
       test('toString', () {

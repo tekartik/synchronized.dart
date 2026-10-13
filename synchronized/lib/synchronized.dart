@@ -87,9 +87,11 @@ abstract class Lock {
   /// Whether calling [synchronized] right now would be able to acquire the
   /// lock without waiting.
   ///
-  /// For a basic (non-reentrant) or reentrant lock, this is the same as
-  /// `!`[locked] (or, inside a reentrant lock's own zone, whether the current
-  /// nesting level is free). For a [MultiLock], this is `true` only when
+  /// For a basic (non-reentrant) lock, this is the same as `!`[locked]. For a
+  /// reentrant lock, this is whether the current nesting level is free (the
+  /// first level outside of the lock's own zone); it can be `false` while
+  /// [locked] is already `false`, when a block just completed and other
+  /// calls are queued behind it. For a [MultiLock], this is `true` only when
   /// every underlying lock can be acquired.
   bool get canLock;
 }

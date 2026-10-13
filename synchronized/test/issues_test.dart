@@ -31,9 +31,9 @@ void main() {
     test('issue_22_timeout', () async {
       var lock = Lock();
 
-      try {
-        // Create a long synchronized function that times out
-        await lock.synchronized(() async {
+      // Create a long synchronized function that times out
+      await expectLater(
+        lock.synchronized(() async {
           Future<void> longAction() async {
             // Do you action here...
             await Future<void>.delayed(const Duration(hours: 1));
@@ -41,8 +41,12 @@ void main() {
 
           // Release the lock before the end
           await longAction().timeout(const Duration(milliseconds: 100));
-        });
-      } on TimeoutException catch (_) {}
+        }),
+        throwsA(isA<TimeoutException>()),
+      );
+      // The lock is released
+      expect(lock.locked, isFalse);
+      await lock.synchronized(() {}, timeout: const Duration(seconds: 1));
     });
     // https://github.com/tekartik/synchronized.dart/issues/1
     test('issue_1', () async {

@@ -247,7 +247,8 @@ canLock returns whether the lock can be locked immediately.
 
 For basic lock, it is true if the lock is not locked.
 
-For reentrant lock, it is true if the lock is not locked or if the current zone lock level is locked by the lock.
+For reentrant lock, it is true if the current zone lock level is free: outside of the lock, it can be false
+right after a block completed while other calls are still queued, even if `locked` is already false.
 
 For multi lock, it returns true if all inner locks `canLock` values are true.
 

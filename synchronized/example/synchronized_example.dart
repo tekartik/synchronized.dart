@@ -55,7 +55,8 @@ class Demo {
 
   Future<void> readme2() async {
     var lock = Lock();
-    if (!lock.locked) {
+    // canLock (rather than !locked) also works for reentrant and multi locks
+    if (lock.canLock) {
       await lock.synchronized(() async {
         // do some stuff
       });
@@ -77,6 +78,6 @@ Future<void> main() async {
   await demo.test1();
   await demo.test2();
   await demo.readme1();
-  await demo.readme1();
+  await demo.readme2();
   await demo.readme3();
 }

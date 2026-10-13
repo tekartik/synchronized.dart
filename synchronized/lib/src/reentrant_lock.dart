@@ -73,6 +73,9 @@ class ReentrantLock implements Lock {
     // call that is about to throw.
     final level = innerLevel;
     _checkLevel(level);
-    return !locked || !innerLocks[level].locked;
+    // Not `!locked`: right after a synchronous block, `locked` is already
+    // false while the level lock is still held for a microtask, possibly
+    // with other calls queued behind it.
+    return !innerLocks[level].locked;
   }
 }

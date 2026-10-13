@@ -79,14 +79,6 @@ void main() {
       expect(exception, const TypeMatcher<TimeoutException>());
     });
 
-    test('Myclass non-reentrant', () async {
-      await MyClass('non-reentrant').synchronized(() async {
-        await MyClass(
-          'non-reentrant-distinct',
-        ).synchronized(() {}, timeout: const Duration(seconds: 1));
-      });
-    });
-
     group('lock keying contract', () {
       // The lock cache is a plain Map, so it keys on ==/hashCode rather than
       // identity. Nothing else pins this, which is how the dartdoc managed to

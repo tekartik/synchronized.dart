@@ -90,16 +90,14 @@ void lockMain(LockFactory lockFactory) {
         await future;
       });
 
-      test('100_ms', () async {
-        // var isNewTiming = await isDart2AsyncTiming();
-        // hoping timint is ok...
+      test('hold_1000_ms', () async {
         final lock = newLock();
 
         var ran1 = false;
         var ran2 = false;
         var ran3 = false;
         var ran4 = false;
-        // hold for 5ms
+        // hold for 1000ms
         // ignore: unawaited_futures
         lock.synchronized(() async {
           await sleep(1000);
@@ -119,12 +117,11 @@ void lockMain(LockFactory lockFactory) {
           fail('should time out while the lock is held');
         } on TimeoutException catch (_) {}
 
-        try {
-          // ignore: unawaited_futures
-          lock.synchronized(() {
-            ran4 = true;
-          }, timeout: const Duration(milliseconds: 2000));
-        } on TimeoutException catch (_) {}
+        // Waits long enough for the first block (not awaited here)
+        // ignore: unawaited_futures
+        lock.synchronized(() {
+          ran4 = true;
+        }, timeout: const Duration(milliseconds: 2000));
 
         // waiting long enough
         await lock.synchronized(() {
@@ -247,7 +244,7 @@ void lockMain(LockFactory lockFactory) {
             value = 2;
           });
         });
-        // A sync method is executed right away!
+        // The async method runs right away until its first await
         expect(value, 1);
 
         await future;
@@ -398,6 +395,21 @@ void lockMain(LockFactory lockFactory) {
       expect(await futureOr3, 3);
 
       expect(list, [1, 2, 3]);
+    });
+
+    test('synchronizedSync after a sync block keeps the order', () async {
+      final lock = newLock();
+      final list = <String>[];
+      // A sync block followed by a queued call: the lock is busy until both
+      // complete, even when the sync block has already run.
+      final futureA = lock.synchronized(() => list.add('A'));
+      final futureB = lock.synchronized(() async => list.add('B'));
+      expect(lock.canLock, isFalse);
+      final futureOrC = lock.synchronizedSync(() => list.add('C'));
+      expect(futureOrC, isA<Future>());
+      await Future.wait([futureA, futureB]);
+      await futureOrC;
+      expect(list, ['A', 'B', 'C']);
     });
 
     group('synchronizedSync async computation', () {

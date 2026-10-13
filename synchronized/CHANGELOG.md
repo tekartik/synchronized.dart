@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.5.0
+
+* Fix `ReentrantLock.canLock` reporting the lock free right after a synchronous block while other calls
+  were still queued, which let `synchronizedSync` run before earlier `synchronized` calls. In that case
+  `canLock` is now `false` and `synchronizedSync` returns a `Future` that completes in order.
+* Example: `readme2` was never called and now uses `canLock`
+
 ## 3.4.2
 
 * Add `synchronized-lock` agent skill (`skills/`), installable with `dart run skills@ get`
@@ -8,6 +15,12 @@
 
 * Requires dart 3.12
 * Improve documentation
+* `MultiLock` `timeout` now bounds the whole acquisition (one shared budget) instead of each underlying lock
+* `MultiLock` copies its locks at construction
+* `synchronizedSync` asserts (in debug mode) when the computation returns a `Future`
+* `ReentrantLock.canLock` throws a `StateError` (instead of a `RangeError`, or `true`) when called from a
+  zone that outlived its `synchronized` block
+* Add `MultiLock.toString`
 
 
 ## 3.4.0+1

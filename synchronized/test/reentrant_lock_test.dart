@@ -171,7 +171,8 @@ void main() {
           }),
           throwsA(isA<StateError>()),
         );
-        await sleep(1);
+
+        await lock.synchronized(() {});
       });
     });
 
