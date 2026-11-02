@@ -1,0 +1,49 @@
+# Same as run_ci_workflow_dart_all.yml on ubuntu (pub get, analyze, format,
+# test, build for each sdk) but only the platform specific part (vm test) on
+# windows and macos.
+name: Run CI workflow dart all platform
+on:
+  push:
+    branches: ['**'] # Not on tag pushes
+    paths-ignore: ['**.md'] # Not on doc only changes
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'  # every sunday at midnight
+
+# One job per os/sdk (no matrix) so that each one is displayed as its own
+# group in the workflow graph.
+jobs:
+  ubuntu_stable:
+    name: ubuntu stable
+    uses: tekartik/ci.dart/.github/workflows/run_ci_dart_jobs.yml@v1
+    with:
+      sdk: stable
+      runs-on: ubuntu-latest
+
+  ubuntu_beta:
+    name: ubuntu beta
+    uses: tekartik/ci.dart/.github/workflows/run_ci_dart_jobs.yml@v1
+    with:
+      sdk: beta
+      runs-on: ubuntu-latest
+
+  ubuntu_dev:
+    name: ubuntu dev
+    uses: tekartik/ci.dart/.github/workflows/run_ci_dart_jobs.yml@v1
+    with:
+      sdk: dev
+      runs-on: ubuntu-latest
+
+  windows_stable:
+    name: windows stable
+    uses: tekartik/ci.dart/.github/workflows/run_ci_dart_platform_jobs.yml@v1
+    with:
+      sdk: stable
+      runs-on: windows-latest
+
+  macos_stable:
+    name: macos stable
+    uses: tekartik/ci.dart/.github/workflows/run_ci_dart_platform_jobs.yml@v1
+    with:
+      sdk: stable
+      runs-on: macos-latest
