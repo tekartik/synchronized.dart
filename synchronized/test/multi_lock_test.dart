@@ -132,20 +132,22 @@ void main() {
       final completer = Completer<void>();
 
       // lock1 frees partway through the budget; lock2 never does. A per-lock
-      // timeout would restart the clock for lock2 and wait 250 + 300 ms.
-      final held1 = lock1.synchronized(() => sleep(250));
+      // timeout would restart the clock for lock2 and wait 600 + 700 ms.
+      // The 300 ms margin on each side of the bound absorbs slow timers
+      // (486 ms was measured for a 300 ms budget on windows chrome).
+      final held1 = lock1.synchronized(() => sleep(600));
       final held2 = lock2.synchronized(() => completer.future);
 
       final sw = Stopwatch()..start();
       await expectLater(
         multiLock.synchronized(
           () {},
-          timeout: const Duration(milliseconds: 300),
+          timeout: const Duration(milliseconds: 700),
         ),
         throwsA(isA<TimeoutException>()),
       );
       sw.stop();
-      expect(sw.elapsedMilliseconds, lessThan(450));
+      expect(sw.elapsedMilliseconds, lessThan(1000));
 
       completer.complete();
       await Future.wait([held1, held2]);
