@@ -5,7 +5,7 @@ description: >-
   asynchronous work: creating and sharing a Lock, choosing reentrant vs basic
   locks, using timeouts, MultiLock, synchronizedSync, and the extension that
   turns any object into a lock, while avoiding deadlocks and shared-key
-  pitfalls.
+  pitfalls; or a GlobalLock shared across isolates, processes or browser tabs.
 ---
 
 # synchronized: async mutual exclusion in Dart
@@ -13,7 +13,8 @@ description: >-
 `package:synchronized` provides a `Lock` whose `synchronized()` method runs a
 computation only when no other computation holding the same lock is running.
 It is the Dart equivalent of a critical section for `async` code (single
-isolate only). It has no dependencies and works on the VM, Flutter and the web.
+isolate only; a `GlobalLock` spans isolates, processes and tabs). It has no
+dependencies and works on the VM, Flutter and the web.
 
 ```dart
 import 'package:synchronized/synchronized.dart';
@@ -122,12 +123,36 @@ Future<void> save() => _lock.synchronized(() async {
 ### Scope and limits
 
 * One isolate only. A `Lock` does not synchronize across isolates, processes
-  or browser tabs.
+  or browser tabs: use a `GlobalLock` for that (see below).
 * Do not use it to make code "thread safe": Dart is single threaded within an
   isolate. Use it to keep interleaved `await` sequences from stepping on each
   other (read-modify-write on shared state, transaction-like sequences on a
   store without transactions, one-at-a-time UI flows such as login or
   navigation).
+
+### GlobalLock (`package:synchronized/global_lock.dart`)
+
+A named lock shared beyond the isolate, for a resource of the machine (an
+emulator and its ports, a cache folder) or of the origin on the web:
+
+```dart
+import 'package:synchronized/global_lock.dart';
+
+final lock = GlobalLock('my_app_firebase_emulator');
+
+await lock.synchronized(() => useEmulator(), timeout: const Duration(minutes: 10));
+
+// Held across calls (start/stop):
+var handle = await lock.acquire(timeout: const Duration(minutes: 10));
+await handle.release();
+```
+
+* io: all the isolates and processes of the machine of the same user (a lock
+  file touched every second by its holder, taken over 10 seconds after its
+  holder died; release it, the heartbeat keeps the isolate alive).
+* web: the tabs and workers of the origin (Web Locks API).
+* Not reentrant: acquiring it again while holding it waits for itself. Always
+  pass a `timeout` when another program may hold it for long.
 
 ## Examples
 

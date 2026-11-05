@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.6.0
+
+* Add `GlobalLock` (`package:synchronized/global_lock.dart`), a named lock shared by the isolates and
+  processes of the machine (a lock file with a heartbeat, taken over 10 seconds after its holder died) or by
+  the tabs and workers of the origin on the web (Web Locks API), with `synchronized` and `acquire`/`release`
+
 ## 3.5.0
 
 * Fix `ReentrantLock.canLock` reporting the lock free right after a synchronous block while other calls

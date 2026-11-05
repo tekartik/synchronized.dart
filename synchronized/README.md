@@ -29,6 +29,7 @@ For single process (single isolate) accessing some resources (database..), it ca
  * Consistent behavior (i.e. if it is unlocked calling synchronized grab the lock)
  * Values and Errors are properly reported to the caller
  * Work on Browser, DartVM and Flutter
+ * `GlobalLock` across isolates, processes and browser tabs
  * No dependencies (other than the sdk itself)
  
 It differs from the `pool` package used with a resource count of 1 by supporting a reentrant option
@@ -267,6 +268,40 @@ multiLock.synchronized(() async {
   ...
 });
 ```
+
+## GlobalLock (across isolates, processes and tabs)
+
+As of version 3.6.0, `package:synchronized/global_lock.dart` provides a `GlobalLock`, identified by a
+name, that two isolates, two processes or two browser tabs cannot hold at the same time:
+
+```dart
+import 'package:synchronized/global_lock.dart';
+
+final lock = GlobalLock('my_app_firebase_emulator');
+
+await lock.synchronized(() async {
+  // Only one isolate or process of the machine runs this at a time.
+}, timeout: const Duration(minutes: 10));
+
+// Or hold it across calls.
+var handle = await lock.acquire(timeout: const Duration(minutes: 10));
+// ...
+await handle.release();
+```
+
+* io (Dart VM, Flutter mobile and desktop): shared by all the isolates and processes of the machine
+  run by the same user. The lock is a file created exclusively in `/tmp/synchronized_global_lock_<user>`
+  (Linux, macOS, whatever `TMPDIR`) or in the system temp folder (Windows, mobile), touched every second
+  by its holder. A waiter takes it over once it was not touched for 10 seconds, so a holder that died
+  (crash, kill, killed isolate) blocks the others for 10 seconds at most, and nothing outside this folder
+  can hold the lock. A holder whose event loop is frozen for longer (debugger pause, long synchronous
+  work) may lose it. The heartbeat keeps the isolate alive until the lock is released.
+* web: shared by the tabs and workers of the same origin, using the
+  [Web Locks API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API); released when the
+  tab closes.
+* elsewhere (no Web Locks API): within the current isolate only.
+
+It is not reentrant and has no dependencies.
 
 ## Features and bugs
 
