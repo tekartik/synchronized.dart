@@ -292,13 +292,15 @@ await handle.release();
 * io (Dart VM, Flutter mobile and desktop): shared by all the isolates and processes of the machine
   run by the same user. The lock is a file created exclusively in `/tmp/synchronized_global_lock_<user>`
   (Linux, macOS, whatever `TMPDIR`) or in the system temp folder (Windows, mobile), touched every second
-  by its holder. A waiter takes it over once it was not touched for 10 seconds, so a holder that died
-  (crash, kill, killed isolate) blocks the others for 10 seconds at most, and nothing outside this folder
-  can hold the lock. A holder whose event loop is frozen for longer (debugger pause, long synchronous
-  work) may lose it. The heartbeat keeps the isolate alive until the lock is released.
+  by a heartbeat isolate: the lock stays held while the event loop of the holder is blocked (synchronous
+  work), and is released at once when the holder isolate exits without releasing it. A waiter takes over
+  a file not touched for 10 seconds, so a holder process that died (crash, kill) blocks the others for 10
+  seconds at most, and nothing outside this folder can hold the lock.
 * web: shared by the tabs and workers of the same origin, using the
   [Web Locks API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API); released when the
   tab closes.
+* node (its Web Locks API, node 24+): within the current process only (and its worker threads), not across
+  processes.
 * elsewhere (no Web Locks API): within the current isolate only.
 
 It is not reentrant and has no dependencies.

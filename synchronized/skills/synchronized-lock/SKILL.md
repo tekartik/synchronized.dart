@@ -148,9 +148,10 @@ await handle.release();
 ```
 
 * io: all the isolates and processes of the machine of the same user (a lock
-  file touched every second by its holder, taken over 10 seconds after its
-  holder died; release it, the heartbeat keeps the isolate alive).
+  file touched every second by a heartbeat isolate; released at once when the
+  holder isolate exits, taken over 10 seconds after its holder process died).
 * web: the tabs and workers of the origin (Web Locks API).
+* node: the current process only (its Web Locks API), not across processes.
 * Not reentrant: acquiring it again while holding it waits for itself. Always
   pass a `timeout` when another program may hold it for long.
 

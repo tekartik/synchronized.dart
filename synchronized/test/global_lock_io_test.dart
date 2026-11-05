@@ -19,6 +19,9 @@ const _acquireTimeout = Duration(seconds: 10);
 const _heartbeat = Duration(milliseconds: 100);
 const _stale = Duration(seconds: 1);
 
+/// Longer than any test: the lock is released, not taken over.
+const _neverStale = Duration(seconds: 30);
+
 /// Try to acquire [name] in another isolate within [timeout]: 'acquired'
 /// (then released) or 'timeout'.
 Future<String> _acquireInIsolate(String name, Duration timeout) =>
@@ -43,11 +46,17 @@ class _Holder {
   final Process process;
   final StreamIterator<String> _lines;
 
-  static Future<_Holder> start(String name, {String? dir}) async {
+  /// [exit] returns from main without releasing the lock.
+  static Future<_Holder> start(
+    String name, {
+    String? dir,
+    bool exit = false,
+  }) async {
     var process = await Process.start(Platform.resolvedExecutable, [
       'test/src/global_lock_holder.dart',
       name,
       if (dir != null) ...[dir, '${_heartbeat.inMilliseconds}'],
+      if (exit) 'exit',
     ]);
     unawaited(stderr.addStream(process.stderr));
     var holder = _Holder._(process);
@@ -211,23 +220,70 @@ void main() {
       expect(File(lock.path).readAsStringSync(), '1 other');
     });
 
-    test('killed isolate taken over', () async {
+    /// A waiter never taking a lock over (30 s), released by its holder.
+    GlobalLockIo newPatientLock(String name) =>
+        GlobalLockIo(name, dir: dir.path, staleTimeout: _neverStale);
+
+    test('killed isolate releases at once', () async {
       var path = dir.path;
       var ready = ReceivePort();
       var isolate = await Isolate.spawn((SendPort sendPort) async {
-        await GlobalLockIo(
-          'test',
-          dir: path,
-          heartbeatInterval: _heartbeat,
-        ).acquire();
+        await GlobalLockIo('test', dir: path).acquire();
         sendPort.send(true);
+        // Keeps the isolate alive.
+        await ReceivePort().first;
       }, ready.sendPort);
       await ready.first;
       await expectLater(
-        newLock('test').acquire(timeout: Duration.zero),
+        newPatientLock('test').acquire(timeout: Duration.zero),
         throwsA(isA<TimeoutException>()),
       );
       isolate.kill(priority: Isolate.immediate);
+      await (await newPatientLock(
+        'test',
+      ).acquire(timeout: _acquireTimeout)).release();
+    });
+
+    test('isolate exiting without release releases at once', () async {
+      var path = dir.path;
+      await Isolate.run(() async {
+        await GlobalLockIo('test', dir: path).acquire();
+      });
+      await (await newPatientLock(
+        'test',
+      ).acquire(timeout: _acquireTimeout)).release();
+    });
+
+    test('blocked event loop keeps it held', () async {
+      var path = dir.path;
+      var handle = await newLock('test').acquire();
+      // Started before blocking this isolate, tries for 3 stale timeouts.
+      var waiter = Isolate.run(() async {
+        try {
+          await GlobalLockIo(
+            'test',
+            dir: path,
+            staleTimeout: _stale,
+          ).acquire(timeout: _stale * 3);
+          return 'acquired';
+        } on TimeoutException {
+          return 'timeout';
+        }
+      });
+      // Blocks the event loop of the holder for 4 stale timeouts.
+      sleep(_stale * 4);
+      expect(await waiter, 'timeout');
+      await handle.release();
+    });
+
+    test('process exiting without release', () async {
+      var holder = await _Holder.start('test', dir: dir.path, exit: true);
+      // The heartbeat isolate does not keep the process alive.
+      expect(
+        await holder.process.exitCode.timeout(const Duration(seconds: 30)),
+        0,
+      );
+      // Taken over once stale.
       await (await newLock('test').acquire(timeout: _acquireTimeout)).release();
     });
 

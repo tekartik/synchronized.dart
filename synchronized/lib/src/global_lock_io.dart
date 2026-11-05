@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'global_lock.dart';
@@ -12,8 +13,8 @@ GlobalLock newGlobalLock(String name) => GlobalLockIo(name);
 /// How often a holder touches its lock file.
 const globalLockHeartbeatInterval = Duration(seconds: 1);
 
-/// A lock file not touched for this long is taken over: its holder died
-/// (process or isolate) or its event loop is frozen.
+/// A lock file not touched for this long is taken over: its holder process
+/// died (or its heartbeat isolate is frozen).
 const globalLockStaleTimeout = Duration(seconds: 10);
 
 /// The longest wait between two tries.
@@ -57,13 +58,13 @@ String globalLockFileName(String name) {
   return '${safe}_${hash.toRadixString(16).padLeft(8, '0')}.lock';
 }
 
-/// A [GlobalLock] held by an exclusively created lock file, touched by its
-/// holder every [heartbeatInterval].
+/// A [GlobalLock] held by an exclusively created lock file, touched every
+/// [heartbeatInterval] by a heartbeat isolate, which deletes it when the
+/// holder isolate exits without releasing it.
 ///
 /// A lock file not touched for [staleTimeout] is deleted by a waiter (one at
-/// a time, holding the `.break` file next to it), so a holder that died
-/// (crash, kill, isolate killed) blocks the others for [staleTimeout] at
-/// most. Nothing outside the lock folder can hold the lock.
+/// a time, holding the `.break` file next to it), so a holder process that
+/// died (crash, kill) blocks the others for [staleTimeout] at most. Nothing outside the lock folder can hold the lock.
 class GlobalLockIo with GlobalLockMixin {
   /// Creates the lock [name], its file in [dir] ([globalLockDefaultDir] by
   /// default).
@@ -188,28 +189,108 @@ class GlobalLockIo with GlobalLockMixin {
   }
 }
 
-class _GlobalLockIoHandle implements GlobalLockHandle {
-  _GlobalLockIoHandle._(this._file, this._token, Duration interval) {
-    _heartbeat = Timer.periodic(interval, (_) {
-      try {
-        _file.setLastModifiedSync(DateTime.now());
-      } catch (_) {}
-    });
+/// Deletes the lock [file] if it still holds [token] (not taken over).
+void _deleteIfOwned(File file, String token) {
+  try {
+    if (file.readAsStringSync() == token) {
+      file.deleteSync();
+    }
+  } catch (_) {}
+}
+
+/// Messages of the heartbeat isolate.
+const _heartbeatStop = 'stop';
+const _ownerExited = 'exited';
+const _ownerAlive = 'alive';
+
+/// Without an answer to its ping in this time, the owner died before the
+/// heartbeat listened to its exit.
+const _ownerPingTimeout = Duration(seconds: 5);
+
+/// The heartbeat isolate: touches the lock file every interval until the
+/// owner releases the lock ([_heartbeatStop], the owner deletes the file) or
+/// exits without releasing it (the file is deleted here).
+///
+/// Another isolate, so the lock stays held while the event loop of the owner
+/// is blocked (synchronous work, `Process.runSync`). It does not keep the
+/// process alive: a process exiting without releasing leaves a lock file
+/// taken over once stale.
+void _heartbeatMain(
+  (String path, String token, Duration interval, SendPort owner, SendPort) args,
+) {
+  final (path, token, interval, ownerControlPort, ready) = args;
+  final file = File(path);
+  final port = ReceivePort();
+  final heartbeat = Timer.periodic(interval, (_) {
+    try {
+      file.setLastModifiedSync(DateTime.now());
+    } catch (_) {}
+  });
+  Timer? pingTimeout;
+  var stopped = false;
+  void stop({required bool deleteFile}) {
+    if (stopped) {
+      return;
+    }
+    stopped = true;
+    heartbeat.cancel();
+    pingTimeout?.cancel();
+    port.close();
+    if (deleteFile) {
+      _deleteIfOwned(file, token);
+    }
   }
 
+  final owner = Isolate(ownerControlPort);
+  owner.addOnExitListener(port.sendPort, response: _ownerExited);
+  // An owner dead before the listener was added sends no exit message, nor
+  // an answer.
+  owner.ping(port.sendPort, response: _ownerAlive, priority: Isolate.immediate);
+  pingTimeout = Timer(_ownerPingTimeout, () => stop(deleteFile: true));
+  port.listen((message) {
+    switch (message) {
+      case _ownerAlive:
+        pingTimeout?.cancel();
+      case _ownerExited:
+        stop(deleteFile: true);
+      case _heartbeatStop:
+        stop(deleteFile: false);
+    }
+  });
+  ready.send(port.sendPort);
+}
+
+class _GlobalLockIoHandle implements GlobalLockHandle {
+  _GlobalLockIoHandle._(this._file, this._token, this._heartbeat);
+
   /// Writes the owner (pid and a token) in [file], just created, and starts
-  /// the heartbeat.
+  /// the heartbeat isolate.
   static Future<_GlobalLockIoHandle> start(File file, Duration interval) async {
     final token = '$pid ${_random.nextInt(1 << 31)}${_random.nextInt(1 << 31)}';
     try {
       await file.writeAsString(token, flush: true);
     } catch (_) {}
-    return _GlobalLockIoHandle._(file, token, interval);
+    final ready = ReceivePort();
+    try {
+      await Isolate.spawn(_heartbeatMain, (
+        file.path,
+        token,
+        interval,
+        Isolate.current.controlPort,
+        ready.sendPort,
+      ), debugName: 'GlobalLock heartbeat');
+      final heartbeat = await ready.first as SendPort;
+      return _GlobalLockIoHandle._(file, token, heartbeat);
+    } catch (_) {
+      ready.close();
+      _deleteIfOwned(file, token);
+      rethrow;
+    }
   }
 
   final File _file;
   final String _token;
-  Timer? _heartbeat;
+  SendPort? _heartbeat;
 
   @override
   Future<void> release() async {
@@ -217,13 +298,10 @@ class _GlobalLockIoHandle implements GlobalLockHandle {
     if (heartbeat == null) {
       return;
     }
-    heartbeat.cancel();
     _heartbeat = null;
-    try {
-      // Taken over (frozen past the stale timeout): the file of another.
-      if (await _file.readAsString() == _token) {
-        await _file.delete();
-      }
-    } catch (_) {}
+    heartbeat.send(_heartbeatStop);
+    // Taken over (owner and heartbeat frozen past the stale timeout): the
+    // file of another.
+    _deleteIfOwned(_file, _token);
   }
 }

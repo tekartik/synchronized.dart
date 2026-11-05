@@ -7,7 +7,8 @@ import 'package:synchronized/src/global_lock_io.dart';
 /// Holds the lock named by the first argument until `release` is read on
 /// stdin (used by `global_lock_io_test.dart` as another process).
 ///
-/// Optional arguments: the lock folder and the heartbeat in milliseconds.
+/// Optional arguments: the lock folder, the heartbeat in milliseconds, and
+/// `exit` to return from main without releasing the lock.
 Future<void> main(List<String> arguments) async {
   final name = arguments.first;
   final lock = arguments.length > 1
@@ -19,6 +20,9 @@ Future<void> main(List<String> arguments) async {
       : GlobalLock(name);
   final handle = await lock.acquire();
   stdout.writeln('acquired');
+  if (arguments.length > 3 && arguments[3] == 'exit') {
+    return;
+  }
   await stdin
       .transform(utf8.decoder)
       .transform(const LineSplitter())

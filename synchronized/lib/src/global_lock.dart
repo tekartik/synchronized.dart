@@ -11,14 +11,16 @@ import 'global_lock_memory.dart'
 /// * io (Dart VM, Flutter mobile and desktop): across all the isolates and
 ///   processes of the machine run by the same user. The lock is a file
 ///   created exclusively in `/tmp/synchronized_global_lock_<user>` (Linux,
-///   macOS) or the system temp folder (elsewhere), touched every second by
-///   its holder; a waiter takes it over once it was not touched for 10
-///   seconds, so a holder that died (crash, kill, killed isolate) blocks the
-///   others for 10 seconds at most. A holder whose event loop is frozen
-///   longer (debugger pause, long synchronous work) may lose it. The
-///   heartbeat keeps the isolate alive until [GlobalLockHandle.release].
+///   macOS) or the system temp folder (elsewhere), touched every second by a
+///   heartbeat isolate, so the lock stays held while the event loop of the
+///   holder is blocked (synchronous work). The lock is released at once when
+///   the holder isolate exits without releasing it; a waiter takes over a
+///   file not touched for 10 seconds, so a holder process that died (crash,
+///   kill) blocks the others for 10 seconds at most.
 /// * web: across the tabs and workers of the same origin, using the Web Locks
 ///   API (`navigator.locks`); the browser releases it when the tab closes.
+/// * node (its Web Locks API, node 24+): within the current process only
+///   (and its worker threads), not across processes.
 /// * elsewhere (no Web Locks API): within the current isolate only.
 ///
 /// Not reentrant: acquiring it again while holding it waits for itself

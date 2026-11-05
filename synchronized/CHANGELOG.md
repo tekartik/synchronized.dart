@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.6.1
+
+* `GlobalLock` (io): the heartbeat runs in its own isolate, so the lock stays held while the event loop of the holder is
+  blocked (synchronous work, `Process.runSync`), is released at once when the holder isolate exits or is killed without
+  releasing it (instead of 10 seconds later), and no longer keeps the holder isolate alive
+* Document that on node the lock only covers the current process (its Web Locks API)
+
 ## 3.6.0
 
 * Add `GlobalLock` (`package:synchronized/global_lock.dart`), a named lock shared by the isolates and
