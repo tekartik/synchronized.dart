@@ -294,8 +294,9 @@ await handle.release();
   (Linux, macOS, whatever `TMPDIR`) or in the system temp folder (Windows, mobile), touched every second
   by a heartbeat isolate: the lock stays held while the event loop of the holder is blocked (synchronous
   work), and is released at once when the holder isolate exits without releasing it. A waiter takes over
-  a file not touched for 10 seconds, so a holder process that died (crash, kill) blocks the others for 10
-  seconds at most, and nothing outside this folder can hold the lock.
+  a file it saw untouched for 10 seconds (timed on its own clock, so a clock change or a suspended machine
+  never breaks a live lock), so a holder process that died (crash, kill) blocks the others for about 10
+  seconds, and nothing outside this folder can hold the lock.
 * web: shared by the tabs and workers of the same origin, using the
   [Web Locks API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API); released when the
   tab closes.

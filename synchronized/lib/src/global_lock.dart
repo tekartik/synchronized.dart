@@ -15,8 +15,9 @@ import 'global_lock_memory.dart'
 ///   heartbeat isolate, so the lock stays held while the event loop of the
 ///   holder is blocked (synchronous work). The lock is released at once when
 ///   the holder isolate exits without releasing it; a waiter takes over a
-///   file not touched for 10 seconds, so a holder process that died (crash,
-///   kill) blocks the others for 10 seconds at most.
+///   file it saw untouched for 10 seconds (timed on its own clock, so a clock
+///   change or a suspended machine never breaks a live lock), so a holder
+///   process that died (crash, kill) blocks the others for about 10 seconds.
 /// * web: across the tabs and workers of the same origin, using the Web Locks
 ///   API (`navigator.locks`); the browser releases it when the tab closes.
 /// * node (its Web Locks API, node 24+): within the current process only

@@ -13,8 +13,9 @@ GlobalLock newGlobalLock(String name) => GlobalLockIo(name);
 /// How often a holder touches its lock file.
 const globalLockHeartbeatInterval = Duration(seconds: 1);
 
-/// A lock file not touched for this long is taken over: its holder process
-/// died (or its heartbeat isolate is frozen).
+/// A lock file a waiter saw untouched for this long (on the waiter's own
+/// clock) is taken over: its holder process died (or its heartbeat isolate is
+/// frozen).
 const globalLockStaleTimeout = Duration(seconds: 10);
 
 /// The longest wait between two tries.
@@ -62,9 +63,13 @@ String globalLockFileName(String name) {
 /// [heartbeatInterval] by a heartbeat isolate, which deletes it when the
 /// holder isolate exits without releasing it.
 ///
-/// A lock file not touched for [staleTimeout] is deleted by a waiter (one at
-/// a time, holding the `.break` file next to it), so a holder process that
-/// died (crash, kill) blocks the others for [staleTimeout] at most. Nothing outside the lock folder can hold the lock.
+/// A lock file that a waiter saw untouched for [staleTimeout] is deleted by
+/// that waiter (one at a time, holding the `.break` file next to it), so a
+/// holder process that died (crash, kill) blocks the others for about
+/// [staleTimeout]. The delay is timed on the waiter's own (monotonic)
+/// stopwatch, never by comparing the file time with the wall clock: a clock
+/// change or a suspended machine cannot make a live lock look stale. Nothing
+/// outside the lock folder can hold the lock.
 class GlobalLockIo with GlobalLockMixin {
   /// Creates the lock [name], its file in [dir] ([globalLockDefaultDir] by
   /// default).
@@ -86,7 +91,7 @@ class GlobalLockIo with GlobalLockMixin {
   /// How often the holder touches the lock file.
   final Duration heartbeatInterval;
 
-  /// A lock file not touched for this long is taken over.
+  /// A lock file a waiter saw untouched for this long is taken over.
   final Duration staleTimeout;
 
   @override
@@ -95,6 +100,8 @@ class GlobalLockIo with GlobalLockMixin {
     final file = File(path);
     var delay = const Duration(milliseconds: 10);
     var createErrors = 0;
+    final lockWatch = _StaleWatch(staleTimeout);
+    final breakerWatch = _StaleWatch(staleTimeout);
     while (true) {
       try {
         await file.create(exclusive: true);
@@ -109,7 +116,7 @@ class GlobalLockIo with GlobalLockMixin {
           if (++createErrors > _maxCreateErrors) {
             rethrow;
           }
-        } else if (await _breakIfStale(file)) {
+        } else if (await _breakIfStale(file, lockWatch, breakerWatch)) {
           continue;
         }
       }
@@ -135,18 +142,15 @@ class GlobalLockIo with GlobalLockMixin {
     }
   }
 
-  /// True when [file] exists and was not touched for [staleTimeout].
-  bool _isStale(File file) {
-    final stat = file.statSync();
-    return stat.type != FileSystemEntityType.notFound &&
-        DateTime.now().difference(stat.modified) > staleTimeout;
-  }
-
-  /// Deletes the lock [file] when stale, holding the `.break` file (so that
-  /// a waiter never deletes the lock file another waiter just created).
-  /// Returns true when deleted.
-  Future<bool> _breakIfStale(File file) async {
-    if (!_isStale(file)) {
+  /// Deletes the lock [file] when stale ([lockWatch]), holding the `.break`
+  /// file (so that a waiter never deletes the lock file another waiter just
+  /// created). Returns true when deleted.
+  Future<bool> _breakIfStale(
+    File file,
+    _StaleWatch lockWatch,
+    _StaleWatch breakerWatch,
+  ) async {
+    if (!lockWatch.isStale(file)) {
       return false;
     }
     final breaker = File('${file.path}.break');
@@ -154,7 +158,7 @@ class GlobalLockIo with GlobalLockMixin {
       await breaker.create(exclusive: true);
     } on FileSystemException {
       // Another waiter breaking it, or a waiter that died doing it.
-      if (_isStale(breaker)) {
+      if (breakerWatch.isStale(breaker)) {
         try {
           await breaker.delete();
         } catch (_) {}
@@ -162,7 +166,8 @@ class GlobalLockIo with GlobalLockMixin {
       return false;
     }
     try {
-      if (_isStale(file)) {
+      // Still the file seen stale (not replaced meanwhile).
+      if (lockWatch.isStale(file)) {
         await file.delete();
         return true;
       }
@@ -186,6 +191,41 @@ class GlobalLockIo with GlobalLockMixin {
       }
     } catch (_) {}
     return 'held by $holder (${file.path})';
+  }
+}
+
+/// The modification time of a file as seen by a waiter: stale once unchanged
+/// for [timeout] on the waiter's own stopwatch (monotonic), whatever the wall
+/// clock does (clock step, suspended machine), so that the file time is only
+/// compared with itself.
+class _StaleWatch {
+  _StaleWatch(this.timeout);
+
+  /// The stale delay.
+  final Duration timeout;
+
+  /// The last modification time seen, null when the file was not seen.
+  DateTime? _modified;
+
+  /// Time since [_modified] was first seen.
+  final _unchanged = Stopwatch();
+
+  /// True when [file] exists and its modification time did not change for
+  /// [timeout] since this watch first saw it.
+  bool isStale(File file) {
+    final stat = file.statSync();
+    if (stat.type == FileSystemEntityType.notFound) {
+      _modified = null;
+      return false;
+    }
+    if (stat.modified != _modified) {
+      _modified = stat.modified;
+      _unchanged
+        ..reset()
+        ..start();
+      return false;
+    }
+    return _unchanged.elapsed >= timeout;
   }
 }
 

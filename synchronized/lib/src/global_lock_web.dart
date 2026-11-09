@@ -26,7 +26,21 @@ extension type _LockOptions._(JSObject _) implements JSObject {
 @JS('AbortSignal')
 extension type _AbortSignal._(JSObject _) implements JSObject {
   external static _AbortSignal timeout(int milliseconds);
+
+  external bool get aborted;
 }
+
+/// The prefix of the Web Locks name of a lock whose name starts with `-`
+/// (names reserved by the Web Locks API, which rejects their requests).
+const _reservedNamePrefix = 'synchronized_global_lock:';
+
+/// The Web Locks name of the [GlobalLock] [name]: [name] itself, so that it
+/// stays the same across tabs and versions, unless it starts with `-`
+/// (rejected by the Web Locks API): then [name] prefixed with
+/// `synchronized_global_lock:` (reversible: remove the prefix when followed
+/// by `-`).
+String globalLockWebLockName(String name) =>
+    name.startsWith('-') ? '$_reservedNamePrefix$name' : name;
 
 /// A [GlobalLock] shared by the tabs and workers of the origin (Web Locks
 /// API), within the current isolate only when the API is missing (node
@@ -65,28 +79,33 @@ class _GlobalLockWeb with GlobalLockMixin {
       return released.future.toJS;
     }
 
+    final _AbortSignal? signal;
     final _LockOptions options;
     if (timeout == null) {
+      signal = null;
       options = _LockOptions();
     } else if (timeout <= Duration.zero) {
+      signal = null;
       options = _LockOptions(ifAvailable: true);
     } else {
-      options = _LockOptions(
-        signal: _AbortSignal.timeout(timeout.inMilliseconds),
-      );
+      signal = _AbortSignal.timeout(timeout.inMilliseconds);
+      options = _LockOptions(signal: signal);
     }
-    final request = _locks.request(name, options, callback.toJS).toDart;
+    final request = _locks
+        .request(globalLockWebLockName(name), options, callback.toJS)
+        .toDart;
     unawaited(
       request.then<void>(
         (_) {},
-        onError: (Object error) {
-          // Aborted (timeout) before being granted.
+        onError: (Object error, StackTrace stackTrace) {
           if (!granted.isCompleted) {
-            granted.completeError(
-              timeout == null
-                  ? error
-                  : globalLockTimeoutException(name, timeout),
-            );
+            // Aborted by the timeout before being granted; any other
+            // rejection (invalid request, insecure context) as is.
+            if (signal?.aborted ?? false) {
+              granted.completeError(globalLockTimeoutException(name, timeout));
+            } else {
+              granted.completeError(error, stackTrace);
+            }
           }
         },
       ),

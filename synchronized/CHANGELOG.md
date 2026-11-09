@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.6.1+1
+
+* `synchronized` with a `timeout` that had to wait now releases the lock as soon as it completes; the
+  `Object.synchronized` extension no longer keeps the monitor in its global lock cache after such a call
+* `GlobalLock` (io): a waiter takes a lock file over once it has itself seen the file untouched for 10 seconds
+  (timed on its own monotonic stopwatch): a wall clock jump or a resumed machine no longer breaks a live lock, and a
+  file time in the future no longer delays the takeover of a dead one. A lock left by a dead process is now taken
+  over 10 seconds after a waiter first sees it, not at once
+* `GlobalLock` (web): names starting with `-` (reserved by the Web Locks API) now work, requested as
+  `synchronized_global_lock:<name>` (every other name keeps its lock name), and a rejected request throws its own
+  error instead of a `TimeoutException`
+
 ## 3.6.1
 
 * `GlobalLock` (io): the heartbeat runs in its own isolate, so the lock stays held while the event loop of the holder is

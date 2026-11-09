@@ -21,6 +21,8 @@ class BasicLock implements Lock {
     final prev = last;
     final completer = Completer<void>.sync();
     last = completer.future;
+    // Whether the previous block is done (it never completes with an error).
+    var prevDone = prev == null;
     try {
       // If there is a previous running block, wait for it
       if (prev != null) {
@@ -30,6 +32,7 @@ class BasicLock implements Lock {
         } else {
           await prev;
         }
+        prevDone = true;
       }
 
       // Run the function and return the result
@@ -51,12 +54,13 @@ class BasicLock implements Lock {
       }
 
       // In case of timeout, wait for the previous one to complete too
-      // before marking this task as complete
-
-      if (prev != null && timeout != null) {
+      // before marking this task as complete. Once the previous one is done
+      // (lock acquired after waiting), release at once: deferring it would
+      // leave the lock marked as locked after the call completed.
+      if (!prevDone) {
         // But we still returns immediately
         // ignore: unawaited_futures
-        prev.then((_) {
+        prev!.then((_) {
           complete();
         });
       } else {

@@ -195,7 +195,33 @@ void main() {
       File(lock.path)
         ..writeAsStringSync('1 dead')
         ..setLastModifiedSync(DateTime.now().subtract(_stale * 2));
-      await (await lock.acquire(timeout: Duration.zero)).release();
+      var stopwatch = Stopwatch()..start();
+      await (await lock.acquire(timeout: _acquireTimeout)).release();
+      // Seen untouched for the stale timeout by the waiter, however old.
+      expect(stopwatch.elapsed, greaterThanOrEqualTo(_stale));
+    });
+
+    test('file time in the future taken over', () async {
+      // A dead holder, the wall clock set back since it last touched it.
+      var lock = newLock('test');
+      File(lock.path)
+        ..writeAsStringSync('1 dead')
+        ..setLastModifiedSync(DateTime.now().add(const Duration(hours: 1)));
+      await (await lock.acquire(timeout: _acquireTimeout)).release();
+    });
+
+    test('wall clock jump keeps it held', () async {
+      var handle = await newLock('test').acquire();
+      // The wall clock jumps forward (clock step, machine resumed): the file
+      // time looks old until the next heartbeat.
+      File(
+        newLock('test').path,
+      ).setLastModifiedSync(DateTime.now().subtract(_stale * 10));
+      await expectLater(
+        newLock('test').acquire(timeout: _stale * 3),
+        throwsA(isA<TimeoutException>()),
+      );
+      await handle.release();
     });
 
     test('stale breaker taken over', () async {

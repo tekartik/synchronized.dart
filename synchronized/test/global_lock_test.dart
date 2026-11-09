@@ -109,6 +109,25 @@ void main() {
       }
     });
 
+    test('name starting with -', () async {
+      // Reserved by the Web Locks API.
+      var name = '-${newGlobalLockName()}';
+      var handle = await GlobalLock(name).acquire(timeout: _acquireTimeout);
+      try {
+        await expectLater(
+          GlobalLock(name).acquire(timeout: Duration.zero),
+          throwsA(isA<TimeoutException>()),
+        );
+        // Not the lock without the -.
+        await (await GlobalLock(
+          name.substring(1),
+        ).acquire(timeout: _acquireTimeout)).release();
+      } finally {
+        await handle.release();
+      }
+      expect(await GlobalLock(name).synchronized(() => 1), 1);
+    });
+
     test('release twice', () async {
       var lock = GlobalLock(newGlobalLockName());
       var handle = await lock.acquire();
