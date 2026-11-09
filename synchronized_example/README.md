@@ -2,6 +2,11 @@
 
 Example consumer of `package:synchronized`.
 
+`example/main.dart` is the smallest `Lock` use: 10 concurrent
+read-modify-write calls that never interleave (`dart run example/main.dart`
+prints `10`). See the [synchronized README](../synchronized/README.md) for
+the package itself.
+
 It shows how the agent skill shipped in `synchronized/skills/` reaches a
 consumer project through the [pub package skills](https://dart.dev/tools/pub/package-skills)
 mechanism.
