@@ -2,6 +2,8 @@
 
 ## 3.6.1+1
 
+* Documentation: getting started, which lock to use (`GlobalLock` platforms), common mistakes,
+  `example/main.dart`, `GlobalLock` dartdoc, synchronized-lock skill update
 * `synchronized` with a `timeout` that had to wait now releases the lock as soon as it completes; the
   `Object.synchronized` extension no longer keeps the monitor in its global lock cache after such a call
 * `GlobalLock` (io): a waiter takes a lock file over once it has itself seen the file untouched for 10 seconds

@@ -12,13 +12,24 @@
 ///
 ///   Future<void> myMethod() async {
 ///     await _lock.synchronized(() async {
-///       step1();
-///       step2();
-///       step3();
+///       await step1();
+///       await step2();
+///       await step3();
 ///     });
 ///   }
 /// }
 /// ```
+///
+/// Which lock to use:
+/// * `Lock()`: one block at a time within the isolate, not reentrant (a block
+///   calling [Lock.synchronized] again on the same lock deadlocks).
+/// * `Lock(reentrant: true)`: same, a block can call [Lock.synchronized] again
+///   on the same lock.
+/// * [MultiLock]: holds several locks at once.
+/// * `package:synchronized/extension.dart`: `synchronized` on any object.
+/// * `package:synchronized/global_lock.dart`: a `GlobalLock` excludes the other
+///   isolates and processes of the machine (io) or the other tabs of the
+///   origin (web).
 library;
 
 import 'dart:async';
@@ -37,6 +48,22 @@ export 'src/multi_lock.dart' show MultiLock;
 /// asynchronous executor with a capacity of 1 (only one call to
 /// [synchronized] runs at a time; a nested call from within an already-held
 /// non-reentrant lock deadlocks).
+///
+/// Share one instance (a `final` field or a top-level variable) between all
+/// the calls to serialize: a [Lock] created in each call locks nothing.
+///
+/// ```dart
+/// final lock = Lock();
+///
+/// Future<int> next() => lock.synchronized(() async {
+///   // Only one block of this lock runs at a time, the others wait.
+///   return await readAndIncrementCounter();
+/// });
+/// ```
+///
+/// A [Lock] works within one isolate. Use a `GlobalLock`
+/// (`package:synchronized/global_lock.dart`) across isolates, processes or
+/// browser tabs.
 abstract class Lock {
   /// Creates a [Lock].
   ///
@@ -65,6 +92,10 @@ abstract class Lock {
   /// [computation] (or its awaited result, if it returns a [Future]) once
   /// [computation] finishes and the lock is released. Any error thrown by
   /// [computation] is rethrown through the returned [Future].
+  ///
+  /// When the lock is free, [computation] starts at once. There is no
+  /// cancellation: once started, [computation] runs to completion, even past
+  /// [timeout].
   Future<T> synchronized<T>(
     FutureOr<T> Function() computation, {
     Duration? timeout,

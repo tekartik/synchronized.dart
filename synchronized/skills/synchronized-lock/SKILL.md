@@ -2,10 +2,12 @@
 name: synchronized-lock
 description: >-
   Use when writing Dart or Flutter code with package:synchronized to serialize
-  asynchronous work: creating and sharing a Lock, choosing reentrant vs basic
-  locks, using timeouts, MultiLock, synchronizedSync, and the extension that
+  asynchronous work (a mutex or critical section for async code): creating and
+  sharing a Lock, choosing reentrant vs basic locks, using timeouts
+  (TimeoutException), MultiLock, synchronizedSync, and the extension that
   turns any object into a lock, while avoiding deadlocks and shared-key
-  pitfalls; or a GlobalLock shared across isolates, processes or browser tabs.
+  pitfalls; or a GlobalLock (acquire/release) shared across isolates,
+  processes or browser tabs, and what it covers on io, web and node.
 ---
 
 # synchronized: async mutual exclusion in Dart
@@ -14,7 +16,8 @@ description: >-
 computation only when no other computation holding the same lock is running.
 It is the Dart equivalent of a critical section for `async` code (single
 isolate only; a `GlobalLock` spans isolates, processes and tabs). It has no
-dependencies and works on the VM, Flutter and the web.
+dependencies and works on the VM, Flutter and the web. Add it with
+`dart pub add synchronized`.
 
 ```dart
 import 'package:synchronized/synchronized.dart';
@@ -25,6 +28,21 @@ Future<void> save() => _lock.synchronized(() async {
       // Only one save() body runs at a time.
     });
 ```
+
+## Which lock
+
+| Lock                         | Use it to                                                | Import              |
+|------------------------------|----------------------------------------------------------|---------------------|
+| `Lock()`                     | serialize async code in one isolate (not reentrant)      | `synchronized.dart` |
+| `Lock(reentrant: true)`      | same, when a block calls `synchronized` on the same lock | `synchronized.dart` |
+| `MultiLock(locks: [a, b])`   | hold several locks at once                               | `synchronized.dart` |
+| `anyObject.synchronized(..)` | lock on an object without a `Lock` field                 | `extension.dart`    |
+| `GlobalLock('name')`         | exclude other isolates, processes or browser tabs        | `global_lock.dart`  |
+
+All of them run on every platform (VM, Flutter mobile, desktop and web,
+dart2js, dart2wasm, node); only what a `GlobalLock` excludes varies (see
+below). `BasicLock` and `ReentrantLock` are the implementation classes behind
+`Lock()`; they are not exported, never import `package:synchronized/src/...`.
 
 ## Guidelines
 
@@ -44,7 +62,9 @@ Future<void> save() => _lock.synchronized(() async {
 * `Lock()` (default, non-reentrant) is cheap and behaves like an async
   executor with a capacity of 1. Calling `synchronized()` again on the same
   basic lock from inside its own computation **deadlocks**: the inner call
-  waits for the outer one, which waits for the inner one.
+  waits for the outer one, which waits for the inner one. It hangs silently
+  (no error); with a `timeout` the inner call throws a `TimeoutException`
+  instead, which helps to find it.
 * `Lock(reentrant: true)` uses a `Zone` to detect nested calls from the same
   computation and lets them proceed. Use it only when nesting is genuinely
   needed (for example a public method that takes the lock and calls another
@@ -147,11 +167,28 @@ var handle = await lock.acquire(timeout: const Duration(minutes: 10));
 await handle.release();
 ```
 
-* io: all the isolates and processes of the machine of the same user (a lock
-  file touched every second by a heartbeat isolate; released at once when the
-  holder isolate exits, taken over 10 seconds after its holder process died).
-* web: the tabs and workers of the origin (Web Locks API).
+* The API is `GlobalLock(name)`, `synchronized(computation, {timeout})`,
+  `acquire({timeout})` returning a `GlobalLockHandle`, and
+  `handle.release()`. There is no `close()`, `dispose()` or `tryLock()`:
+  `acquire(timeout: Duration.zero)` tries once.
+* The name is any string, the same in every program that shares the lock.
+  Make it specific to the application and the resource.
+* Prefer `synchronized`, which releases the lock when the computation
+  completes or throws. After `acquire`, release in a `finally`: an unreleased
+  handle holds the lock until the holder isolate exits (io) or the tab closes
+  (web).
+* `timeout` bounds the wait; a `TimeoutException` is thrown when it expires
+  (on io its message names the holder pid and the lock file). Without a
+  timeout the wait has no limit.
+* io (VM, Flutter mobile and desktop): all the isolates and processes of the
+  machine of the same user (a lock file touched every second by a heartbeat
+  isolate; released at once when the holder isolate exits, taken over 10
+  seconds after its holder process died).
+* web (browser, Flutter web): the tabs and workers of the origin (Web Locks
+  API, which needs a secure context: https or localhost).
 * node: the current process only (its Web Locks API), not across processes.
+* No Web Locks API (plain http page, node before 24): the current isolate
+  only.
 * Not reentrant: acquiring it again while holding it waits for itself. Always
   pass a `timeout` when another program may hold it for long.
 
@@ -182,7 +219,7 @@ Future<void> main() async {
 }
 ```
 
-### Global lock guarding a shared resource
+### Top-level lock guarding a shared file (one isolate)
 
 ```dart
 import 'dart:io';
@@ -305,6 +342,28 @@ Future<void> transfer() => transferLock.synchronized(() async {
     });
 ```
 
+### GlobalLock held between start and stop
+
+```dart
+import 'package:synchronized/global_lock.dart';
+
+class EmulatorSession {
+  final _lock = GlobalLock('my_app_firebase_emulator');
+  GlobalLockHandle? _handle;
+
+  /// Waits (at most 10 minutes) until no other process uses the emulator.
+  Future<void> start() async {
+    _handle = await _lock.acquire(timeout: const Duration(minutes: 10));
+  }
+
+  /// Lets the next process in.
+  Future<void> stop() async {
+    await _handle?.release();
+    _handle = null;
+  }
+}
+```
+
 ### synchronizedSync: fast path for synchronous bodies
 
 ```dart
@@ -339,3 +398,21 @@ void main() {
   });
 }
 ```
+
+## Common mistakes
+
+* Re-entering a `Lock()` from its own computation (directly or through
+  another method that takes the same lock): it hangs. Use
+  `Lock(reentrant: true)` or a private method that does not take the lock.
+* `Lock()` created inside the method or the computation: nothing is
+  serialized.
+* `synchronized()` not awaited nor returned: errors become unhandled and the
+  caller continues before the work is done.
+* Expecting `timeout` to stop a long computation: it only bounds the wait for
+  the lock.
+* Using a `Lock` to coordinate isolates, processes or tabs: use a
+  `GlobalLock`.
+* Calling `close()` on a `GlobalLock` (there is none), or acquiring it without
+  releasing the handle in a `finally`.
+* Locking on a string key with the extension when other code may lock on the
+  same string.

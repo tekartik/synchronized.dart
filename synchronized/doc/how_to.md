@@ -1,6 +1,7 @@
 # Synchronized guide
 
 * [Development notes](synchronized_development.md)
+* [README](../README.md): getting started, which lock to use, common mistakes
 
 ## Development guide
 
@@ -10,22 +11,22 @@
 var lock = Lock();
 // ...
 await lock.synchronized(() async {
-  // do you stuff
+  // do your stuff
   // await ...
 });
 ```
 
 Have in mind that the `Lock` instance must be shared between calls in order to effectively prevent concurrent execution. For instance, in the example below the lock instance is the same between all `myMethod()` calls.
 
-```
+```dart
 class MyClass {
   final _lock = Lock();
 
   Future<void> myMethod() async {
     await _lock.synchronized(() async {
-      step1();
-      step2();
-      step3();
+      await step1();
+      await step2();
+      await step3();
     });
   }
 }
@@ -39,16 +40,15 @@ Add lock ability to any object.
 import 'package:synchronized/extension.dart';
 ```
 
-Then you can simple call on any object.
+Then you can simply call `synchronized` on any object.
 
- ```dart
+```dart
 myObject.synchronized(() async {
   // ...uninterrupted action
 });
 
 class MyClass {
   /// Perform a long action that won't be called more than once at a time.
-  /// 
   Future<void> performAction() {
     // Lock at the instance level
     return synchronized(() async {
@@ -60,7 +60,7 @@ class MyClass {
 
 Or you can synchronize at the class level
 
- ```dart
+```dart
 class MyClass {
   /// Perform a long action that won't be called more than once at a time.
   Future<void> performClassAction() {
@@ -71,3 +71,6 @@ class MyClass {
   }
 }
 ```
+
+The lock of an object is found by equality (`==`), so two equal objects (two
+equal strings for example) share the same lock.

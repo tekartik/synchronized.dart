@@ -26,8 +26,31 @@ import 'global_lock_memory.dart'
 ///
 /// Not reentrant: acquiring it again while holding it waits for itself
 /// (until the timeout, if any).
+///
+/// ```dart
+/// final lock = GlobalLock('my_app_firebase_emulator');
+///
+/// // Released when the computation completes.
+/// await lock.synchronized(() async {
+///   // ...
+/// }, timeout: const Duration(minutes: 10));
+///
+/// // Or held across calls: always release the handle.
+/// var handle = await lock.acquire(timeout: const Duration(minutes: 10));
+/// try {
+///   // ...
+/// } finally {
+///   await handle.release();
+/// }
+/// ```
+///
+/// There is nothing to close: a lock that is not held uses no resource.
 abstract class GlobalLock {
   /// Creates a lock named [name].
+  ///
+  /// [name] is any string, the same for all the users of the lock: pick one
+  /// specific to the application and the resource it protects. Creating the
+  /// object does not acquire the lock.
   factory GlobalLock(String name) => impl.newGlobalLock(name);
 
   /// The lock name, the same for all the users of the lock.
@@ -53,6 +76,10 @@ abstract class GlobalLock {
 }
 
 /// A held [GlobalLock], see [GlobalLock.acquire].
+///
+/// Call [release] (in a `finally`) when done: until then the other users of
+/// the lock wait. A handle never released holds the lock until the holder
+/// isolate exits (io) or the tab closes (web).
 abstract class GlobalLockHandle {
   /// Releases the lock (once, later calls do nothing).
   Future<void> release();

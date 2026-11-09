@@ -35,10 +35,12 @@ dart run build_runner test -- -p chrome -p vm
     
 ## Use the git version
 
-```
+```yaml
 dependency_overrides:
   synchronized:
-    git: https://github.com/tekartik/synchronized.dart
+    git:
+      url: https://github.com/tekartik/synchronized.dart
+      path: synchronized
 ```
 
 ## Run perf test
