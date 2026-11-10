@@ -2,10 +2,10 @@
 library;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:process_run/shell.dart';
 import 'package:synchronized/global_lock.dart';
 import 'package:synchronized/src/global_lock_io.dart';
 import 'package:test/test.dart';
@@ -38,13 +38,24 @@ Future<String> _acquireInIsolate(String name, Duration timeout) =>
 /// Another process holding the lock [name] (in [dir] with a short heartbeat
 /// when set).
 class _Holder {
-  _Holder._(this.process)
-    : _lines = StreamIterator(
-        process.stdout.transform(utf8.decoder).transform(const LineSplitter()),
-      );
+  _Holder._(this.process, this.input, Stream<String> output) {
+    output.listen((line) {
+      _lines.add(line);
+      var wake = _wake;
+      _wake = null;
+      wake?.complete();
+    });
+  }
 
+  /// The process, as the shell gives it.
   final Process process;
-  final StreamIterator<String> _lines;
+
+  /// Its input: `release` makes it release the lock.
+  final ShellLinesController input;
+
+  /// The lines read and not consumed yet.
+  final _lines = <String>[];
+  Completer<void>? _wake;
 
   /// [exit] returns from main without releasing the lock.
   static Future<_Holder> start(
@@ -52,24 +63,35 @@ class _Holder {
     String? dir,
     bool exit = false,
   }) async {
-    var process = await Process.start(Platform.resolvedExecutable, [
+    var input = ShellLinesController();
+    var output = ShellLinesController();
+    var shell = Shell(
+      stdin: input.binaryStream,
+      stdout: output.sink,
+      stderr: stderr,
+      verbose: false,
+      throwOnError: false,
+    );
+    var started = Completer<Process>();
+    shell.runExecutableArguments(Platform.resolvedExecutable, [
       'test/src/global_lock_holder.dart',
       name,
       if (dir != null) ...[dir, '${_heartbeat.inMilliseconds}'],
       if (exit) 'exit',
-    ]);
-    unawaited(stderr.addStream(process.stderr));
-    var holder = _Holder._(process);
+    ], onProcess: started.complete).ignore();
+    var holder = _Holder._(await started.future, input, output.stream);
     await holder.expectLine('acquired');
     return holder;
   }
 
   Future<void> expectLine(String expected) async {
-    expect(
-      await _lines.moveNext().timeout(const Duration(seconds: 60)),
-      isTrue,
-    );
-    expect(_lines.current, expected);
+    var timeout = DateTime.now().add(const Duration(seconds: 60));
+    while (_lines.isEmpty) {
+      expect(DateTime.now().isBefore(timeout), isTrue, reason: 'no $expected');
+      _wake = Completer<void>();
+      await _wake!.future.timeout(const Duration(seconds: 1), onTimeout: () {});
+    }
+    expect(_lines.removeAt(0), expected);
   }
 }
 
@@ -320,7 +342,7 @@ void main() {
         GlobalLock(name).acquire(timeout: const Duration(milliseconds: 200)),
         throwsA(isA<TimeoutException>()),
       );
-      holder.process.stdin.writeln('release');
+      holder.input.writeln('release');
       await holder.expectLine('released');
       expect(await holder.process.exitCode, 0);
       var handle = await GlobalLock(name).acquire(timeout: _acquireTimeout);
